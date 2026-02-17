@@ -40,7 +40,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   showPreviewBanner = input(false);
   showHostPromo = input(false);
   onDateChange = input<(date: string) => void>();
-  onUserListClick = input<(title: string, users: any[]) => void>();
+  onUserListClick = input<(title: string, eventTitle: string) => void>();
   selectedDate = input<string>('');
   onManageEventClick = input<() => void>();
   onEventChatClick = input<() => void>();
@@ -129,11 +129,11 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
     }
   }
 
-  handleUserListClick(title: string, users: any[]): void {
+  handleUserListClick(title: string): void {
     if ((title == 'Going' || title == 'Maybe') && !this.canViewAttendees()) return;
     const handler = this.onUserListClick();
     if (handler) {
-      handler(title, users);
+      handler(title, this.eventData()?.title || '');
     }
   }
 
