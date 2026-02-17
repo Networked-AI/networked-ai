@@ -2,8 +2,8 @@
   <ion-toolbar mode="md">
     <div class="p-4 flex items-center justify-between">
       <div class="flex flex-col">
-        <div class="heading-h3 neutral-01">{{ eventTitle }}</div>
-        <div class="body-14R neutral-03">by {{ hostName }}</div>
+        <div class="heading-h3 neutral-01 line-clamp-1 w-full">{{ eventTitle }}</div>
+        <div class="body-14R neutral-03 line-clamp-1 w-full">by {{ hostName }}</div>
       </div>
       <i class="pi pi-times cursor-pointer text-xl text-neutral-01" (click)="close()"></i>
     </div>
@@ -15,20 +15,24 @@
     <!-- Event Details -->
 
     <div class="flex flex-col gap-2 mb-6">
-      <div class="flex items-start gap-1.5">
-        <div class="pi pi-calendar neutral-03 !text-[16px] mt-0.5"></div>
-        <div class="flex items-center justify-between gap-1 w-full">
-          <div class="body-14M neutral-03">Date &amp; Time</div>
-          <div class="body-14M">{{ date }}</div>
+      <div class="flex items-start gap-10 w-full justify-between">
+        <div class="flex items-start gap-1.5 justify-between">
+          <div class="pi pi-calendar neutral-03 text-[16px]! mt-0.5"></div>
+          <div class="body-14M neutral-03 w-max">Date &amp; Time</div>
+        </div>
+        <div class="flex items-center justify-end w-full">
+          <div class="body-14M line-clamp-1 w-full">{{ date }}</div>
         </div>
       </div>
-
+      
       <!-- location -->
-      <div class="flex items-start gap-1.5">
-        <div class="pi pi-map-marker neutral-03 !text-[16px] mt-0.5"></div>
-        <div class="flex items-center justify-between gap-1 w-full">
+      <div class="flex items-start gap-16 w-full justify-between">
+        <div class="flex items-start gap-1.5 justify-between">
+          <div class="pi pi-map-marker neutral-03 text-[16px]! mt-0.5"></div>
           <div class="body-14M neutral-03">Location</div>
-          <div class="body-14M">{{ location }}</div>
+        </div>
+        <div class="flex items-center justify-end w-full">
+          <div class="body-14M line-clamp-1 w-full">{{ location }}</div>
         </div>
       </div>
     </div>

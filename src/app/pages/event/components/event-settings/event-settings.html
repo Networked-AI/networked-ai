@@ -2,83 +2,7 @@
   <!-- Require RSVP Approval -->
   <toggle-input [formGroup]="eventForm()" controlName="is_show_timer" label="Show Time?" />
   <toggle-input [formGroup]="eventForm()" controlName="is_rsvp_approval_required" label="Require RSVP Approval?" />
-  <!-- Repeating Event -->
-  @if (!isModalMode() && !isEditMode()) {
-    <div>
-      <toggle-input [formGroup]="eventForm()" controlName="is_repeating_event" label="Repeating Event" />
-
-      @if (getFieldValue('is_repeating_event')) {
-        <div class="w-full mt-2">
-          <div class="border-l-3 border-neutral-300 pl-3">
-            <!-- Repeat Frequency -->
-            <div class="flex gap-2 mb-4">
-              @for (item of repeatOptions(); track item.value) {
-                <chip
-                  [type]="item.value"
-                  [color]="getFieldValue('repeating_frequency') === item.value ? 'lgold' : ''"
-                  (selectedType)="setRepeatFrequency(item.value)"
-                  class="w-full"
-                >
-                  <span class="body-14R flex justify-center">
-                    {{ item.label }}
-                  </span>
-                </chip>
-              }
-            </div>
-            <!-- Repeat Count -->
-            <label class="neutral-02 body-14M block mb-2"> How many times will the event occur in total? </label>
-
-            <div class="flex gap-2">
-              @for (item of repeatCountOptions(); track item.value) {
-                @if (item.value !== 'custom') {
-                  <chip
-                    [type]="item.value.toString()"
-                    [color]="getFieldValue('repeat_count') === item.value ? 'lgold' : ''"
-                    (selectedType)="handleRepeatCountClick(item.value)"
-                  >
-                    <span class="body-14R">
-                      {{ item.label }}
-                    </span>
-                  </chip>
-                } @else {
-                  <div>
-                    <number-input
-                      [formGroup]="eventForm()"
-                      controlName="custom_repeat_count"
-                      placeholder="Custom"
-                      [min]="5"
-                      [max]="10"
-                      class="w-14"
-                    ></number-input>
-                  </div>
-                }
-              }
-            </div>
-          </div>
-
-          <!-- Events List -->
-          @if (getFieldValue('is_repeating_event') && repeatingEvents().length > 0) {
-            <div class="mt-4">
-              <div class="flex flex-col gap-2">
-                <!-- Main Event (Event #1) - from form data -->
-                <repeating-event-item [event]="mainEvent()" [isMainEvent]="true" />
-
-                <!-- Repeating Events (Event #2, #3, etc.) -->
-                @for (event of repeatingEvents(); track event['id']) {
-                  <repeating-event-item
-                    [event]="event"
-                    [isMainEvent]="false"
-                    (edit)="editRepeatingEvent(event)"
-                    (delete)="deleteRepeatingEvent(event['id'])"
-                  />
-                }
-              </div>
-            </div>
-          }
-        </div>
-      }
-    </div>
-  }
+  
   <!-- Co-Hosts -->
   <participant-input label="Co-Host(s)" type="CoHost" [selectedUsers]="coHosts()" (usersChange)="onUsersChange($event, 'co_hosts')" />
 
@@ -172,4 +96,82 @@
       }
     </div>
   </div>
+
+  <!-- Repeating Event -->
+  @if (!isModalMode() && !isEditMode()) {
+    <div>
+      <toggle-input [formGroup]="eventForm()" controlName="is_repeating_event" label="Repeating Event" />
+
+      @if (getFieldValue('is_repeating_event')) {
+        <div class="w-full mt-2">
+          <div class="border-l-3 border-neutral-300 pl-3">
+            <!-- Repeat Frequency -->
+            <div class="flex gap-2 mb-4">
+              @for (item of repeatOptions(); track item.value) {
+                <chip
+                  [type]="item.value"
+                  [color]="getFieldValue('repeating_frequency') === item.value ? 'lgold' : ''"
+                  (selectedType)="setRepeatFrequency(item.value)"
+                  class="w-full"
+                >
+                  <span class="body-14R flex justify-center">
+                    {{ item.label }}
+                  </span>
+                </chip>
+              }
+            </div>
+            <!-- Repeat Count -->
+            <label class="neutral-02 body-14M block mb-2"> How many times will the event occur in total? </label>
+
+            <div class="flex gap-2">
+              @for (item of repeatCountOptions(); track item.value) {
+                @if (item.value !== 'custom') {
+                  <chip
+                    [type]="item.value.toString()"
+                    [color]="getFieldValue('repeat_count') === item.value ? 'lgold' : ''"
+                    (selectedType)="handleRepeatCountClick(item.value)"
+                  >
+                    <span class="body-14R">
+                      {{ item.label }}
+                    </span>
+                  </chip>
+                } @else {
+                  <div>
+                    <number-input
+                      [formGroup]="eventForm()"
+                      controlName="custom_repeat_count"
+                      placeholder="Custom"
+                      [min]="5"
+                      [max]="10"
+                      class="w-14"
+                    ></number-input>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+
+          <!-- Events List -->
+          @if (getFieldValue('is_repeating_event') && repeatingEvents().length > 0) {
+            <div class="mt-4">
+              <div class="flex flex-col gap-2">
+                <!-- Main Event (Event #1) - from form data -->
+                <repeating-event-item [event]="mainEvent()" [isMainEvent]="true" />
+
+                <!-- Repeating Events (Event #2, #3, etc.) -->
+                @for (event of repeatingEvents(); track event['id']) {
+                  <repeating-event-item
+                    [event]="event"
+                    [isMainEvent]="false"
+                    (edit)="editRepeatingEvent(event)"
+                    (delete)="deleteRepeatingEvent(event['id'])"
+                  />
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
 </div>

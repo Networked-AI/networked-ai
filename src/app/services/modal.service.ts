@@ -224,7 +224,7 @@ export class ModalService {
       backdropDismiss: true,
       component: LocationModal,
       componentProps: { location },
-      cssClass: 'modal-80-percent-height'
+      cssClass: 'modal-60-percent-height'
     });
 
     await modal.present();
@@ -968,7 +968,7 @@ export class ModalService {
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      cssClass: 'modal-600px-height',
+      cssClass: 'modal-80-percent-height',
       component: Signup,
       componentProps: {
         isRsvpModal: true,

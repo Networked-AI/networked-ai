@@ -1,12 +1,12 @@
 <div
-  class="gpu-accelerate flex flex-col items-center gap-2 p-2 rounded-xl bg-gradient-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]"
+  class="gpu-accelerate flex flex-col items-center gap-2 p-2 rounded-xl bg-linear-to-br from-[#1a1a1a] via-[#111111] to-[#0c0c0c] border border-[#1f1f1f]"
   [class.cursor-pointer]="!badge().is_locked"
   [class.cursor-not-allowed]="badge().is_locked"
   (click)="handleClick()"
 >
   <div class="w-16 h-16 flex items-center justify-center">
     @if (badgeImageUrl()) {
-      <img [src]="badgeImageUrl()" [alt]="badge().title" class="w-full h-full object-contain" />
+      <ion-icon [src]="badgeImageUrl()" class="w-full h-full object-contain" />
     }
   </div>
   @if (badge().is_locked) {

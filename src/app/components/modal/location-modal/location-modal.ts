@@ -6,7 +6,7 @@ import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { environment } from 'src/environments/environment';
 import { IonHeader, IonToolbar, IonContent, ModalController } from '@ionic/angular/standalone';
-import { of, Subject, catchError, switchMap, debounceTime, distinctUntilChanged } from 'rxjs';
+import { of, Subject, catchError, switchMap, debounceTime, distinctUntilChanged, forkJoin } from 'rxjs';
 import { Input, inject, OnInit, signal, computed, Component, ChangeDetectionStrategy } from '@angular/core';
 
 interface LocationResult {
@@ -19,36 +19,45 @@ interface LocationResult {
   longitude: number;
 }
 
-interface MapTilerContext {
-  id: string;
-  text: string;
-  kind?: string;
-  text_en?: string;
-  country_code?: string;
-  place_designation?: string;
+interface GoogleAutocompleteResponse {
+  suggestions: GoogleSuggestion[];
 }
 
-interface MapTilerFeature {
-  id: string;
-  type: string;
-  geometry: {
-    type: string;
-    coordinates: [number, number]; // [longitude, latitude]
+interface GoogleSuggestion {
+  placePrediction?: GooglePlacePrediction;
+}
+
+interface GooglePlacePrediction {
+  place: string;
+  placeId: string;
+  text: {
+    text: string;
   };
-  text: string;
-  text_en?: string;
-  relevance: number;
-  place_name: string;
-  place_name_en?: string;
-  context?: MapTilerContext[];
-  properties?: Record<string, any>;
+  structuredFormat?: {
+    mainText?: {
+      text: string;
+    };
+    secondaryText?: {
+      text: string;
+    };
+  };
+  types?: string[];
 }
 
-interface MapTilerGeocodingResponse {
-  type: string;
-  query: string[];
-  attribution: string;
-  features: MapTilerFeature[];
+interface GooglePlaceDetailsResponse {
+  formattedAddress: string;
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+  addressComponents?: GoogleAddressComponent[];
+}
+
+interface GoogleAddressComponent {
+  longText: string;
+  shortText?: string;
+  types?: string[];
+  languageCode?: string;
 }
 
 @Component({
@@ -127,59 +136,102 @@ export class LocationModal implements OnInit {
    */
   private searchLocations(query: string) {
     this.isSearching.set(true);
-    const url = `https://api.maptiler.com/geocoding/${encodeURIComponent(query)}.json`;
 
-    return this.http
-      .get<MapTilerGeocodingResponse>(url, {
-        params: {
-          limit: '10',
-          key: environment.maptilerApiKey,
-          proximity: `${this.currentLng()},${this.currentLat()}` // Bias results towards user location or default
+    return this.http.post<GoogleAutocompleteResponse>(
+      'https://places.googleapis.com/v1/places:autocomplete',
+      {
+        input: query
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': environment.firebaseConfig.apiKey
         }
+      }
+    ).pipe(
+      switchMap((autoResponse: GoogleAutocompleteResponse) => {
+
+        const predictions = autoResponse.suggestions
+          .map(s => s.placePrediction)
+          .filter(Boolean);
+
+        if (!predictions.length) {
+          return of([]);
+        }
+
+        // Fetch details for each place
+        const detailRequests = predictions.map(pred =>
+          this.getPlaceDetails(pred!.placeId)
+        );
+
+        return detailRequests.length
+          ? forkJoin(detailRequests)
+          : of([]);
+      }),
+      catchError(err => {
+        console.error('Google Places error:', err);
+        return of([]);
       })
-      .pipe(
-        catchError((error) => {
-          console.error('MapTiler geocoding error:', error);
-          return of({ features: [] });
-        }),
-        switchMap((response) => {
-          const results: LocationResult[] = response.features.map((feature) => {
-            const [longitude, latitude] = feature.geometry.coordinates;
+    );
+  }
 
-            // Extract city, state, and country from context array
-            let city: string | undefined;
-            let state: string | undefined;
-            let country: string | undefined;
+  private getPlaceDetails(placeId: string) {
+    return this.http.get<GooglePlaceDetailsResponse>(
+      `https://places.googleapis.com/v1/places/${placeId}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': environment.firebaseConfig.apiKey,
+          'X-Goog-FieldMask': 'location,addressComponents,formattedAddress'
+        }
+      }
+    ).pipe(
+      switchMap((details: GooglePlaceDetailsResponse) => {
+        let city: string | undefined;
+        let state: string | undefined;
+        let country: string | undefined;
 
-            if (feature.context && feature.context.length > 0) {
-              // Context items are ordered from most specific to least specific
-              // City/municipality is usually near the start
-              // State/region is in the middle
-              // Country is near the end
-              for (const ctx of feature.context) {
-                const designation = ctx.place_designation?.toLowerCase();
-                if (!city && (designation === 'city' || designation === 'municipality' || designation === 'town')) {
-                  city = ctx.text_en || ctx.text;
-                } else if (!state && (designation === 'state' || designation === 'province' || designation === 'region')) {
-                  state = ctx.text_en || ctx.text;
-                } else if (!country && designation === 'country') {
-                  country = ctx.text_en || ctx.text;
-                }
-              }
-            }
+        for (const comp of details?.addressComponents || []) {
+          const types = comp.types || [];
 
-            // use place_name_en or place_name as the address
-            const address = feature.place_name_en || feature.place_name || feature.text_en || feature.text || '';
+          if (!city && (
+            types.includes('locality') ||
+            types.includes('administrative_area_level_3')
+          )) {
+            city = comp.longText;
+          }
 
-            // calculate distance from user location or default
-            const distance = this.calculateDistance(this.currentLat(), this.currentLng(), latitude, longitude);
+          if (!state && types.includes('administrative_area_level_1')) {
+            state = comp.longText;
+          }
 
-            return { city, state, address, country, distance, latitude, longitude };
-          });
+          if (!country && types.includes('country')) {
+            country = comp.longText;
+          }
+        }
 
-          return of(results);
-        })
-      );
+        const latitude = details.location?.latitude;
+        const longitude = details.location?.longitude;
+
+        const distance = this.calculateDistance(
+          this.currentLat(),
+          this.currentLng(),
+          latitude,
+          longitude
+        );
+
+        const result: LocationResult = {
+          address: details.formattedAddress,
+          latitude,
+          longitude,
+          city,
+          state,
+          country,
+          distance
+        };
+        return of(result);
+      })
+    );
   }
 
   /**

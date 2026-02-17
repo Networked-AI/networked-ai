@@ -457,19 +457,6 @@ export class RsvpModal implements OnInit, OnDestroy {
     return parts.length > 0 ? parts.join(' ') : '0 sec';
   };
 
-  getTicketChipImage(ticketType: string): string {
-    switch (ticketType) {
-      case 'Early Bird':
-        return 'assets/svg/ticket/early-bird-card-chip.svg';
-      case 'Sponsor':
-        return 'assets/svg/ticket/sponsor-card-chip.svg';
-      case 'Free':
-        return 'assets/svg/ticket/free-card-chip.svg';
-      default:
-        return 'assets/svg/ticket/standard-card-chip.svg';
-    }
-  }
-
   getStatusBadgeClass(status: string): string {
     switch (status) {
       case 'sale-ended':
@@ -1088,10 +1075,6 @@ export class RsvpModal implements OnInit, OnDestroy {
   }
 
   async dismiss(): Promise<void> {
-    // if (!this.isLoggedIn()) {
-    //   await this.modalService.openSignupModal();
-    //   return;
-    // }
 
     if (!(await this.ensureLoggedIn())) return;
 

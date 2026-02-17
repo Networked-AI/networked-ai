@@ -1,27 +1,11 @@
 <ion-header mode="md">
   <ion-toolbar mode="md">
     <div class="p-4 flex items-center justify-between">
-      <div class="heading-h3 neutral-01">{{ eventTitle }}</div>
+      <div class="heading-h3 neutral-01 line-clamp-1 w-full">{{ eventTitle }}</div>
       <i class="pi pi-times cursor-pointer text-xl" (click)="close()"></i>
     </div>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content mode="md">
-  <div class="px-4">
-    <div class="px-4 py-4 flex flex-col gap-4">
-      @if (isSubscriberExclusive && !hasSubscribed) {
-        <!-- Subscriber Exclusive Message -->
-        <div class="flex flex-col items-center justify-center gap-4 py-8">
-          <div class="flex flex-col items-center gap-3">
-            <ion-icon src="assets/svg/crown-white.svg" alt="crown" class="w-[48px] h-[48px] text-neutral-03"></ion-icon>
-            <div class="body-16M neutral-01 text-center">You have not subscribed</div>
-            <div class="body-14R neutral-03 text-center max-w-md">
-              This event is exclusively for subscribers. Please subscribe to access this event.
-            </div>
-          </div>
-        </div>
-      } @else {
+    @if (!isSubscriberExclusive || hasSubscribed) {
+      <div class="px-6 flex flex-col gap-3 pb-2">
         <!-- Questionnaire Requirement -->
         @if (hasQuestionnaire()) {
           <div class="flex items-center gap-3 bg-gray-200 rounded-lg p-2">
@@ -31,7 +15,7 @@
             <span class="body-14M neutral-01">A short questionnaire is required to complete RSVP.</span>
           </div>
         }
-
+  
         <!-- Promo Code Section -->
         @if (hasPromoCodes()) {
           <div class="flex flex-col gap-1">
@@ -66,7 +50,7 @@
                 }
               </button>
             </div>
-
+  
             <!-- Error Message -->
             @if ((promoInput() || promoCode()) && !promoValidation().isValid && promoValidation().message) {
               <div class="flex items-start gap-2 accent-red">
@@ -74,7 +58,7 @@
                 <span class="body-14R flex-1">{{ promoValidation().message }}</span>
               </div>
             }
-
+  
             <!-- Success Message -->
             @if (promoValidation().isValid && (promoCode() || promoInput()) && promoValidation().discountAmount > 0) {
               <div class="flex items-start gap-3 text-primary">
@@ -84,7 +68,26 @@
             }
           </div>
         }
+      </div>
+    }
+  </ion-toolbar>
+</ion-header>
 
+<ion-content mode="md">
+  <div class="px-4">
+    <div class="px-4 py-4 flex flex-col gap-4">
+      @if (isSubscriberExclusive && !hasSubscribed) {
+        <!-- Subscriber Exclusive Message -->
+        <div class="flex flex-col items-center justify-center gap-4 py-8">
+          <div class="flex flex-col items-center gap-3">
+            <ion-icon src="assets/svg/crown-white.svg" alt="crown" class="w-[48px] h-[48px] text-neutral-03"></ion-icon>
+            <div class="body-16M neutral-01 text-center">You have not subscribed</div>
+            <div class="body-14R neutral-03 text-center max-w-md">
+              This event is exclusively for subscribers. Please subscribe to access this event.
+            </div>
+          </div>
+        </div>
+      } @else {
         @for (ticket of ticketsData(); track ticket.id) {
           <div
             class="flex flex-col rounded-lg overflow-hidden mb-4"
@@ -96,7 +99,10 @@
             <!-- Ticket Type Banner -->
             @if (ticket.ticket_type === 'Early Bird') {
               <div class="relative w-full">
-                <img [src]="getTicketChipImage(ticket.ticket_type)" class="w-full h-[30px] object-cover" />
+                <div class="h-[32px] flex items-center bg-early-bird">
+                  <ion-icon src="assets/svg/ticket/early-bird-icon.svg" class="h-[20px] w-[20px] pl-5 pr-2"></ion-icon>
+                  <span>Early Bird</span>
+                </div>
               </div>
             }
 
