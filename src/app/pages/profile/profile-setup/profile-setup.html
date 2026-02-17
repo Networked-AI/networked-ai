@@ -33,9 +33,9 @@
         </div>
 
         <!-- step 4: network suggestions -->
-        <div [hidden]="currentStep() !== 4">
-          <profile-setup-user-suggestion />
-        </div>
+          @if (currentStep() == 4) {
+            <profile-setup-user-suggestion />
+          }
       </form>
     }
   </div>

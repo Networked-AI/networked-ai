@@ -1,36 +1,19 @@
 <div class="flex flex-col gap-4">
   <div class="heading-h2 neutral-01">Network Suggestion</div>
 
-  <!-- network suggestions list -->
-  <div class="mb-4">
-    @for (suggestion of networkSuggestions; track suggestion.id) {
-      <div class="flex items-center gap-3 bg-surface-0 py-4">
-        <!-- profile picture -->
-        <div class="w-12 h-12 rounded-full bg-surface-100 border-2 border-surface-200 flex items-center justify-center flex-shrink-0">
-          <i class="pi pi-user text-surface-400 text-xl"></i>
-        </div>
-
-        <!-- name and details -->
-        <div class="flex-1 flex flex-col gap-1">
-          <div class="flex items-center gap-2">
-            <div class="body-14SB neutral-01 truncate">{{ suggestion.name }}</div>
-            <div class="flex items-center gap-1 border border-[#dbdbdb] rounded-full py-0 h-[20px]">
-              <img src="assets/svg/diamondYellow.svg" alt="diamond" class="h-4 w-auto ml-1.5" />
-              <span class="text-sm font-medium pr-2">{{ suggestion.value }}</span>
-            </div>
-          </div>
-          <p class="body-12 neutral-03">{{ suggestion.jobTitle }}, {{ suggestion.company }}</p>
-        </div>
-
-        <!-- add button -->
-        <app-button
-          width="60px"
-          height="32px"
-          color="secondary"
-          (click)="addSuggestion(suggestion.id)"
-          [label]="isSelected(suggestion.id) ? 'Added' : 'Add'"
-        />
-      </div>
-    }
-  </div>
+  <!-- loading skeletons while recommendations are being fetched -->
+  @if (recommendationsService.isLoading()) {
+    <div class="mb-4 flex flex-col gap-3">
+      @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; track i) {
+        <ion-skeleton-text class="h-[60px] rounded-xl" />
+      }
+    </div>
+  } @else {
+    <!-- network suggestions list -->
+    <div class="mb-4">
+      @for (people of peopleCards(); track people.id) {
+        <user-card-list [user]="people" />
+      }
+    </div>
+  }
 </div>
