@@ -20,7 +20,7 @@ export class UserRecommendationsService {
     });
   }
 
-  async loadRecommendations(): Promise<void> {
+  async loadRecommendations(limit: number = 10): Promise<void> {
     const currentUser = this.authService.currentUser();
     if (!currentUser) return;
 
@@ -28,7 +28,7 @@ export class UserRecommendationsService {
     if (!shouldLoad) return;
 
     try {
-      const recommendations = await this.networkService.getNetworkRecommendations();
+      const recommendations = await this.networkService.getNetworkRecommendations(limit);
       this.peopleCards.set(recommendations);
     } catch (error) {
       console.error('Error loading recommendations:', error);

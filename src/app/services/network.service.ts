@@ -138,9 +138,15 @@ export class NetworkService extends BaseApiService {
   }
 
   // Get network connection recommendations (people you might know)
-  async getNetworkRecommendations(): Promise<IUser[]> {
+  async getNetworkRecommendations(limit: number): Promise<IUser[]> {
     try {
-      const response = await this.get<{ success: boolean; message: string; data: IUser[] }>('/network-connections/recommendations');
+      let httpParams = new HttpParams();
+      if (limit) {
+        httpParams = httpParams.set('limit', limit);
+      }
+      const response = await this.get<{ success: boolean; message: string; data: IUser[] }>('/network-connections/recommendations', {
+        params: httpParams
+      });
       return response?.data || [];
     } catch (error) {
       console.error('Error fetching network recommendations:', error);
