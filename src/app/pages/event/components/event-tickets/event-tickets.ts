@@ -226,15 +226,16 @@ export class EventTickets implements OnInit {
 
   createPromoCodeFromFormData(data: PromoCodeFormModalData): PromoCode {
     return {
+      ...(data.id ? { id: data.id } : {}),
       promo_code: data.promo_code,
       type: data.type,
       value: data.value,
-      capped_amount: data.capped_amount || null,
-      quantity: data.quantity || null,
-      max_uses_per_user: data.max_uses_per_user || 1
+      capped_amount: data.capped_amount ?? null,
+      quantity: data.quantity ?? null,
+      max_uses_per_user: data.max_uses_per_user ?? 1
     };
   }
-
+  
   handleTicketReorder(event: CustomEvent<ItemReorderEventDetail>): void {
     const reorderedTickets = event.detail.complete([...this.tickets()]);
     // Update order field based on new position
@@ -337,6 +338,7 @@ export class EventTickets implements OnInit {
     if (!promo) return;
 
     const initialData: Partial<PromoCodeFormModalData> = {
+      id:promo.id,
       promo_code: promo.promo_code,
       type: promo.type,
       value: promo.value,

@@ -26,6 +26,7 @@ export class PromoCodeFormModal {
   // signals
   promoForm = signal<FormGroup>(
     this.fb.group({
+      id: [''],
       type: ['Fixed', [Validators.required]],
       capped_amount: [null]
     })

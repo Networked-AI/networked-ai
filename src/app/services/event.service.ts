@@ -842,12 +842,12 @@ export class EventService extends BaseApiService {
       }
       if (typeof opt === 'object' && opt.option) {
         const formatted: { option: string; order: number; id?: string } = { option: opt.option, order: opt.order ?? index + 1 };
-        // if (opt.id != null) formatted.id = opt.id;
+        if (opt.id != null) formatted.id = opt.id;
         return formatted;
       }
       return { option: String(opt), order: index + 1 };
     });
-  }
+  } 
 
   formatTickets(tickets: any[], eventDate: string | null, eventStartTime: string | null): any[] {
     return tickets.map((ticket, index) => {

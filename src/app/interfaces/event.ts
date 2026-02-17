@@ -100,6 +100,7 @@ export interface TicketFormData {
 }
 
 export interface PromoCodeFormModalData {
+  id?: string;
   promo_code: string;
   value: number;
   max_uses_per_user?: number;
@@ -131,6 +132,7 @@ export interface TicketDisplay extends Ticket {
 }
 
 export interface PromoCode {
+  id?:string;
   promo_code: string;
   type: 'Percentage' | 'Fixed';
   value: number;

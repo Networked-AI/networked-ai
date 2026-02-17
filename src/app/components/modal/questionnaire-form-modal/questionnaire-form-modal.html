@@ -97,10 +97,9 @@
                 <div formArrayName="options" class="space-y-2">
                   <ion-reorder-group [disabled]="false" (ionItemReorder)="reorderOptions(i, $event)" class="flex flex-col gap-2">
                     @for (opt of getOptions(q).controls; let oi = $index; track oi) {
-                      <div class="flex items-center gap-3">
+                      <div class="flex items-center gap-3" [formGroupName]="oi">
                         <ion-reorder slot="start"></ion-reorder>
-                        <input pInputText class="w-full h-[44px]" [placeholder]="`Option ${oi + 1}`" [formControlName]="oi" />
-
+                        <input pInputText class="w-full h-[44px]" [placeholder]="`Option ${oi + 1}`" formControlName="value" />
                         <i class="pi pi-times text-surface-700" (click)="removeOption(i, oi)"></i>
                       </div>
                     }
@@ -108,7 +107,6 @@
                   <app-button label="Add Option" iconName="pi-plus" color="secondary" (click)="addOption(i)" [disabled]="areOptionsInvalid(q)" />
                 </div>
               }
-
               @if (q.get('type')?.value === 'Rating') {
                 <div class="flex gap-4 items-center">
                   <span class="body-14M neutral-02"> Scale</span>
