@@ -14,7 +14,7 @@
           <div class="relative w-10 h-10 overflow-hidden rounded-full">
             <img
               fill
-              placeholder 
+              placeholder
               [ngSrc]="getImageUrl(user.thumbnail_url)"
               (error)="onImageError($event)"
               [alt]="user.name"
@@ -23,7 +23,7 @@
           </div>
           <span class="body-regular-14">{{ user.name }}</span>
         </div>
-        <button type="button" class="p-0 m-0 bg-transparent border-none cursor-pointer shrink-0" (click)="onRemoveUser(user.id!)">
+        <button type="button" class="p-0 m-0 bg-transparent border-none cursor-pointer shrink-0" (click)="onRemoveUser(user.user_id!)">
           <i class="pi pi-times text-lg text-neutral-04"></i>
         </button>
       </div>
@@ -50,7 +50,7 @@
         </div>
       } @else if (filteredUsers().length > 0) {
         <div class="absolute top-full left-0 right-0 z-10 bg-white border border-surface-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto p-4">
-          @for (filteredUser of filteredUsers(); track filteredUser.id) {
+          @for (filteredUser of filteredUsers(); track filteredUser.user_id) {
             <div class="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50" (click)="onSelectUser(filteredUser)">
               <div class="relative w-10 h-10 rounded-full overflow-hidden">
                 <img

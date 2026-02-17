@@ -8,6 +8,9 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" mode="md">
+  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" mode="md">
+    <ion-refresher-content mode="md"></ion-refresher-content>
+  </ion-refresher>
   <div class="min-h-full">
     <div class="w-full max-w-[672px] mx-auto p-6">
       <!-- Event Title -->
@@ -18,7 +21,7 @@
       <!-- Section Title -->
       <div class="flex items-center justify-between mb-4">
         <div class="body-16SB neutral-01">{{ title() }}</div>
-        <div class="body-14M neutral-03">{{ users().length }}</div>
+        <div class="body-14M neutral-03">{{ pagination()?.totalCount }}</div>
       </div>
 
       <!-- Search Bar -->
@@ -26,19 +29,35 @@
         <searchbar
           [placeholder]="'Search by username'"
           [searchQuery]="searchQuery()"
-          (searchChange)="searchQuery.set($event)"
-          (clear)="searchQuery.set('')"
+          (searchChange)="onSearchChange($event)"
+          (clear)="onClearSearch()"
           class="w-full"
         />
       </div>
 
-      <!-- User List -->
-      @for (user of filteredUsers(); track user.id) {
-        <div class="border-b border-gray-200">
-          <user-card-list [user]="user" />
+      <!-- Loading state -->
+      @if (isLoading()) {
+        <div class="flex justify-center items-center py-8">
+          <ion-spinner name="crescent" class="w-6 h-6"></ion-spinner>
         </div>
-      } @empty {
-        <app-empty-state title="No users found" message="" />
+      } @else {
+        <!-- User List -->
+        @for (user of filteredUsers(); track user.id) {
+          <div class="border-b border-gray-200">
+            <user-card-list [user]="user" />
+          </div>
+        } @empty {
+          <app-empty-state title="No users found" message="" />
+        }
+
+        <!-- Load more -->
+        @if (hasMore()) {
+          @if (hasMore()) {
+            <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreUsers($event)" [disabled]="!hasMore()">
+              <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more users..." />
+            </ion-infinite-scroll>
+          }
+        }
       }
     </div>
   </div>

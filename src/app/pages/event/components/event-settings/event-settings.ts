@@ -77,12 +77,13 @@ export class EventSettings {
         return p.role === 'Host';
       });
 
-      const participants: Array<{ user_id: string; role: string; thumbnail_url?: string; name?: string }> = [...existingHosts];
+      const participants: Array<{ id: string; user_id?: string; role: string; thumbnail_url?: string; name?: string }> = [...existingHosts];
 
       this.coHosts().forEach((user) => {
-        if (user.id) {
+        if (user.user_id) {
           participants.push({
-            user_id: user.id,
+            id: user.id,
+            user_id: user.user_id,
             role: 'CoHost',
             thumbnail_url: user.thumbnail_url,
             name: user.name
@@ -91,9 +92,10 @@ export class EventSettings {
       });
 
       this.sponsors().forEach((user) => {
-        if (user.id) {
+        if (user.user_id) {
           participants.push({
-            user_id: user.id,
+            id: user.id,
+            user_id: user.user_id,
             role: 'Sponsor',
             thumbnail_url: user.thumbnail_url,
             name: user.name
@@ -103,9 +105,10 @@ export class EventSettings {
 
       // Add speakers
       this.speakers().forEach((user) => {
-        if (user.id) {
+        if (user.user_id) {
           participants.push({
-            user_id: user.id,
+            id: user.id,
+            user_id: user.user_id,
             role: 'Speaker',
             thumbnail_url: user.thumbnail_url,
             name: user.name
@@ -201,7 +204,8 @@ export class EventSettings {
           participants.forEach((p: any) => {
             const role = (p.role || '').trim();
             const user: IUser = {
-              id: p.user_id,
+              id: p.id,
+              user_id: p.user_id,
               name: p.name || '',
               thumbnail_url: p.thumbnail_url
             };
@@ -230,7 +234,8 @@ export class EventSettings {
             participants.forEach((p: any) => {
               const role = (p.role || '').trim();
               const user: IUser = {
-                id: p.user_id,
+                id: p.id,
+                user_id: p.user_id,
                 name: p.name || '',
                 thumbnail_url: p.thumbnail_url
               };

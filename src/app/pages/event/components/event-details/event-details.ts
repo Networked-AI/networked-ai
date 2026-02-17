@@ -59,7 +59,7 @@ export class EventDetails implements OnInit {
   eventMediaSwiperEl = viewChild<ElementRef<SwiperContainer>>('eventMediaSwiper');
 
   // Signals
-  mediaItems = signal<Array<{ id: string; type: string; file?: File; url: string; order?: number }>>([]);
+  mediaItems = signal<Array<{ type: string; file?: File; url: string; order?: number }>>([]);
   isCustomize = signal(false);
   descriptionLength = signal(0);
   selectedMetaTags = signal<Set<string>>(new Set());
@@ -238,10 +238,9 @@ export class EventDetails implements OnInit {
     fileOrUrl: File | string,
     type: 'image' | 'video' | 'gif',
     order?: number
-  ): { id: string; type: string; file?: File; url: string; order?: number } {
+  ): { type: string; file?: File; url: string; order?: number } {
     const isFile = fileOrUrl instanceof File;
     return {
-      id: crypto.randomUUID(),
       type,
       file: isFile ? fileOrUrl : undefined,
       url: isFile ? URL.createObjectURL(fileOrUrl) : fileOrUrl,

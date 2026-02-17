@@ -94,7 +94,7 @@
             [alt]="eventDisplayData().title || 'Event image'"
             class="object-contain"
             (error)="onImageError($event)"
-            [ngSrc]="getImageUrl(mainImageUrl() || '')"
+            [ngSrc]="getImageUrl(eventDisplayData().image_url || eventDisplayData().thumbnail_url || '')"
           />
         </div>
         <div class="bg-image-bottom"></div>

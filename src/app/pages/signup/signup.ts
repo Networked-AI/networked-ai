@@ -31,7 +31,7 @@ type SignupMethod = 'email' | 'mobile';
   imports: [Button, IonIcon, OtpInput, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule, IonContent]
 })
 export class Signup implements OnInit, OnDestroy {
-  @Input() onSignupSuccess: () => void = () => {};
+  @Input() onSignupSuccess: (isNewUser?: boolean) => void = () => {};
   @Input() isRsvpModal: boolean = false;
   // services
   router = inject(Router);
@@ -62,6 +62,7 @@ export class Signup implements OnInit, OnDestroy {
   private queryParamsSubscription!: Subscription;
 
   ngOnInit() {
+    if (this.isRsvpModal) return;
     this.queryParamsSubscription = this.route.queryParamMap.subscribe((params) => {
       const method = params.get('method');
       if (method === 'mobile') {
@@ -87,11 +88,13 @@ export class Signup implements OnInit, OnDestroy {
     this.activeTab.set(method);
 
     // navigate to the signup page with the new method
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { method },
-      queryParamsHandling: 'merge'
-    });
+    if (!this.isRsvpModal) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { method },
+        queryParamsHandling: 'merge'
+      });
+    }
   }
 
   private async sendVerificationCode() {
@@ -195,7 +198,7 @@ export class Signup implements OnInit, OnDestroy {
 
       // after successful registration, navigate to profile setup
       if (this.isRsvpModal) {
-        this.onSignupSuccess();
+        this.onSignupSuccess(true);
       } else {
         await this.modalService.close();
         await this.modalService.openPhoneEmailVerifiedModal(this.activeTab());

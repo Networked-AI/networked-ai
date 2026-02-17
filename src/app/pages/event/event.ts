@@ -7,7 +7,8 @@ import {
   IonSkeletonText,
   IonRefresher,
   IonRefresherContent,
-  RefresherCustomEvent
+  RefresherCustomEvent,
+  LoadingController
 } from '@ionic/angular/standalone';
 import { Subscription } from 'rxjs';
 import { MenuModule } from 'primeng/menu';
@@ -28,8 +29,8 @@ import { EventDisplay } from '@/components/common/event-display';
 import { NavigationService } from '@/services/navigation.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { ManageEventService } from '@/services/manage-event.service';
-import { RsvpDetailsModal } from '@/components/modal/rsvp-details-modal';
 import { OnInit, inject, signal, computed, Component, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
+import { BaseApiService } from '@/services/base-api.service';
 
 @Component({
   selector: 'event',
@@ -62,6 +63,8 @@ export class Event implements OnInit, OnDestroy {
   navigationService = inject(NavigationService);
   platformId = inject(PLATFORM_ID);
   ogService = inject(OgService);
+  loadingCtrl = inject(LoadingController);
+
   // subscriptions
   routeParamsSubscription?: Subscription;
   timerInterval?: any;
@@ -78,6 +81,11 @@ export class Event implements OnInit, OnDestroy {
   childEventData = signal<Map<string, any>>(new Map());
   isNativePlatform = computed(() => Capacitor.isNativePlatform());
 
+  // Attendees data for Going and Maybe sections
+  attendeesYes = signal<any[]>([]);
+  attendeesMaybe = signal<any[]>([]);
+  attendeesSummary = signal<{ total_yes_guest: number; total_maybe_guest: number } | null>(null);
+
   eventIdFromData = computed(() => {
     // If a child event is selected, return its ID, otherwise return parent event ID
     const selectedChildId = this.selectedChildEventId();
@@ -87,6 +95,18 @@ export class Event implements OnInit, OnDestroy {
     const eventData = this.event();
     return eventData?.id || null;
   });
+
+  // Add new signals for caching attendees by event ID
+  attendeesCache = signal<
+    Map<
+      string,
+      {
+        yes: any[];
+        maybe: any[];
+        summary: { total_yes_guest: number; total_maybe_guest: number } | null;
+      }
+    >
+  >(new Map());
 
   currentUser = computed(() => this.authService.currentUser());
   subscriptionPlanType = computed<'event' | 'sponsor' | null>(() => {
@@ -187,15 +207,6 @@ export class Event implements OnInit, OnDestroy {
     }
   });
 
-  mainImageUrl = computed(() => {
-    const displayData = this.eventDisplayData();
-    if (displayData.displayMedias && displayData.displayMedias.length > 0) {
-      const firstMedia = displayData.displayMedias[0];
-      return firstMedia?.url || firstMedia?.media_url || displayData.thumbnail_url;
-    }
-    return displayData.thumbnail_url;
-  });
-
   formatTimerDisplay(formatted: string, isLessThan24Hours: boolean): string {
     if (isLessThan24Hours) {
       const parts = formatted.split(' : ');
@@ -223,6 +234,7 @@ export class Event implements OnInit, OnDestroy {
       return {
         id: '',
         thumbnail_url: '',
+        image_url: '',
         title: '',
         description: '',
         images: [],
@@ -276,8 +288,46 @@ export class Event implements OnInit, OnDestroy {
     const isCurrentUserRequestPending = currentUserRequest?.status === 'Pending' || currentUserRequest?.status === 'pending';
     const isCurrentUserRequestRejected = currentUserRequest?.status === 'Rejected' || currentUserRequest?.status === 'rejected';
 
+    // Map attendees to IUser format and add Going/Maybe sections
+    const mapAttendeeToUser = (attendee: any): IUser | null => {
+      if (!attendee?.user) return null;
+      return {
+        id: attendee.id,
+        username: attendee.parent_user_id ? '' : attendee.user.username,
+        thumbnail_url: attendee.parent_user_id ? '' : attendee.user.thumbnail_url
+      };
+    };
+
+    const summary = this.attendeesSummary();
+    const attendeesYesUsers = this.attendeesYes()
+      .map(mapAttendeeToUser)
+      .filter((u): u is IUser => u !== null);
+    const attendeesMaybeUsers = this.attendeesMaybe()
+      .map(mapAttendeeToUser)
+      .filter((u): u is IUser => u !== null);
+
+    // Add Going and Maybe sections to userSections
+    const userSections = [...transformedData.userSections || []];
+
+    if (attendeesYesUsers.length > 0 || (summary && summary.total_yes_guest > 0)) {
+      userSections.push({
+        title: 'Going',
+        users: attendeesYesUsers,
+        totalCount: summary?.total_yes_guest
+      });
+    }
+
+    if (attendeesMaybeUsers.length > 0 || (summary && summary.total_maybe_guest > 0)) {
+      userSections.push({
+        title: 'Maybe',
+        users: attendeesMaybeUsers,
+        totalCount: summary?.total_maybe_guest
+      });
+    }
+
     return {
       ...transformedData,
+      userSections,
       dateItems,
       subscriptionPlanType: this.subscriptionPlanType(),
       isCurrentUserAttendee,
@@ -328,20 +378,32 @@ export class Event implements OnInit, OnDestroy {
     try {
       this.isLoading.set(true);
 
+      // Check if attendees are cached for parent event
+      const cache = this.attendeesCache();
+      const cachedAttendees = cache.get(eventId);
+
+      let attendeesYes, attendeesMaybe;
+
+      if (cachedAttendees) {
+        // Use cached data
+        attendeesYes = { data: cachedAttendees.yes, summary: cachedAttendees.summary };
+        attendeesMaybe = { data: cachedAttendees.maybe, summary: cachedAttendees.summary };
+      } else {
+        // Fetch from API
+        [attendeesYes, attendeesMaybe] = await Promise.all([this.getAttendeesList(eventId, 'Yes'), this.getAttendeesList(eventId, 'Maybe')]);
+      }
+
       const eventData = await this.eventService.getEventById(eventId);
+
       if (eventData) {
         this.event.set(eventData);
         this.ogService.setOgTagInEvent(eventData);
-
-        this.selectedChildEventId.set(null);
-        this.childEventData.set(new Map());
-        if (eventData.start_date) {
-          this.selectedDate.set(this.eventService.formatDateKey(eventData.start_date));
-        } else if (this.eventDisplayData().dateItems.length > 0) {
-          this.selectedDate.set(this.eventDisplayData().dateItems[0].value);
-        }
+        this.resetChildEventState();
+        this.setInitialDate(eventData);
         await this.trackEventView(eventData.id);
       }
+
+      this.updateAttendeesData(attendeesYes, attendeesMaybe, eventData?.id);
     } catch (error) {
       console.error('Error loading event:', error);
       this.toasterService.showError('Failed to load event');
@@ -352,6 +414,8 @@ export class Event implements OnInit, OnDestroy {
 
   async onRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
+      // Clear attendees cache to force fresh data
+      this.attendeesCache.set(new Map());
       await this.loadEvent();
     } catch (error) {
       console.error('Error refreshing:', error);
@@ -368,67 +432,204 @@ export class Event implements OnInit, OnDestroy {
   async handleDateChange(date: string): Promise<void> {
     const eventData = this.event();
     if (!eventData) return;
-
-    if (eventData.child_events && eventData.child_events.length > 0) {
-      const matchingChild = eventData.child_events.find((child: any) => {
-        if (!child.start_date) return false;
-        const childDateKey = this.eventService.formatDateKey(child.start_date);
-        return childDateKey === date;
-      });
-
-      if (matchingChild) {
-        this.selectedChildEventId.set(matchingChild.id);
-        await this.loadChildEvent(matchingChild.id);
-      } else {
-        const parentDateKey = this.eventService.formatDateKey(eventData.start_date);
-        if (parentDateKey === date) {
-          this.selectedChildEventId.set(null);
-        }
-      }
-    } else {
+    const matchingChild = this.findMatchingChildEvent(eventData, date);
+    if (matchingChild && matchingChild?.id != this.event()?.id) {
+      this.selectedChildEventId.set(matchingChild.id);
+      await this.loadChildEvent(matchingChild.id);
+    } else if (this.isParentEventDate(eventData, date)) {
       this.selectedChildEventId.set(null);
+      this.loadCachedAttendees(this.event()?.id);
     }
+  }
+
+  resetChildEventState(): void {
+    this.selectedChildEventId.set(null);
+    this.childEventData.set(new Map());
+  }
+
+  setInitialDate(eventData: any): void {
+    if (eventData.start_date) {
+      this.selectedDate.set(this.eventService.formatDateKey(eventData.start_date));
+      return;
+    }
+
+    // Fallback to first date item if available
+    const dateItems = this.eventService.createDateItems(eventData);
+    if (dateItems.length > 0) {
+      this.selectedDate.set(dateItems[0].value);
+    }
+  }
+
+  findMatchingChildEvent(eventData: any, date: string): any {
+    if (!eventData.child_events?.length) return null;
+
+    return eventData.child_events.find((child: any) => {
+      if (!child.start_date) return false;
+      const childDateKey = this.eventService.formatDateKey(child.start_date);
+      return childDateKey === date;
+    });
+  }
+
+  isParentEventDate(eventData: any, date: string): boolean {
+    const parentDateKey = this.eventService.formatDateKey(eventData.start_date);
+    return parentDateKey === date;
+  }
+
+  cacheChildEventData(childEventId: string, childEventData: any): void {
+    const updatedMap = new Map(this.childEventData());
+    updatedMap.set(childEventId, childEventData);
+    this.childEventData.set(updatedMap);
   }
 
   async loadChildEvent(childEventId: string): Promise<void> {
     const childEventsMap = this.childEventData();
-    if (childEventsMap.has(childEventId)) {
+    const cache = this.attendeesCache();
+    const cachedAttendees = cache.get(childEventId);
+
+    // If both event data and attendees are cached, just load from cache
+    if (childEventsMap.has(childEventId) && cachedAttendees) {
+      this.loadCachedAttendees(childEventId);
       return;
     }
 
+    // If only event data is cached, just load attendees
+    if (childEventsMap.has(childEventId) && !cachedAttendees) {
+      await this.loadAndCacheAttendees(childEventId);
+      return;
+    }
+
+    const loading = await this.loadingCtrl.create({
+      mode: 'md'
+    });
+    await loading.present();
+
     try {
-      this.isLoadingChildEvent.set(true);
-      const childEventData = await this.eventService.getEventById(childEventId);
+      const [childEventData, attendeesYes, attendeesMaybe] = await Promise.all([
+        this.eventService.getEventById(childEventId),
+        this.getAttendeesList(childEventId, 'Yes'),
+        this.getAttendeesList(childEventId, 'Maybe')
+      ]);
+
       if (childEventData) {
-        const updatedMap = new Map(childEventsMap);
-        updatedMap.set(childEventId, childEventData);
-        this.childEventData.set(updatedMap);
+        this.cacheChildEventData(childEventId, childEventData);
         await this.trackEventView(childEventData.id);
       }
+
+      this.updateAttendeesData(attendeesYes, attendeesMaybe, childEventId);
     } catch (error) {
       console.error('Error loading child event:', error);
       this.toasterService.showError('Failed to load event details');
     } finally {
-      this.isLoadingChildEvent.set(false);
+      await loading.dismiss();
     }
   }
 
-  openUserList(title: string, users: IUser[]): void {
-    const eventId = this.eventIdFromData();
-    const displayData = this.eventDisplayData();
-    if (eventId && users && users.length > 0) {
-      const sectionParam = encodeURIComponent(title);
-      const route = `/event/guests/${eventId}/${sectionParam.toLowerCase()}`;
+  async getAttendeesList(eventId: string, rsvpStatus: 'Yes' | 'Maybe') {
+    return this.eventService.getEventAttendeesList(eventId, {
+      rsvp_status: rsvpStatus,
+      page: 1,
+      limit: 4
+    });
+  }
+  // New helper method to load cached attendees
+  loadCachedAttendees(eventId: string): void {
+    const cache = this.attendeesCache();
+    const cachedData = cache.get(eventId);
 
-      const state = {
-        users: users,
-        role: title,
-        eventId: eventId,
-        eventTitle: displayData.title
-      };
-
-      this.navigationService.navigateForward(route, false, state);
+    if (cachedData) {
+      this.attendeesYes.set(cachedData.yes);
+      this.attendeesMaybe.set(cachedData.maybe);
+      this.attendeesSummary.set(cachedData.summary);
     }
+  }
+  async loadAndCacheAttendees(eventId: string): Promise<void> {
+    try {
+      const [attendeesYes, attendeesMaybe] = await Promise.all([this.getAttendeesList(eventId, 'Yes'), this.getAttendeesList(eventId, 'Maybe')]);
+
+      this.updateAttendeesData(attendeesYes, attendeesMaybe, eventId);
+    } catch (error) {
+      console.error('Error loading attendees:', error);
+    }
+  }
+
+  updateAttendeesData(attendeesYes: any, attendeesMaybe: any, eventId: string): void {
+    const yesData = attendeesYes.data || [];
+    const maybeData = attendeesMaybe.data || [];
+    const summary = attendeesYes.summary || attendeesMaybe.summary;
+
+    // Update current signals
+    this.attendeesYes.set(yesData);
+    this.attendeesMaybe.set(maybeData);
+
+    const summaryData = summary
+      ? {
+        total_yes_guest: summary.total_yes_guest || 0,
+        total_maybe_guest: summary.total_maybe_guest || 0
+      }
+      : null;
+
+    this.attendeesSummary.set(summaryData);
+
+    // Cache the data
+    const cache = new Map(this.attendeesCache());
+    cache.set(eventId, {
+      yes: yesData,
+      maybe: maybeData,
+      summary: summaryData
+    });
+
+    this.attendeesCache.set(cache);
+  }
+
+  // Update loadParentEventAttendees to show loading
+  async loadParentEventAttendees(): Promise<void> {
+    const eventData = this.event();
+    if (!eventData?.id) return;
+
+    try {
+      this.isLoading.set(true); // Show spinner
+
+      const [attendeesYesResult, attendeesMaybeResult] = await Promise.all([
+        this.eventService.getEventAttendeesList(eventData.id, {
+          rsvp_status: 'Yes',
+          page: 1,
+          limit: 4
+        }),
+
+        this.eventService.getEventAttendeesList(eventData.id, {
+          rsvp_status: 'Maybe',
+          page: 1,
+          limit: 4
+        })
+      ]);
+
+      this.attendeesYes.set(attendeesYesResult.data || []);
+      this.attendeesMaybe.set(attendeesMaybeResult.data || []);
+
+      if (attendeesYesResult.summary || attendeesMaybeResult.summary) {
+        const summary = attendeesYesResult.summary || attendeesMaybeResult.summary;
+        this.attendeesSummary.set({
+          total_yes_guest: summary?.total_yes_guest || 0,
+          total_maybe_guest: summary?.total_maybe_guest || 0
+        });
+      }
+    } catch (error) {
+      console.error('Error loading parent event attendees:', error);
+    } finally {
+      this.isLoading.set(false); // Hide spinner
+    }
+  }
+
+  openUserList(title: string, eventTitle: string): void {
+    const eventId = this.eventIdFromData();
+    if (!eventId) return;
+
+    const sectionParam = encodeURIComponent(title);
+    const route = `/event/guests/${eventId}/${sectionParam.toLowerCase()}`;
+
+    this.navigationService.navigateForward(route, false, {
+      eventTitle
+    });
   }
 
   async openRsvpModal(): Promise<void> {
@@ -471,13 +672,17 @@ export class Event implements OnInit, OnDestroy {
           try {
             await this.saveRsvpAttendees(result, result?.stripe_payment_intent_id || '');
             await loadingModal.dismiss();
-            await this.modalService.openRsvpConfirmModal(displayData);
-            await this.loadEvent();
+            await this.modalService.openRsvpConfirmModal(displayData, {
+              showFinishProfileSetup: result.isNewUser === true
+            });
           } catch (attendeeError) {
             await loadingModal.dismiss();
             console.error('Error saving RSVP attendees:', attendeeError);
-            this.toasterService.showError('Failed to save RSVP. Please try again.');
+            const message = BaseApiService.getErrorMessage(attendeeError, 'Failed to save RSVP. Please try again.')
+            this.toasterService.showError(message);
             return;
+          } finally {
+            await this.loadEvent();
           }
         } else {
           await loadingModal.dismiss();
@@ -493,7 +698,7 @@ export class Event implements OnInit, OnDestroy {
   async sendRsvpRequest(): Promise<void> {
     const isLoggedIn = await this.eventService.checkIsLoggin();
     if (!isLoggedIn) return;
-    
+
     const eventId = this.eventIdFromData();
     if (!eventId) {
       console.error('Event ID not found');
@@ -508,7 +713,8 @@ export class Event implements OnInit, OnDestroy {
       await this.loadEvent();
     } catch (error) {
       console.error('Error sending RSVP request:', error);
-      this.toasterService.showError('Failed to send RSVP request. Please try again.');
+      const message = BaseApiService.getErrorMessage(error, 'Failed to send RSVP request. Please try again.');
+      this.toasterService.showError(message);
     } finally {
       this.isSendingRsvpRequest.set(false);
     }
@@ -603,7 +809,8 @@ export class Event implements OnInit, OnDestroy {
       return true;
     } catch (error) {
       console.error('Error saving event feedback:', error);
-      this.toasterService.showError('Failed to save questionnaire responses. Please try again.');
+      const message = BaseApiService.getErrorMessage(error, 'Failed to save questionnaire responses. Please try again.')
+      this.toasterService.showError(message);
       return false;
     }
   }

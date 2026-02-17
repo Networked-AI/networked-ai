@@ -3,6 +3,7 @@ import { Button } from '@/components/form/button';
 import { TicketDisplay } from '@/interfaces/event';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
+import { ToasterService } from '@/services/toaster.service';
 import { IonHeader, IonFooter, IonToolbar, IonIcon, ModalController, IonContent } from '@ionic/angular/standalone';
 import { Input, signal, inject, OnInit, effect, computed, Component, OnDestroy, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { NavigationService } from '@/services/navigation.service';
@@ -30,10 +31,12 @@ export class RsvpModal implements OnInit, OnDestroy {
   @Input() hasPlans: boolean = false;
   @Input() hasSubscribed: boolean = false;
   @Input() isSubscriberExclusive: boolean = false;
+  @Input() participants: Array<{ user_id?: string; user?: { id?: string }; role?: string }> = [];
 
   modalCtrl = inject(ModalController);
   authService = inject(AuthService);
   modalService = inject(ModalService);
+  private toasterService = inject(ToasterService);
 
   promoCode = signal<string>('');
   promoInput = signal<string>('');
@@ -296,10 +299,20 @@ export class RsvpModal implements OnInit, OnDestroy {
     this.startTimeUpdate();
   }
 
-  private async ensureLoggedIn(): Promise<boolean> {
-    if (this.authService.getCurrentToken()) return true;
-    const result = await this.modalService.openLoginModal();
-    return result?.success ?? false;
+  private async ensureLoggedIn(): Promise<{ success: boolean; isNewUser?: boolean } | null> {
+    if (this.authService.getCurrentToken()) return { success: true };
+    return await this.modalService.openLoginModal();
+  }
+
+  private isCurrentUserHostOrCoHost(): boolean {
+    const currentUser = this.authService.currentUser();
+    if (!currentUser?.id || !this.participants?.length) return false;
+    const id = currentUser.id;
+    return this.participants.some((p) => {
+      const userId = p.user_id ?? p.user?.id;
+      const role = (p.role ?? '').toLowerCase();
+      return userId === id && (role === 'host' || role === 'cohost');
+    });
   }
 
 
@@ -456,19 +469,6 @@ export class RsvpModal implements OnInit, OnDestroy {
 
     return parts.length > 0 ? parts.join(' ') : '0 sec';
   };
-
-  getTicketChipImage(ticketType: string): string {
-    switch (ticketType) {
-      case 'Early Bird':
-        return 'assets/svg/ticket/early-bird-card-chip.svg';
-      case 'Sponsor':
-        return 'assets/svg/ticket/sponsor-card-chip.svg';
-      case 'Free':
-        return 'assets/svg/ticket/free-card-chip.svg';
-      default:
-        return 'assets/svg/ticket/standard-card-chip.svg';
-    }
-  }
 
   getStatusBadgeClass(status: string): string {
     switch (status) {
@@ -1088,12 +1088,13 @@ export class RsvpModal implements OnInit, OnDestroy {
   }
 
   async dismiss(): Promise<void> {
-    // if (!this.isLoggedIn()) {
-    //   await this.modalService.openSignupModal();
-    //   return;
-    // }
+    const loginResult = await this.ensureLoggedIn();
+    if (!loginResult?.success) return;
 
-    if (!(await this.ensureLoggedIn())) return;
+    if (this.isCurrentUserHostOrCoHost()) {
+      this.toasterService.showError('You are the host or co-host of this event. You cannot RSVP as a guest.');
+      return;
+    }
 
     if (this.hasSponsorPlan() && !this.hasSubscribed && this.isSelectedSponsorTicket() && !this.hasShownSponsorPrompt()) {
       this.hasShownSponsorPrompt.set(true);
@@ -1156,7 +1157,8 @@ export class RsvpModal implements OnInit, OnDestroy {
       questionnaireResult: this.questionnaireResult(),
       event_id: this.eventId,
       attendees: this.attendees(),
-      stripe_payment_intent_id: rsvpConfirmData?.stripePaymentIntentId || null
+      stripe_payment_intent_id: rsvpConfirmData?.stripePaymentIntentId || null,
+      isNewUser: loginResult.isNewUser ?? false
     };
 
     await this.modalCtrl.dismiss(result);

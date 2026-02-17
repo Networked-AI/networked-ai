@@ -2,10 +2,20 @@ import { IUser } from './IUser';
 
 export type RSVPStatus = 'Yes' | 'Maybe' | 'No' | (string & {});
 
-export interface IEventAttendeesPagination {
+export type OrderDirection = 'ASC' | 'DESC';
+
+export interface IPagination {
   totalCount: number;
   currentPage: number;
   totalPages: number;
+}
+
+export interface IListParamsBase {
+  page?: number;
+  limit?: number;
+  search?: string;
+  order_by?: string;
+  order_direction?: OrderDirection;
 }
 
 export interface IEventAttendeeTicket {
@@ -35,14 +45,22 @@ export interface IEventAttendee {
   event_ticket?: IEventAttendeeTicket;
 }
 
-export interface IGetEventAttendeesParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-  rsvp_status?: string;
+export interface IGetEventAttendeesParams extends IListParamsBase {
+  rsvp_status?: RSVPStatus;
   is_checked_in?: boolean;
   ticket_type?: string;
   is_connected?: boolean;
+}
+
+export interface IGetEventAttendeesListParams extends IListParamsBase {
+  order_by?: 'name' | 'created_at';
+  rsvp_status?: RSVPStatus;
+}
+
+export interface IEventAttendeesSummary {
+  total_yes_guest: number;
+  total_maybe_guest: number;
+  total_no_guest: number;
 }
 
 export interface IEventAttendeesCounts {
@@ -53,8 +71,32 @@ export interface IEventAttendeesCounts {
   total_checkedin_guest: number;
 }
 
+export interface IGetEventAttendeesListResult {
+  data: IEventAttendee[];
+  pagination: IPagination;
+  summary?: IEventAttendeesSummary;
+}
+
 export interface IGetEventAttendeesResult {
   data: IEventAttendee[];
-  pagination: IEventAttendeesPagination;
+  pagination: IPagination;
   counts?: IEventAttendeesCounts;
+}
+
+export type EventParticipantRole = 'Host' | 'CoHost' | 'Sponsor' | 'Speaker' | (string & {});
+
+export interface IEventParticipant {
+  id: string;
+  role?: EventParticipantRole;
+  user?: IUser;
+}
+
+export interface IGetEventParticipantsListParams extends IListParamsBase {
+  role?: EventParticipantRole;
+  order_by?: 'name' | 'role' | 'created_at';
+}
+
+export interface IGetEventParticipantsListResult {
+  data: IEventParticipant[];
+  pagination: IPagination;
 }

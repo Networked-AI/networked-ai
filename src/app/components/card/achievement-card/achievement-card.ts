@@ -1,10 +1,11 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input, output, computed } from '@angular/core';
 import { GamificationBadge } from '@/interfaces/IGamification';
+import { IonIcon } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'achievement-card',
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe, IonIcon],
   styleUrl: './achievement-card.scss',
   templateUrl: './achievement-card.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -20,8 +21,6 @@ export class AchievementCard {
   });
 
   handleClick(): void {
-    if (!this.badge().is_locked) {
-      this.onClick.emit(this.badge());
-    }
+    this.onClick.emit(this.badge());
   }
 }

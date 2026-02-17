@@ -24,6 +24,13 @@
     --border-radius: 32px;
 }
 
+.modal-60-percent-height {
+    --height: 60% !important;
+    --max-width: 672px;
+    align-items: flex-end;
+    --border-radius: 32px;
+}
+
 .modal-600px-height {
     --height: 600px;
     --max-width: 672px;

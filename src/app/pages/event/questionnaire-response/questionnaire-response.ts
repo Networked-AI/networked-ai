@@ -52,6 +52,7 @@ export class QuestionnaireResponse implements OnInit {
   user = signal<any>(null);
   questions = signal<any>(null);
   isHost = signal<boolean>(true);
+  isLoading = signal<boolean>(false);
   searchQuery = signal<string>('');
   isDownloading = signal<boolean>(false);
   isViewResponse = signal<boolean>(false);
@@ -103,6 +104,7 @@ export class QuestionnaireResponse implements OnInit {
 
   private async checkAccessAndLoadData(): Promise<void> {
     try {
+      this.isLoading.set(true); // ✅ start loading
       const eventId = this.eventId();
       if (!eventId) return;
 
@@ -114,12 +116,13 @@ export class QuestionnaireResponse implements OnInit {
       }
 
       if (!this.isHost()) {
-        this.segmentValue.set('pre-event');
         this.filter.set('analytics');
       }
     } catch (error) {
       console.error('Error checking access:', error);
       this.navigationService.navigateForward(`/event/${this.eventId()}`, true);
+    } finally {
+      this.isLoading.set(false);
     }
   }
 
@@ -128,20 +131,29 @@ export class QuestionnaireResponse implements OnInit {
     const phase = this.segmentValue() === 'pre-event' ? 'PreEvent' : 'PostEvent';
     const search = this.searchQuery() || '';
 
-    let response: any;
+    try {
+      this.isLoading.set(true); // ✅ start loading
 
-    if (this.filter() === 'responses') {
-      response = await this.eventService.getEventQuestionnaireResponses(eventId, phase, search);
+      let response: any;
 
-      this.analytics.set(response?.users || []);
-      this.totalResponses.set(response?.pagination?.totalCount || 0);
-      this.totalPages.set(response?.pagination?.totalPages || 0);
-    } else {
-      response = await this.eventService.getEventQuestionAnalysis(eventId, this.isHost() ? phase : '');
+      if (this.filter() === 'responses') {
+        response = await this.eventService.getEventQuestionnaireResponses(eventId, phase, search);
 
-      this.analytics.set(response?.questions || []);
-      this.totalResponses.set(response?.total_responses || 0);
-      this.totalPages.set(response?.pagination?.totalPages || 0);
+        this.analytics.set(response?.users || []);
+        this.totalResponses.set(response?.pagination?.totalCount || 0);
+        this.totalPages.set(response?.pagination?.totalPages || 0);
+      } else {
+        response = await this.eventService.getEventQuestionAnalysis(eventId, phase);
+
+        this.analytics.set(response?.questions || []);
+        this.totalResponses.set(response?.total_responses || 0);
+        this.totalPages.set(response?.pagination?.totalPages || 0);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+      this.toasterService.showError('Failed to load data');
+    } finally {
+      this.isLoading.set(false);
     }
   };
 

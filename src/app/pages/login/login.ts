@@ -31,7 +31,7 @@ type LoginMethod = 'email' | 'mobile';
   imports: [Button, IonIcon, OtpInput, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule, IonContent]
 })
 export class Login implements OnInit, OnDestroy {
-  @Input() onLoginSuccess: () => void = () => {};
+  @Input() onLoginSuccess: (isNewUser?: boolean) => void = () => {};
   @Input() isRsvpModal: boolean = false;
   // services
   router = inject(Router);
@@ -61,6 +61,7 @@ export class Login implements OnInit, OnDestroy {
   private queryParamsSubscription!: Subscription;
 
   ngOnInit() {
+    if (this.isRsvpModal) return;
     this.queryParamsSubscription = this.route.queryParamMap.subscribe((params) => {
       const method = params.get('method');
       if (method === 'mobile') {
@@ -86,12 +87,13 @@ export class Login implements OnInit, OnDestroy {
     // set the active tab
     this.activeTab.set(method);
 
-    // navigate to the login page with the new method
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { method },
-      queryParamsHandling: 'merge'
-    });
+    if (!this.isRsvpModal) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { method },
+        queryParamsHandling: 'merge'
+      });
+    }
   }
 
   private async loginWithEmail() {
@@ -114,17 +116,18 @@ export class Login implements OnInit, OnDestroy {
       const { email, password } = this.loginForm().value;
       await this.authService.login({ email: email!, password: password! });
       if (this.isRsvpModal) {
-        this.onLoginSuccess();
+        this.onLoginSuccess(false);
       } else {
         this.navigationService.navigateForward('/', true);
       }
+      await this.modalService.close();
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to login.');
       this.toasterService.showError(message);
+      if (message) await this.modalService.close();
     } finally {
       this.isLoading.set(false);
-
-      await this.modalService.close();
+      if (!this.isRsvpModal) await this.modalService.close();
     }
   }
 
@@ -171,7 +174,7 @@ export class Login implements OnInit, OnDestroy {
       await this.modalService.openLoadingModal('Signing you in...');
       await this.authService.login({ mobile: this.phoneNumber(), otp });
       if (this.isRsvpModal) {
-        this.onLoginSuccess();
+        this.onLoginSuccess(false);
       } else {
         this.navigationService.navigateForward('/', true);
       }
@@ -214,10 +217,9 @@ export class Login implements OnInit, OnDestroy {
     }
   }
 
-  goToSignup() {
+  async goToSignup(): Promise<void> {
     if (this.isRsvpModal) {
-      this.modalCtrl.dismiss();
-      this.modalService.openSignupModal();
+      await this.modalService.openSignupModal();
     } else {
       this.navigationService.navigateForward('/signup', true);
     }

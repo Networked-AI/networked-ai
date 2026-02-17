@@ -2,7 +2,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { GamificationBadge } from '@/interfaces/IGamification';
-import { IonFooter, IonToolbar } from '@ionic/angular/standalone';
+import { IonFooter, IonIcon, IonToolbar } from '@ionic/angular/standalone';
 import { ChangeDetectionStrategy, Component, inject, Input, computed } from '@angular/core';
 
 @Component({
@@ -10,7 +10,7 @@ import { ChangeDetectionStrategy, Component, inject, Input, computed } from '@an
   styleUrl: './achievement-detail-modal.scss',
   templateUrl: './achievement-detail-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, DatePipe, IonToolbar, IonFooter, Button]
+  imports: [CommonModule, DatePipe, IonToolbar, IonFooter, Button, IonIcon]
 })
 export class AchievementDetailModal {
   private modalService = inject(ModalService);

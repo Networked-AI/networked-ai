@@ -16,7 +16,7 @@ export const apiInterceptor: HttpInterceptorFn = (req, next) => {
   const navigationService = inject(NavigationService);
 
   // URLs that should skip token addition (e.g., login)
-  const skipUrls = ['auth/login', 'https://api.maptiler.com', 'users/check', 'https://api.openai.com', 'https://api.github.com'];
+  const skipUrls = ['auth/login', 'https://api.maptiler.com', 'users/check', 'https://api.openai.com', 'https://api.github.com', 'https://places.googleapis.com'];
   const shouldSkip = skipUrls.some((url) => req.url.includes(url));
 
   // check if URL is relative (starts with /) and not absolute (starts with http:// or https://)

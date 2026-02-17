@@ -210,7 +210,7 @@ export class EventTickets implements OnInit {
 
   createTicketFromFormData(data: TicketFormData, ticketId?: string): Ticket {
     return {
-      id: ticketId || `ticket-${Date.now()}`,
+      id: ticketId,
       name: data.name,
       ticket_type: data.ticket_type,
       price: data.ticket_type !== 'Free' ? data.price || 0 : 0,
@@ -399,16 +399,16 @@ export class EventTickets implements OnInit {
     if (ticketType && ticketType === 'Free') {
       await this.openTicketModal('Free');
     } else if (ticketType && ticketType === 'Paid') {
-      const user = this.currentUser();
+      const user = await this.userService.getCurrentUser(true);
 
       if (!user?.email) {
         this.toasterService.showError('Please add your email to your profile to create a paid ticket.');
         return;
       }
-      if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
-        this.createPaidTicket();
-      } else {
-        await this.openStripePayoutModal();
+        if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
+          this.createPaidTicket();
+        } else {
+          await this.openStripePayoutModal();
       }
     }
   }

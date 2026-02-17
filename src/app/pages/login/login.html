@@ -33,7 +33,10 @@
       }
 
       <!-- social login buttons -->
-      <social-login-buttons />
+      <social-login-buttons 
+        [isRsvpModal]="isRsvpModal"
+        [onLoginSuccess]="onLoginSuccess" 
+      />
 
       <!-- or separator -->
       <div class="flex items-center gap-3 my-4">
@@ -50,7 +53,7 @@
       <!-- email/mobile tabs -->
       <div class="flex items-center justify-center mb-6">
         <!-- Email tab -->
-        <button (click)="switchLoginMethod('email')" class="flex flex-col items-center gap-2 !py-2 cursor-pointer transition-colors relative w-full">
+        <button (click)="switchLoginMethod('email')" class="flex flex-col items-center gap-2 py-2! cursor-pointer transition-colors relative w-full">
           <div class="flex items-center gap-2">
             <img [src]="activeTab() === 'email' ? 'assets/svg/email-theme.svg' : 'assets/svg/email.svg'" class="w-5 h-5" />
             <span class="text-base font-medium" [class.brand-02]="activeTab() === 'email'" [class.neutral-03]="activeTab() !== 'email'">Email</span>
@@ -59,12 +62,12 @@
           <div
             [class.bg-brand-03]="activeTab() === 'email'"
             [class.bg-neutral-05]="activeTab() !== 'email'"
-            class="absolute bottom-0 left-0 right-0 h-[1px] rounded-full transition-all"
+            class="absolute bottom-0 left-0 right-0 h-px rounded-full transition-all"
           ></div>
         </button>
 
         <!-- Mobile tab -->
-        <button (click)="switchLoginMethod('mobile')" class="flex flex-col items-center gap-2 !py-2 cursor-pointer transition-colors relative w-full">
+        <button (click)="switchLoginMethod('mobile')" class="flex flex-col items-center gap-2 py-2! cursor-pointer transition-colors relative w-full">
           <div class="flex items-center gap-2">
             <img [src]="activeTab() === 'mobile' ? 'assets/svg/call-theme.svg' : 'assets/svg/call.svg'" class="w-5 h-5" />
             <span class="text-base font-medium" [class.brand-02]="activeTab() === 'mobile'" [class.neutral-03]="activeTab() !== 'mobile'"
@@ -75,7 +78,7 @@
           <div
             [class.bg-brand-03]="activeTab() === 'mobile'"
             [class.bg-neutral-05]="activeTab() !== 'mobile'"
-            class="absolute bottom-0 left-0 right-0 h-[1px] rounded-full transition-all"
+            class="absolute bottom-0 left-0 right-0 h-px rounded-full transition-all"
           ></div>
         </button>
       </div>
@@ -130,8 +133,8 @@
         <!-- terms and privacy policy -->
         <div class="text-center text-sm">
           <span class="neutral-03 body-14R">By continuing, I agree to the </span>
-          <a (click)="goToTerms()" class="body-14SB neutral-02 !underline cursor-pointer"> terms of service </a>and
-          <a (click)="goToPrivacyPolicy()" class="body-14SB neutral-02 !underline cursor-pointer"> privacy policy. </a>
+          <a (click)="goToTerms()" class="body-14SB neutral-02 underline! cursor-pointer"> terms of service </a>and
+          <a (click)="goToPrivacyPolicy()" class="body-14SB neutral-02 underline! cursor-pointer"> privacy policy. </a>
         </div>
       </div>
     </div>

@@ -165,11 +165,13 @@ export interface UserSection {
   title: string;
   users: IUser[];
   overflowLabelClass?: string;
+  totalCount?: number;
 }
 
 export interface EventDisplayData {
   id: string;
   thumbnail_url: string;
+  image_url?: string;
   title: string;
   description: string;
   displayMedias: MediaItem[];

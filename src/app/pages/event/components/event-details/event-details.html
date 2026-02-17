@@ -14,10 +14,10 @@
         pagination-clickable="true"
         (swiperslidechange)="onSlideChange($event)"
       >
-        @for (item of mediaItems(); track item.id) {
+        @for (item of mediaItems(); track $index) {
           <swiper-slide>
             <div class="slide-content">
-              <div class="slide-image relative">
+              <div class="slide-image relative bg-black">
                 <!-- IMAGE -->
                 @if (item.type === 'image' || item.type === 'gif') {
                   @if (isBlobUrl(item.url)) {
@@ -58,7 +58,7 @@
         cdkDropListOrientation="horizontal"
         (cdkDropListDropped)="drop($event)"
       >
-        @for (item of mediaItems(); track item.id) {
+        @for (item of mediaItems(); track $index) {
           <div class="thumbnail relative" cdkDrag cdkDragLockAxis="x" [cdkDragStartDelay]="150" (click)="goToSlide($index)">
             @if (item.type === 'image' || item.type === 'gif') {
               @if (isBlobUrl(item.url)) {

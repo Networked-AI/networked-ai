@@ -410,15 +410,15 @@ export class Profile implements OnDestroy {
   }
 
   async navigateToSubscriptionPlans(): Promise<void> {
-    const user = this.currentUser();
+    const user = await this.userService.getCurrentUser(true);
     if (!user?.email) {
       this.toasterService.showError('Please add your email to your profile to add subscription plans.');
       return;
     }
-    if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
-      this.navigationService.navigateForward('/subscription/plans');
-    } else {
-      await this.openStripePayoutModal();
+      if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
+        this.navigationService.navigateForward('/subscription/plans');
+      } else {
+        await this.openStripePayoutModal();
     }
   }
 

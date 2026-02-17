@@ -1,6 +1,6 @@
 <ion-header mode="md">
   <ion-toolbar>
-    <div class="items-center justify-between p-6 max-w-[672px] mx-auto">
+    <div class="items-center justify-between p-6 pb-0! max-w-[672px] mx-auto">
       <div class="pi pi-arrow-left" (click)="goBack()"></div>
       <div class="flex items-center justify-between w-full mt-4">
         <div class="heading-h2 neutral-01">Notifications</div>
@@ -8,13 +8,13 @@
           <button type="button" class="body-14M neutral-01 underline cursor-pointer" (click)="markAllAsRead()">Mark all as read</button>
         }
       </div>
-      <div class="flex gap-2 overflow-x-auto scrollbar-hide mt-4" style="flex-wrap: nowrap">
-        @for (tab of tabs; track tab.value) {
-          <button type="button" class="filter-button" [class.active]="notificationFilter() === tab.value" (click)="notificationFilter.set(tab.value)">
-            {{ tab.label }}
-          </button>
-        }
-      </div>
+    </div>
+    <div class="flex gap-2 overflow-x-auto scrollbar-hide my-4 px-6" style="flex-wrap: nowrap">
+      @for (tab of tabs; track tab.value) {
+        <button type="button" class="filter-button" [class.active]="notificationFilter() === tab.value" (click)="notificationFilter.set(tab.value)">
+          {{ tab.label }}
+        </button>
+      }
     </div>
   </ion-toolbar>
 </ion-header>
@@ -24,7 +24,7 @@
     <ion-refresher-content mode="md"></ion-refresher-content>
   </ion-refresher>
 
-  <div class="w-full pt-0 max-w-[672px] mx-auto p-6 flex flex-col gap-6">
+  <div class="w-full pt-1 max-w-[672px] mx-auto p-6 flex flex-col gap-6">
     @for (notification of notifications(); track notification.id) {
       <div class="flex flex-col gap-3 cursor-pointer" (click)="handleNotificationClick(notification)">
         <div class="flex gap-3 items-start">

@@ -15,6 +15,7 @@ interface IUserSocials {
 
 export interface IUser {
   id: string;
+  user_id?: string;
   dob?: string;
   name?: string;
   title?: string;

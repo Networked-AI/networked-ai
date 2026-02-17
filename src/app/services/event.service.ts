@@ -24,9 +24,13 @@ import { NavigationService } from './navigation.service';
 import {
   IEventAttendee,
   IEventAttendeesCounts,
-  IEventAttendeesPagination,
+  IGetEventAttendeesListParams,
+  IGetEventAttendeesListResult,
   IGetEventAttendeesParams,
-  IGetEventAttendeesResult
+  IGetEventAttendeesResult,
+  IGetEventParticipantsListResult,
+  IGetEventParticipantsListParams,
+  IPagination
 } from '@/interfaces/IEventAttendee';
 
 @Injectable({ providedIn: 'root' })
@@ -81,11 +85,89 @@ export class EventService extends BaseApiService {
       const payload = response?.data ?? response;
       return {
         data: (payload?.data ?? []) as IEventAttendee[],
-        pagination: (payload?.pagination ?? { totalCount: 0, currentPage: 1, totalPages: 0 }) as IEventAttendeesPagination,
+        pagination: (payload?.pagination ?? { totalCount: 0, currentPage: 1, totalPages: 0 }) as IPagination,
         counts: payload?.counts as IEventAttendeesCounts | undefined
       };
     } catch (error) {
       console.error('Error fetching event attendees:', error);
+      throw error;
+    }
+  }
+
+  async getEventAttendeesList(eventIdOrSlug: string, params: IGetEventAttendeesListParams = {}): Promise<IGetEventAttendeesListResult> {
+    try {
+      let httpParams = new HttpParams().set('page', String(params.page ?? 1)).set('limit', String(params.limit ?? 10));
+
+      if (params.rsvp_status) {
+        httpParams = httpParams.set('rsvp_status', params.rsvp_status);
+      }
+
+      if (params.search?.trim()) {
+        httpParams = httpParams.set('search', params.search.trim());
+      }
+
+      if (params.order_by) {
+        httpParams = httpParams.set('order_by', params.order_by);
+      }
+
+      if (params.order_direction) {
+        httpParams = httpParams.set('order_direction', params.order_direction);
+      }
+
+      const response = await this.get<any>(`/events/attendees/${eventIdOrSlug}`, { params: httpParams });
+
+      const payload = response?.data ?? response;
+
+      return {
+        data: payload?.data ?? [],
+        pagination: payload?.pagination ?? {
+          totalCount: 0,
+          currentPage: 1,
+          totalPages: 0
+        },
+        summary: payload?.summary
+      };
+    } catch (error) {
+      console.error('Error fetching event attendees list:', error);
+      throw error;
+    }
+  }
+
+  async getEventParticipantsList(eventIdOrSlug: string, params: IGetEventParticipantsListParams = {}): Promise<IGetEventParticipantsListResult> {
+    try {
+      let httpParams = new HttpParams().set('page', String(params.page ?? 1)).set('limit', String(params.limit ?? 10));
+
+      if (params.search?.trim()) {
+        httpParams = httpParams.set('search', params.search.trim());
+      }
+
+      if (params.role) {
+        // API supports multiple roles comma separated
+        httpParams = httpParams.set('role', params.role);
+      }
+
+      if (params.order_by) {
+        httpParams = httpParams.set('order_by', params.order_by);
+      }
+
+      if (params.order_direction) {
+        httpParams = httpParams.set('order_direction', params.order_direction);
+      }
+
+      const response = await this.get<any>(`/events/participants/${eventIdOrSlug}`, { params: httpParams });
+
+      const payload = response?.data ?? response;
+
+      return {
+        data: payload?.data ?? [],
+        pagination: payload?.pagination ?? {
+          totalCount: 0,
+          currentPage: 1,
+          totalPages: 0
+        }
+      };
+    } catch (error) {
+      console.error('Error fetching event participants list:', error);
       throw error;
     }
   }
@@ -324,40 +406,11 @@ export class EventService extends BaseApiService {
         .filter((user): user is IUser => user !== null);
     };
 
-    const getAttendeesByStatus = (status: string): IUser[] => {
-      if (!attendees || !Array.isArray(attendees)) return [];
-
-      const filteredAttendees = attendees
-        .filter((a: any) => {
-          const rsvpStatus = a.rsvp_status || '';
-          return rsvpStatus === status;
-        })
-        .map((a: any) => {
-          if (a.parent_user_id) {
-            // For attendees with parent_user_id, use attendee's name and default image
-            return {
-              id: a.id,
-              name: a.name,
-              parent_user_id: a.parent_user_id,
-              connection_status: a.user?.connection_status // Include connection_status from user object
-            };
-          } else {
-            // For regular attendees, use user data
-            const user = a.user || a;
-            return user ? mapUser(user) : null;
-          }
-        })
-        .filter((user): user is IUser => user !== null);
-      return filteredAttendees;
-    };
-
     const sections: UserSection[] = [];
     const hosts = getParticipantsByRole('Host');
     const coHosts = getParticipantsByRole('CoHost');
     const sponsors = getParticipantsByRole('Sponsor');
     const speakers = getParticipantsByRole('Speaker');
-    const goingAttendees = getAttendeesByStatus('Yes');
-    const maybeAttendees = getAttendeesByStatus('Maybe');
 
     if (hosts.length > 0) {
       sections.push({ title: 'Host(s)', users: hosts });
@@ -371,13 +424,6 @@ export class EventService extends BaseApiService {
     if (speakers.length > 0) {
       sections.push({ title: 'Speaker(s)', users: speakers });
     }
-    if (goingAttendees.length > 0) {
-      sections.push({ title: 'Going', users: goingAttendees });
-    }
-    if (maybeAttendees.length > 0) {
-      sections.push({ title: 'Maybe', users: maybeAttendees });
-    }
-
     return sections;
   }
 
@@ -506,6 +552,7 @@ export class EventService extends BaseApiService {
       promo_codes: eventData.promo_codes || [],
       participants:
         eventData.participants?.map((p: any) => ({
+          id: p.id,
           user_id: p.user_id,
           role: p.role,
           name: p.user?.name || null,
@@ -710,6 +757,7 @@ export class EventService extends BaseApiService {
     return {
       id: eventData?.id,
       thumbnail_url: eventData?.thumbnail_url || thumbnailUrl,
+      image_url: eventData?.image_url,
       title: eventData?.title || '',
       description: eventData?.description || '',
       displayMedias,
@@ -769,7 +817,7 @@ export class EventService extends BaseApiService {
       order
     };
 
-    // if (q.id != null) formatted.id = q.id;
+    if (q.id != null) formatted.id = q.id;
     if (q.min != null) formatted.min = q.min;
     if (q.max != null) formatted.max = q.max;
     if (q.rating_scale || q.rating) formatted.rating_scale = q.rating_scale || q.rating;
@@ -804,6 +852,7 @@ export class EventService extends BaseApiService {
   formatTickets(tickets: any[], eventDate: string | null, eventStartTime: string | null): any[] {
     return tickets.map((ticket, index) => {
       const formattedTicket: any = {
+        id: ticket.id,
         name: ticket.name,
         price: Number(ticket.price),
         quantity: Number(ticket.quantity),
@@ -831,6 +880,7 @@ export class EventService extends BaseApiService {
 
   formatPromoCodes(promoCodes: any[]): any[] {
     return promoCodes.map((promo) => ({
+      id: promo.id,
       promo_code: promo.promo_code,
       type: promo.type,
       value: Number(promo.value),
@@ -896,6 +946,7 @@ export class EventService extends BaseApiService {
 
     if (payload.participants && Array.isArray(payload.participants)) {
       payload.participants = payload.participants.map((p: any) => ({
+        id: p.id,
         user_id: p.user_id,
         role: p.role
       }));

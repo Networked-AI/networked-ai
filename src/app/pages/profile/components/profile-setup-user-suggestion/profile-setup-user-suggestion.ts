@@ -1,39 +1,44 @@
-import { Component, signal } from '@angular/core';
-import { Button } from '@/components/form/button';
+import { IUser } from '@/interfaces/IUser';
+import { Component, inject } from '@angular/core';
+import { SocketService } from '@/services/socket.service';
+import { IonSkeletonText } from '@ionic/angular/standalone';
+import { UserCardList } from '@/components/card/user-card-list';
+import { UserRecommendationsService } from '@/services/user-recommendations.service';
 
 @Component({
-  imports: [Button],
+  imports: [UserCardList, IonSkeletonText],
   selector: 'profile-setup-user-suggestion',
   styleUrl: './profile-setup-user-suggestion.scss',
   templateUrl: './profile-setup-user-suggestion.html'
 })
 export class ProfileSetupUserSuggestion {
+  
+  // services
+  private socketService = inject(SocketService);
+  recommendationsService = inject(UserRecommendationsService);
+  
   // signals
-  selectedSuggestions = signal<Set<string>>(new Set());
+  peopleCards = this.recommendationsService.peopleCards;
 
-  // constants
-  readonly networkSuggestions = [
-    { id: '1', name: 'Kathryn Murphy', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '2', name: 'Esther Howard', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '3', name: 'Arlene McCoy', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '4', name: 'Darlene Robertson', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '5', name: 'Ronald Richards', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '6', name: 'Albert Flores', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '7', name: 'Eleanor Pena', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' },
-    { id: '8', name: 'Savannah Nguyen', value: 200, jobTitle: 'Founder & CEO', company: 'Cortazzo Consulting' }
-  ];
-
-  addSuggestion(id: string): void {
-    const selected = new Set(this.selectedSuggestions());
-    if (selected.has(id)) {
-      selected.delete(id);
-    } else {
-      selected.add(id);
-    }
-    this.selectedSuggestions.set(selected);
+  constructor() {
+    this.recommendationsService.loadRecommendations(20);
   }
 
-  isSelected(id: string): boolean {
-    return this.selectedSuggestions().has(id);
+  ngOnInit(): void {
+    this.setupNetworkConnectionListener();
+  }
+
+  private setupNetworkConnectionListener(): void {
+    this.socketService.onAfterRegistration(() => {
+      this.socketService.on('network:connection:update', this.networkConnectionHandler);
+    });
+  }
+
+  private networkConnectionHandler = (payload: IUser) => {
+    this.peopleCards.update((list) => list.map((u) => (u.id === payload.id ? { ...u, connection_status: payload.connection_status } : u)));
+  };
+
+  ngOnDestroy(): void {
+    this.socketService.off('network:connection:update', this.networkConnectionHandler);
   }
 }

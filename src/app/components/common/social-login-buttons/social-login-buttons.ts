@@ -1,4 +1,4 @@
-import { inject, Component } from '@angular/core';
+import { inject, Component, input } from '@angular/core';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
@@ -11,21 +11,33 @@ import { NavigationService } from '@/services/navigation.service';
   templateUrl: './social-login-buttons.html'
 })
 export class SocialLoginButtons {
+
+  isRsvpModal = input<boolean>(false);
+  onLoginSuccess = input<(isNewUser?: boolean) => void>(() => {});
+
   // services
   authService = inject(AuthService);
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
   navigationService = inject(NavigationService);
 
+  private handleLoginSuccess(isNewUser: boolean) {
+    if (this.isRsvpModal()) {
+      this.onLoginSuccess()(isNewUser);
+      return;
+    }
+    if (isNewUser) {
+      this.navigationService.navigateForward('/profile/setup', true);
+      return;
+    }
+    this.navigationService.navigateForward('/', true);
+  }
+
   async loginWithGoogle() {
     try {
       await this.modalService.openLoadingModal('Signing you in...');
       const { data } = await this.authService.signInWithGoogle();
-      if (data.is_new_user) {
-        this.navigationService.navigateForward('/profile/setup', true);
-      } else {
-        this.navigationService.navigateForward('/', true);
-      }
+      this.handleLoginSuccess(data.is_new_user);
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to sign in with Google.');
       this.toasterService.showError(message);
@@ -38,11 +50,7 @@ export class SocialLoginButtons {
     try {
       await this.modalService.openLoadingModal('Signing you in...');
       const { data } = await this.authService.signInWithApple();
-      if (data.is_new_user) {
-        this.navigationService.navigateForward('/profile/setup', true);
-      } else {
-        this.navigationService.navigateForward('/', true);
-      }
+      this.handleLoginSuccess(data.is_new_user);
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to sign in with Apple.');
       this.toasterService.showError(message);
@@ -55,11 +63,7 @@ export class SocialLoginButtons {
     try {
       await this.modalService.openLoadingModal('Signing you in...');
       const { data } = await this.authService.signInWithFacebook();
-      if (data.is_new_user) {
-        this.navigationService.navigateForward('/profile/setup', true);
-      } else {
-        this.navigationService.navigateForward('/', true);
-      }
+      this.handleLoginSuccess(data.is_new_user);
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to sign in with Facebook.');
       this.toasterService.showError(message);

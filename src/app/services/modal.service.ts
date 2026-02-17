@@ -67,6 +67,9 @@ export class ModalService {
   navCtrl = inject(NavController);
   private document = inject(DOCUMENT);
 
+  /** References to all login modals when open (e.g. so signup can close them with success data). */
+  private loginModalRefs: HTMLIonModalElement[] = [];
+
   async openLoadingModal(message: string): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -224,7 +227,7 @@ export class ModalService {
       backdropDismiss: true,
       component: LocationModal,
       componentProps: { location },
-      cssClass: 'modal-80-percent-height'
+      cssClass: 'modal-60-percent-height'
     });
 
     await modal.present();
@@ -806,7 +809,8 @@ export class ModalService {
     isSubscriberExclusive?: boolean,
     plans?: any[],
     date?: string,
-    location?: string
+    location?: string,
+    participants?: Array<{ user_id?: string; user?: { id?: string }; role?: string }>
   ): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -830,7 +834,8 @@ export class ModalService {
         isSubscriberExclusive,
         plans,
         date,
-        location
+        location,
+        participants: participants ?? []
       }
     });
     await modal.present();
@@ -900,7 +905,10 @@ export class ModalService {
     return data || null;
   }
 
-  async openRsvpConfirmModal(eventData: any): Promise<any> {
+  async openRsvpConfirmModal(
+    eventData: any,
+    options?: { showFinishProfileSetup?: boolean }
+  ): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -908,11 +916,14 @@ export class ModalService {
       initialBreakpoint: 1,
       component: RsvpConfirmModal,
       cssClass: 'auto-hight-modal',
-      componentProps: { eventData }
+      componentProps: {
+        eventData,
+        showFinishProfileSetup: options?.showFinishProfileSetup ?? false
+      }
     });
     await modal.present();
     const { data } = await modal.onDidDismiss();
-    return data || null;
+    return data ?? null;
   }
 
   async openUnsubscribeConfirmModal(config: {
@@ -935,7 +946,7 @@ export class ModalService {
     return data || null;
   }
 
-  async openLoginModal(returnUrl?: string): Promise<{ success: boolean } | null> {
+  async openLoginModal(returnUrl?: string): Promise<{ success: boolean; isNewUser?: boolean } | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -946,41 +957,53 @@ export class ModalService {
 
       componentProps: {
         isRsvpModal: true,
-        onLoginSuccess: () => {
+        onLoginSuccess: (isNewUser?: boolean) => {
           if (returnUrl) {
             this.navCtrl.navigateForward(returnUrl);
           }
-          modal.dismiss({ success: true });
-          this.close();
+          // Close all login modals when login succeeds (similar to signup)
+          const payload = { success: true, isNewUser: isNewUser ?? false };
+          const loginModals = [...this.loginModalRefs];
+          this.loginModalRefs = [];
+          loginModals.forEach((loginModal) => loginModal.dismiss(payload));
         }
       }
     });
 
     if (!modal) return null;
+    this.loginModalRefs.push(modal);
+    modal.onWillDismiss().then(() => {
+      const index = this.loginModalRefs.indexOf(modal);
+      if (index > -1) this.loginModalRefs.splice(index, 1);
+    });
     await modal.present();
     const { data } = await modal.onWillDismiss();
     return data ?? null;
   }
 
-  async openSignupModal(): Promise<any> {
+  async openSignupModal(): Promise<{ success: boolean; isNewUser?: boolean } | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      cssClass: 'modal-600px-height',
+      cssClass: 'modal-80-percent-height',
       component: Signup,
       componentProps: {
         isRsvpModal: true,
-        onSignupSuccess: () => {
-          modal.dismiss();
-          this.close();
+        onSignupSuccess: (isNewUser?: boolean) => {
+          const payload = { success: true, isNewUser: isNewUser ?? true };
+          modal.dismiss(payload);
+          // Force-close all login modals by reference so awaited flow gets success data
+          const loginModals = [...this.loginModalRefs];
+          this.loginModalRefs = [];
+          loginModals.forEach((loginModal) => loginModal.dismiss(payload));
         }
       }
     });
     await modal.present();
     const { data } = await modal.onWillDismiss();
-    return data || null;
+    return data ?? null;
   }
 
   async openForgotPasswordModal(): Promise<any> {
