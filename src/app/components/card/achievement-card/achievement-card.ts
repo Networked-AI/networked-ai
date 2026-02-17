@@ -21,8 +21,6 @@ export class AchievementCard {
   });
 
   handleClick(): void {
-    if (!this.badge().is_locked) {
-      this.onClick.emit(this.badge());
-    }
+    this.onClick.emit(this.badge());
   }
 }

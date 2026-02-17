@@ -1,19 +1,17 @@
-<div class="inner-content px-4 py-6">
+<div class="inner-content px-4">
   <div class="text-center">
-    <div class="flex flex-col items-center gap-4 p-6">
+    <div class="flex flex-col items-center p-6">
       @if (achievement) {
         <div class="w-50 h-50 flex items-center justify-center">
           @if (badgeImageUrl()) {
-            <img [src]="badgeImageUrl()" [alt]="achievement.title" class="w-full h-full object-contain" />
+            <ion-icon [src]="badgeImageUrl()" class="w-full h-full object-contain"></ion-icon>
           }
         </div>
         <div class="heading-h3">{{ categoryDisplayName() }}</div>
         @if (achievement.completed_date) {
           <div class="body-14R neutral-03">{{ achievement.completed_date | date: 'MMM d, y' }}</div>
-        } @else if (achievement.is_locked) {
-          <div class="body-14R neutral-03">Locked</div>
         }
-        <div class="body-14R">{{ description() }}</div>
+        <div class="body-14R mt-4">{{ description() }}</div>
       }
     </div>
   </div>

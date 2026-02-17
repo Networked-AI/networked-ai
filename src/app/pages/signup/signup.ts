@@ -62,6 +62,7 @@ export class Signup implements OnInit, OnDestroy {
   private queryParamsSubscription!: Subscription;
 
   ngOnInit() {
+    if (this.isRsvpModal) return;
     this.queryParamsSubscription = this.route.queryParamMap.subscribe((params) => {
       const method = params.get('method');
       if (method === 'mobile') {
@@ -87,11 +88,13 @@ export class Signup implements OnInit, OnDestroy {
     this.activeTab.set(method);
 
     // navigate to the signup page with the new method
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { method },
-      queryParamsHandling: 'merge'
-    });
+    if (!this.isRsvpModal) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { method },
+        queryParamsHandling: 'merge'
+      });
+    }
   }
 
   private async sendVerificationCode() {

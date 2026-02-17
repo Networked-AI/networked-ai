@@ -61,6 +61,7 @@ export class Login implements OnInit, OnDestroy {
   private queryParamsSubscription!: Subscription;
 
   ngOnInit() {
+    if (this.isRsvpModal) return;
     this.queryParamsSubscription = this.route.queryParamMap.subscribe((params) => {
       const method = params.get('method');
       if (method === 'mobile') {
@@ -86,12 +87,13 @@ export class Login implements OnInit, OnDestroy {
     // set the active tab
     this.activeTab.set(method);
 
-    // navigate to the login page with the new method
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { method },
-      queryParamsHandling: 'merge'
-    });
+    if (!this.isRsvpModal) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { method },
+        queryParamsHandling: 'merge'
+      });
+    }
   }
 
   private async loginWithEmail() {
@@ -118,13 +120,12 @@ export class Login implements OnInit, OnDestroy {
       } else {
         this.navigationService.navigateForward('/', true);
       }
+      await this.modalService.close();
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to login.');
       this.toasterService.showError(message);
     } finally {
       this.isLoading.set(false);
-
-      await this.modalService.close();
     }
   }
 
@@ -214,10 +215,9 @@ export class Login implements OnInit, OnDestroy {
     }
   }
 
-  goToSignup() {
+  async goToSignup(): Promise<void> {
     if (this.isRsvpModal) {
-      this.modalCtrl.dismiss();
-      this.modalService.openSignupModal();
+      await this.modalService.openSignupModal();
     } else {
       this.navigationService.navigateForward('/signup', true);
     }

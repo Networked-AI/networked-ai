@@ -33,7 +33,10 @@
       }
 
       <!-- social login buttons -->
-      <social-login-buttons />
+      <social-login-buttons
+        [isRsvpModal]="isRsvpModal"
+        [onLoginSuccess]="onSignupSuccess"
+      />
 
       <!-- or separator -->
       <div class="flex items-center gap-3 my-4">

@@ -22,16 +22,15 @@ export class SocialLoginButtons {
   navigationService = inject(NavigationService);
 
   private handleLoginSuccess(isNewUser: boolean) {
+    if (this.isRsvpModal()) {
+      this.onLoginSuccess()();
+      return;
+    }
     if (isNewUser) {
       this.navigationService.navigateForward('/profile/setup', true);
       return;
     }
-
-    if (this.isRsvpModal()) {
-      this.onLoginSuccess()();
-    } else {
-      this.navigationService.navigateForward('/', true);
-    }
+    this.navigationService.navigateForward('/', true);
   }
 
   async loginWithGoogle() {

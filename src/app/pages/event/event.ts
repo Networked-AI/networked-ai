@@ -307,7 +307,7 @@ export class Event implements OnInit, OnDestroy {
       .filter((u): u is IUser => u !== null);
 
     // Add Going and Maybe sections to userSections
-    const userSections = [...transformedData.userSections || []];
+    const userSections = [];
 
     if (attendeesYesUsers.length > 0 || (summary && summary.total_yes_guest > 0)) {
       userSections.push({
@@ -327,7 +327,7 @@ export class Event implements OnInit, OnDestroy {
 
     return {
       ...transformedData,
-      userSections,
+      userSections: this.buildUserSections(transformedData.userSections || []),
       dateItems,
       subscriptionPlanType: this.subscriptionPlanType(),
       isCurrentUserAttendee,
@@ -403,7 +403,7 @@ export class Event implements OnInit, OnDestroy {
         await this.trackEventView(eventData.id);
       }
 
-      this.updateAttendeesData(attendeesYes, attendeesMaybe, eventData?.id);
+      this.updateAttendeesData(attendeesYes, attendeesMaybe, eventId);
     } catch (error) {
       console.error('Error loading event:', error);
       this.toasterService.showError('Failed to load event');
@@ -433,12 +433,12 @@ export class Event implements OnInit, OnDestroy {
     const eventData = this.event();
     if (!eventData) return;
     const matchingChild = this.findMatchingChildEvent(eventData, date);
-    if (matchingChild && matchingChild?.id != this.event()?.id) {
+    // if (matchingChild && matchingChild?.id != this.event()?.id) {
+    if (matchingChild) {
       this.selectedChildEventId.set(matchingChild.id);
       await this.loadChildEvent(matchingChild.id);
     } else if (this.isParentEventDate(eventData, date)) {
       this.selectedChildEventId.set(null);
-      this.loadCachedAttendees(this.event()?.id);
     }
   }
 
@@ -577,8 +577,45 @@ export class Event implements OnInit, OnDestroy {
       maybe: maybeData,
       summary: summaryData
     });
-
     this.attendeesCache.set(cache);
+  }
+
+  buildUserSections(existingSections: any[]): any[] {
+    const summary = this.attendeesSummary();
+    const sections = [...existingSections];
+
+    const attendeesYesUsers = this.mapAttendeesToUsers(this.attendeesYes());
+    if (attendeesYesUsers.length > 0 || summary?.total_yes_guest) {
+      sections.push({
+        title: 'Going',
+        users: attendeesYesUsers,
+        totalCount: summary?.total_yes_guest
+      });
+    }
+
+    const attendeesMaybeUsers = this.mapAttendeesToUsers(this.attendeesMaybe());
+    if (attendeesMaybeUsers.length > 0 || summary?.total_maybe_guest) {
+      sections.push({
+        title: 'Maybe',
+        users: attendeesMaybeUsers,
+        totalCount: summary?.total_maybe_guest
+      });
+    }
+
+    return sections;
+  }
+
+  mapAttendeesToUsers(attendees: any[]): IUser[] {
+    return attendees
+      .map((attendee: any): IUser | null => {
+        if (!attendee?.user) return null;
+        return {
+          id: attendee.id,
+          username: attendee.parent_user_id ? '' : attendee.user.username,
+          thumbnail_url: attendee.parent_user_id ? '' : attendee.user.thumbnail_url
+        };
+      })
+      .filter((u): u is IUser => u !== null);
   }
 
   // Update loadParentEventAttendees to show loading
@@ -619,17 +656,15 @@ export class Event implements OnInit, OnDestroy {
       this.isLoading.set(false); // Hide spinner
     }
   }
-
-  openUserList(title: string, eventTitle: string): void {
+  openUserList(title: string, _users: IUser[]): void {
     const eventId = this.eventIdFromData();
     if (!eventId) return;
 
+    // Always navigate to EventUserList route; list will be loaded via API with pagination
     const sectionParam = encodeURIComponent(title);
     const route = `/event/guests/${eventId}/${sectionParam.toLowerCase()}`;
 
-    this.navigationService.navigateForward(route, false, {
-      eventTitle
-    });
+    this.navigationService.navigateForward(route, false);
   }
 
   async openRsvpModal(): Promise<void> {
@@ -672,13 +707,17 @@ export class Event implements OnInit, OnDestroy {
           try {
             await this.saveRsvpAttendees(result, result?.stripe_payment_intent_id || '');
             await loadingModal.dismiss();
-            await this.modalService.openRsvpConfirmModal(displayData);
-            await this.loadEvent();
+            await this.modalService.openRsvpConfirmModal(displayData, {
+              showFinishProfileSetup: result.isNewUser === true
+            });
           } catch (attendeeError) {
             await loadingModal.dismiss();
             console.error('Error saving RSVP attendees:', attendeeError);
-            this.toasterService.showError('Failed to save RSVP. Please try again.');
+            const message = BaseApiService.getErrorMessage(attendeeError, 'Failed to save RSVP. Please try again.')
+            this.toasterService.showError(message);
             return;
+          } finally {
+            await this.loadEvent();
           }
         } else {
           await loadingModal.dismiss();
@@ -805,7 +844,8 @@ export class Event implements OnInit, OnDestroy {
       return true;
     } catch (error) {
       console.error('Error saving event feedback:', error);
-      this.toasterService.showError('Failed to save questionnaire responses. Please try again.');
+      const message = BaseApiService.getErrorMessage(error, 'Failed to save questionnaire responses. Please try again.')
+      this.toasterService.showError(message);
       return false;
     }
   }

@@ -20,7 +20,11 @@
         <app-button label="Share" (click)="share()" iconName="pi pi-upload" color="secondary" class="flex-1" />
         <app-button label="Add Event" (click)="addEvent()" icon="/assets/svg/social-feed/calendar-plus.svg" color="secondary" class="flex-1" />
       </div>
-      <app-button label="Done" (click)="done()" />
+      @if (showFinishProfileSetup) {
+        <app-button label="Finish Setting Up My Profile" (click)="finishProfileSetup()" />
+      } @else {
+        <app-button label="Done" (click)="done()" />
+      }
     </div>
   </ion-toolbar>
 </ion-footer>

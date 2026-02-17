@@ -5,6 +5,8 @@ import { NavController } from '@ionic/angular/standalone';
 import { KEYS, LocalStorageService } from '@/services/localstorage.service';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
+import { BaseApiService } from '@/services/base-api.service';
+import { ToasterService } from '@/services/toaster.service';
 
 export const onboardingGuard: CanActivateFn = async (route, state) => {
   const navCtrl = inject(NavController);
@@ -12,6 +14,7 @@ export const onboardingGuard: CanActivateFn = async (route, state) => {
   const localStorageService = inject(LocalStorageService);
   const authService = inject(AuthService);
   const modalService = inject(ModalService);
+  const toasterService = inject(ToasterService);
 
   // on the server, localStorage is not available, so allow access
   // the guard will run again on the client where localStorage is available
@@ -29,6 +32,8 @@ export const onboardingGuard: CanActivateFn = async (route, state) => {
       }
     } catch (error) {
       console.error('Token login failed:', error);
+      const message = BaseApiService.getErrorMessage(error, 'Failed to login.');
+      toasterService.showError(message);
     } finally {
       await modalService.close();
     }
