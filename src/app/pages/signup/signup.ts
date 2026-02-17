@@ -31,7 +31,7 @@ type SignupMethod = 'email' | 'mobile';
   imports: [Button, IonIcon, OtpInput, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule, IonContent]
 })
 export class Signup implements OnInit, OnDestroy {
-  @Input() onSignupSuccess: () => void = () => {};
+  @Input() onSignupSuccess: (isNewUser?: boolean) => void = () => {};
   @Input() isRsvpModal: boolean = false;
   // services
   router = inject(Router);
@@ -198,7 +198,7 @@ export class Signup implements OnInit, OnDestroy {
 
       // after successful registration, navigate to profile setup
       if (this.isRsvpModal) {
-        this.onSignupSuccess();
+        this.onSignupSuccess(true);
       } else {
         await this.modalService.close();
         await this.modalService.openPhoneEmailVerifiedModal(this.activeTab());

@@ -283,6 +283,8 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
     } catch (error: any) {
       console.error('Error fetching payment intent:', error);
       this.paymentErrorMessage.set(error?.message || 'Failed to initialize payment');
+      const message = BaseApiService.getErrorMessage(error, 'Failed to initialize payment');
+      this.toasterService.showError(message, 'top', 5000);
     } finally {
       this.isLoadingPayment.set(false);
     }

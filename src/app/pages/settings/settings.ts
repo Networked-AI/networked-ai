@@ -151,20 +151,15 @@ export class Settings implements OnInit {
   }
 
   async navigateToSubscriptionPlans(): Promise<void> {
-    const user = this.authService.currentUser();
+    const user = await this.userService.getCurrentUser(true);
     if (!user?.email) {
       this.toasterService.showError('Please add your email to your profile to view subscription plans.');
       return;
     }
-    if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
-      this.navigationService.navigateForward('/subscription/plans');
-    } else {
-      const user = await this.userService.getCurrentUser(true);
       if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
         this.navigationService.navigateForward('/subscription/plans');
       } else {
         await this.openStripePayoutModal();
-      }
     }
   }
 

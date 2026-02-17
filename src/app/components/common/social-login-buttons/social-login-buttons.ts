@@ -13,7 +13,7 @@ import { NavigationService } from '@/services/navigation.service';
 export class SocialLoginButtons {
 
   isRsvpModal = input<boolean>(false);
-  onLoginSuccess = input<() => void>(() => {});
+  onLoginSuccess = input<(isNewUser?: boolean) => void>(() => {});
 
   // services
   authService = inject(AuthService);
@@ -23,7 +23,7 @@ export class SocialLoginButtons {
 
   private handleLoginSuccess(isNewUser: boolean) {
     if (this.isRsvpModal()) {
-      this.onLoginSuccess()();
+      this.onLoginSuccess()(isNewUser);
       return;
     }
     if (isNewUser) {
