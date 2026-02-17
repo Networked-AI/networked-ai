@@ -89,23 +89,28 @@ export class ParticipantInput implements OnDestroy {
     }));
   }
 
-  onSelectUser(user: IUser): void {
+  onSelectUser(user: any): void {
     const currentUsers = this.users();
-    const isAlreadySelected = currentUsers.some((u) => u.id === user.id);
-    if (isAlreadySelected) {
-      return;
-    }
+    const { id, ...rest } = user;
+    const normalizedUser: IUser = {
+      ...rest,
+      user_id: user.user_id ?? id
+    };
+    const isAlreadySelected = currentUsers.some((u) => u.user_id === normalizedUser.user_id);
+    if (isAlreadySelected) return;
 
-    const updatedUsers = [...currentUsers, user];
+    const updatedUsers = [...currentUsers, normalizedUser];
+
     this.users.set(updatedUsers);
     this.searchQuery.set('');
     this.filteredUsers.set([]);
     this.showSearch.set(false);
+
     this.usersChange.emit(updatedUsers);
   }
 
   onRemoveUser(userId: string): void {
-    const updatedUsers = this.users().filter((u) => u.id !== userId);
+    const updatedUsers = this.users().filter((u) => u.user_id !== userId);
     this.users.set(updatedUsers);
     this.usersChange.emit(updatedUsers);
   }

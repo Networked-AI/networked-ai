@@ -135,7 +135,11 @@
           ></i>
         </div>
 
-        <avatar-group [users]="section.users || []" [disabled]="(section.title == 'Going' || section.title == 'Maybe') && !this.canViewAttendees()" />
+        <avatar-group
+          [users]="section.users || []"
+          [disabled]="(section.title == 'Going' || section.title == 'Maybe') && !this.canViewAttendees()"
+          [totalCount]="section.totalCount ?? null"
+        />
       </div>
     }
 

@@ -210,7 +210,7 @@ export class EventTickets implements OnInit {
 
   createTicketFromFormData(data: TicketFormData, ticketId?: string): Ticket {
     return {
-      id: ticketId || `ticket-${Date.now()}`,
+      id: ticketId,
       name: data.name,
       ticket_type: data.ticket_type,
       price: data.ticket_type !== 'Free' ? data.price || 0 : 0,

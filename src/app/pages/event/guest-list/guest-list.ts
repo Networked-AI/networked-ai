@@ -25,7 +25,7 @@ import {
   IonInfiniteScrollContent
 } from '@ionic/angular/standalone';
 import { IUser } from '@/interfaces/IUser';
-import { IEventAttendee, IEventAttendeesCounts, IEventAttendeesPagination, IGetEventAttendeesParams } from '@/interfaces/IEventAttendee';
+import { IEventAttendee, IEventAttendeesCounts, IGetEventAttendeesParams, IPagination } from '@/interfaces/IEventAttendee';
 import { Button } from '@/components/form/button';
 
 type GuestFilter = {
@@ -104,7 +104,7 @@ export class GuestList implements OnInit, OnDestroy {
 
   private readonly PAGE_SIZE = 15;
   attendees = signal<IEventAttendee[]>([]);
-  pagination = signal<IEventAttendeesPagination | null>(null);
+  pagination = signal<IPagination | null>(null);
   counts = signal<IEventAttendeesCounts | null>(null);
   isLoadingMore = signal<boolean>(false);
   private searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;

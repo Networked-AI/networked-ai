@@ -20,6 +20,7 @@ export class AvatarGroupComponent {
   maxVisible = input<number>(5);
   showOverflow = input<boolean>(true);
   disabled = input<boolean>(true);
+  totalCount = input<number | null>(null);
 
   private navigationService = inject(NavigationService);
 
@@ -37,6 +38,12 @@ export class AvatarGroupComponent {
   }
 
   getRemainingCount(): number {
+    const customTotal = this.totalCount();
+    if (customTotal !== null && customTotal !== undefined) {
+      const visibleCount = this.getVisibleUsers().length;
+      return Math.max(0, customTotal - visibleCount);
+    }
+
     const allUsers = this.users();
     const totalUsers = allUsers.length;
 
@@ -49,6 +56,12 @@ export class AvatarGroupComponent {
   }
 
   shouldShowOverflow(): boolean {
+    const customTotal = this.totalCount();
+    if (customTotal !== null && customTotal !== undefined) {
+      const visibleCount = this.getVisibleUsers().length;
+      return this.showOverflow() && customTotal > visibleCount;
+    }
+
     const allUsers = this.users();
     return this.showOverflow() && allUsers.length > 5;
   }

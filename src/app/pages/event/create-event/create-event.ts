@@ -650,6 +650,7 @@ export class CreateEvent implements OnInit, OnDestroy {
     const filesToUpload = mediaItems.filter((item) => item.file).map((item) => item.file!);
 
     let uploadedResults: any[] = [];
+
     if (filesToUpload.length > 0) {
       this.isUploadingMedia.set(true);
       try {
@@ -661,7 +662,13 @@ export class CreateEvent implements OnInit, OnDestroy {
     }
 
     // Build medias array maintaining original order
-    const medias: Array<{ media_url: string; media_type: 'Image' | 'Video'; order: number }> = [];
+    const medias: Array<{
+      id: string;
+      media_url: string;
+      media_type: 'Image' | 'Video';
+      order: number;
+    }> = [];
+
     let uploadedIndex = 0;
 
     for (const item of mediaItems) {
@@ -671,19 +678,22 @@ export class CreateEvent implements OnInit, OnDestroy {
       if (item.file) {
         // Use uploaded URL (new file)
         const uploaded = uploadedResults[uploadedIndex++];
+
         if (!uploaded?.url && !uploaded?.media_url && !uploaded?.path) continue;
+
         mediaUrl = uploaded.url || uploaded.media_url || uploaded.path;
         mediaType = this.getMediaTypeFromMimetype(uploaded.mimetype);
       } else if (item.url) {
-        // Use existing URL (from gallery or existing event media)
-        // Skip blob URLs as they're temporary
+        // Use existing URL
         if (this.isBlobUrl(item.url)) continue;
+
         mediaUrl = item.url;
         mediaType = item.type === 'video' ? 'Video' : 'Image';
       }
 
       if (mediaUrl && mediaType) {
         medias.push({
+          id: item.id, // ✅ added id here
           media_url: mediaUrl,
           media_type: mediaType,
           order: medias.length + 1

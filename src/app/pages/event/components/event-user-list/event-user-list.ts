@@ -1,12 +1,24 @@
+import {
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonSpinner,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+  IonRefresher,
+  IonRefresherContent
+} from '@ionic/angular/standalone';
 import { IUser } from '@/interfaces/IUser';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { EventService } from '@/services/event.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Searchbar } from '@/components/common/searchbar';
 import { SocketService } from '@/services/socket.service';
 import { EmptyState } from '@/components/common/empty-state';
 import { UserCardList } from '@/components/card/user-card-list';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { NavigationService } from '@/services/navigation.service';
-import { IonContent, IonHeader, IonToolbar } from '@ionic/angular/standalone';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { IEventAttendee, IPagination } from '@/interfaces/IEventAttendee';
 import { Component, inject, signal, ChangeDetectionStrategy, computed, OnInit, OnDestroy, PLATFORM_ID } from '@angular/core';
 
 @Component({
@@ -14,15 +26,29 @@ import { Component, inject, signal, ChangeDetectionStrategy, computed, OnInit, O
   styleUrl: './event-user-list.scss',
   templateUrl: './event-user-list.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonToolbar, IonHeader, IonContent, CommonModule, Searchbar, EmptyState, UserCardList]
+  imports: [
+    IonRefresherContent,
+    IonRefresher,
+    IonInfiniteScrollContent,
+    IonInfiniteScroll,
+    IonToolbar,
+    IonHeader,
+    IonContent,
+    IonSpinner,
+    CommonModule,
+    Searchbar,
+    EmptyState,
+    UserCardList
+  ]
 })
 export class EventUserList implements OnInit, OnDestroy {
   navigationService = inject(NavigationService);
   router = inject(Router);
   route = inject(ActivatedRoute);
   private socketService = inject(SocketService);
+  private eventService = inject(EventService);
+  private searchSubject = new Subject<string>();
 
-  // platform
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
 
@@ -32,47 +58,156 @@ export class EventUserList implements OnInit, OnDestroy {
   eventId = signal<string | null>(null);
 
   users = signal<IUser[]>([]);
+  isLoading = signal<boolean>(false);
+  isLoadingMore = signal<boolean>(false);
+  pagination = signal<IPagination | null>(null);
 
-  filteredUsers = computed(() => {
-    const search = this.searchQuery().toLowerCase().trim();
-    if (!search) return this.users();
+  private readonly PAGE_SIZE = 10;
 
-    return this.users().filter((user) => user.name?.toLowerCase().includes(search));
+  hasMore = computed(() => {
+    const pag = this.pagination();
+    return !!pag && pag.currentPage < pag.totalPages;
   });
 
+  filteredUsers = computed(() => this.users());
+
   ngOnInit(): void {
-    // Get route params
     const eventId = this.route.snapshot.paramMap.get('eventId');
     const section = this.route.snapshot.paramMap.get('section');
 
-    if (eventId) {
-      this.eventId.set(eventId);
-    }
+    if (eventId) this.eventId.set(eventId);
+    if (section) this.title.set(decodeURIComponent(section));
 
-    if (section) {
-      this.title.set(decodeURIComponent(section));
-    }
-
-    let state: any = null;
-
-    if (this.isBrowser) state = window.history.state;
-
-    if (!state) {
-      state = this.router.currentNavigation()?.extras?.state;
-    }
-
-    if (state && state.users && Array.isArray(state.users)) {
-      this.users.set(state.users);
-      if (state.role && !section) {
-        this.title.set(state.role);
-      }
-      if (state.eventTitle) {
-        this.eventTitle.set(state.eventTitle);
-      }
-    }
-
+    this.loadUsers(1, true);
     this.setupNetworkConnectionListener();
+
+    this.searchSubject.pipe(debounceTime(400), distinctUntilChanged()).subscribe(() => {
+      this.loadUsers(1, true); // reset pagination + reload
+    });
   }
+
+  onSearchChange(value: string) {
+    this.searchQuery.set(value);
+    this.searchSubject.next(value);
+  }
+
+  onClearSearch() {
+    this.searchQuery.set('');
+    this.searchSubject.next('');
+  }
+
+  async onRefresh(event: any) {
+    try {
+      this.pagination.set(null);
+      this.users.set([]);
+      await this.loadUsers(1, true);
+    } finally {
+      event.target.complete();
+    }
+  }
+
+  private getSectionType(): 'attendees' | 'participants' {
+    const title = this.title().toLowerCase();
+
+    if (title.startsWith('going') || title.startsWith('maybe')) {
+      return 'attendees';
+    }
+
+    return 'participants';
+  }
+
+  private getFilters() {
+    const title = this.title().toLowerCase();
+
+    if (title.startsWith('going')) return { rsvp_status: 'Yes' };
+    if (title.startsWith('maybe')) return { rsvp_status: 'Maybe' };
+
+    if (title.startsWith('host')) return { role: 'Host' };
+    if (title.startsWith('co-host')) return { role: 'CoHost' };
+    if (title.startsWith('sponsor')) return { role: 'Sponsor' };
+    if (title.startsWith('speaker')) return { role: 'Speaker' };
+
+    return {};
+  }
+
+  private mapAttendeeToUser(attendee: IEventAttendee) {
+    if (!attendee.user) return null;
+
+    return {
+      id: attendee.user.id,
+      name: attendee.name,
+      username: attendee.parent_user_id ? '' : attendee.user.username,
+      thumbnail_url: attendee.parent_user_id ? '' : attendee.user.thumbnail_url,
+      total_gamification_points: attendee.user.total_gamification_points,
+      connection_status: attendee.user.connection_status,
+      parent_user_id: attendee.parent_user_id
+    };
+  }
+
+  async loadUsers(page: number, replace = false): Promise<void> {
+    const eventId = this.eventId();
+    if (!eventId) return;
+
+    const sectionType = this.getSectionType();
+    const filters = this.getFilters();
+
+    try {
+      if (page === 1) this.isLoading.set(true);
+
+      let mappedUsers: IUser[] = [];
+      let pagination: any = null;
+
+      if (sectionType === 'attendees') {
+        const res = await this.eventService.getEventAttendeesList(eventId, {
+          page,
+          limit: this.PAGE_SIZE,
+          rsvp_status: filters.rsvp_status,
+          search: this.searchQuery()
+        });
+
+        mappedUsers = (res.data || []).map((a) => this.mapAttendeeToUser(a)).filter(Boolean) as IUser[];
+
+        pagination = res.pagination;
+      } else {
+        const res = await this.eventService.getEventParticipantsList(eventId, {
+          page,
+          limit: this.PAGE_SIZE,
+          role: filters.role,
+          search: this.searchQuery()
+        });
+        mappedUsers = (res.data || []).map((p) => p.user).filter(Boolean) as IUser[];
+
+        pagination = res.pagination;
+      }
+
+      if (replace) this.users.set(mappedUsers);
+      else this.users.update((u) => [...u, ...mappedUsers]);
+
+      this.pagination.set(pagination);
+    } catch (err) {
+      console.error('Load users error:', err);
+    } finally {
+      if (page === 1) this.isLoading.set(false);
+    }
+  }
+
+  loadMoreUsers = async (event: Event) => {
+    const infinite = event.target as HTMLIonInfiniteScrollElement;
+
+    if (this.isLoadingMore() || !this.hasMore()) {
+      infinite.complete();
+      return;
+    }
+
+    try {
+      this.isLoadingMore.set(true);
+      const nextPage = (this.pagination()?.currentPage ?? 1) + 1;
+      await this.loadUsers(nextPage, false);
+    } finally {
+      this.isLoadingMore.set(false);
+      infinite.complete();
+    }
+  };
 
   private setupNetworkConnectionListener(): void {
     this.socketService.onAfterRegistration(() => {
@@ -81,12 +216,7 @@ export class EventUserList implements OnInit, OnDestroy {
   }
 
   private networkConnectionHandler = (payload: IUser) => {
-    if (!payload || !payload.id) return;
-
-    const userId = payload.id;
-    const newStatus = payload.connection_status;
-
-    this.users.update((users) => users.map((user) => (user.id === userId ? { ...user, connection_status: newStatus } : user)));
+    this.users.update((list) => list.map((u) => (u.id === payload.id ? { ...u, connection_status: payload.connection_status } : u)));
   };
 
   ngOnDestroy(): void {
