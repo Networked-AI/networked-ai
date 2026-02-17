@@ -957,12 +957,12 @@ export class ModalService {
 
       componentProps: {
         isRsvpModal: true,
-        onLoginSuccess: () => {
+        onLoginSuccess: (isNewUser?: boolean) => {
           if (returnUrl) {
             this.navCtrl.navigateForward(returnUrl);
           }
           // Close all login modals when login succeeds (similar to signup)
-          const payload = { success: true };
+          const payload = { success: true, isNewUser: isNewUser ?? false };
           const loginModals = [...this.loginModalRefs];
           this.loginModalRefs = [];
           loginModals.forEach((loginModal) => loginModal.dismiss(payload));
@@ -991,8 +991,8 @@ export class ModalService {
       component: Signup,
       componentProps: {
         isRsvpModal: true,
-        onSignupSuccess: () => {
-          const payload = { success: true, isNewUser: true };
+        onSignupSuccess: (isNewUser?: boolean) => {
+          const payload = { success: true, isNewUser: isNewUser ?? true };
           modal.dismiss(payload);
           // Force-close all login modals by reference so awaited flow gets success data
           const loginModals = [...this.loginModalRefs];

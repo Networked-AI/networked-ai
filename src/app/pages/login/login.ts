@@ -31,7 +31,7 @@ type LoginMethod = 'email' | 'mobile';
   imports: [Button, IonIcon, OtpInput, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule, IonContent]
 })
 export class Login implements OnInit, OnDestroy {
-  @Input() onLoginSuccess: () => void = () => {};
+  @Input() onLoginSuccess: (isNewUser?: boolean) => void = () => {};
   @Input() isRsvpModal: boolean = false;
   // services
   router = inject(Router);
@@ -116,7 +116,7 @@ export class Login implements OnInit, OnDestroy {
       const { email, password } = this.loginForm().value;
       await this.authService.login({ email: email!, password: password! });
       if (this.isRsvpModal) {
-        this.onLoginSuccess();
+        this.onLoginSuccess(false);
       } else {
         this.navigationService.navigateForward('/', true);
       }
@@ -124,8 +124,10 @@ export class Login implements OnInit, OnDestroy {
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to login.');
       this.toasterService.showError(message);
+      if (message) await this.modalService.close();
     } finally {
       this.isLoading.set(false);
+      if (!this.isRsvpModal) await this.modalService.close();
     }
   }
 
@@ -172,7 +174,7 @@ export class Login implements OnInit, OnDestroy {
       await this.modalService.openLoadingModal('Signing you in...');
       await this.authService.login({ mobile: this.phoneNumber(), otp });
       if (this.isRsvpModal) {
-        this.onLoginSuccess();
+        this.onLoginSuccess(false);
       } else {
         this.navigationService.navigateForward('/', true);
       }
