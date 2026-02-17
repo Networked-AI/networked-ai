@@ -105,9 +105,9 @@ export class MobileInput implements OnInit {
 
       // initialize intl-tel-input package
       this.iti = intlTelInput(mobileNumberInput, {
-        initialCountry: 'in',
+        initialCountry: 'us',
         separateDialCode: true,
-        countryOrder: ['in', 'us'],
+        countryOrder: ['us', 'in'],
         loadUtils: () => import('node_modules/intl-tel-input/build/js/utils.js')
       });
 

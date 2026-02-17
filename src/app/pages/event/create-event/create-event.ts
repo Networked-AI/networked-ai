@@ -739,12 +739,22 @@ export class CreateEvent implements OnInit, OnDestroy {
   }
 
   async updateSingleEvent(formData: any): Promise<void> {
+      // Show modal with two options
+      const result = await this.showRepublishEventConfirmationModal();
+      if (result.dismissed) return;
+    
     const eventPayload = await this.processEventData(formData);
+    
+    // Add notify flag if user chose to notify
+    if (result.notify) eventPayload.notify = true;
+    
     const response: any = await this.eventService.updateEvent(this.editingEventId()!, eventPayload);
     await this.modalService.openConfirmModal({
       icon: 'assets/svg/launch.svg',
       title: 'Event Republished!',
-      description: 'Your event has been successfully republished.',
+      description: result.notify 
+        ? 'Your event has been successfully republished and attendees and participants will be notified.'
+        : 'Your event has been successfully republished.',
       confirmButtonLabel: 'Done',
       confirmButtonColor: 'primary',
       shareButtonLabel: 'Share',
@@ -890,6 +900,27 @@ export class CreateEvent implements OnInit, OnDestroy {
 
     return result?.role === 'confirm';
   };
+
+  async showRepublishEventConfirmationModal(): Promise<{ dismissed: boolean; notify: boolean }> {
+    const result = await this.modalService.openConfirmModal({
+      iconPosition: 'left',
+      iconBgColor: '#F5BC61',
+      title: 'Republish Event?',
+      icon: 'assets/svg/launch.svg',
+      confirmButtonColor: 'primary',
+      cancelButtonLabel: 'Republish Only',
+      confirmButtonLabel: 'Republish and Notify',
+      description: 'Please review your changes. Once confirmed, the event will be updated with the new information.',
+    });
+
+    if (result?.role === 'confirm') {
+      return { dismissed: false, notify: true };
+    } else if (result?.role === 'cancel') {
+      return { dismissed: false, notify: false };
+    } else {
+      return { dismissed: true, notify: false };
+    }
+  }
 
   ngOnDestroy(): void {
     this.queryParamsSubscription?.unsubscribe();
