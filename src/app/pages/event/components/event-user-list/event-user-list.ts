@@ -72,6 +72,12 @@ export class EventUserList implements OnInit, OnDestroy {
   filteredUsers = computed(() => this.users());
 
   ngOnInit(): void {
+    const nav = this.router.currentNavigation();
+    const state = nav?.extras?.state as { eventTitle?: string };
+  
+    if (state?.eventTitle) {
+      this.eventTitle.set(state.eventTitle);
+    }
     const eventId = this.route.snapshot.paramMap.get('eventId');
     const section = this.route.snapshot.paramMap.get('section');
 
