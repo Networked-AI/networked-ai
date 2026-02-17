@@ -159,8 +159,12 @@ export class Settings implements OnInit {
     if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
       this.navigationService.navigateForward('/subscription/plans');
     } else {
-      await this.userService.getCurrentUser(true);
-      await this.openStripePayoutModal();
+      const user = await this.userService.getCurrentUser(true);
+      if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
+        this.navigationService.navigateForward('/subscription/plans');
+      } else {
+        await this.openStripePayoutModal();
+      }
     }
   }
 

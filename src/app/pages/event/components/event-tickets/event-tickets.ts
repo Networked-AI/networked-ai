@@ -408,8 +408,12 @@ export class EventTickets implements OnInit {
       if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
         this.createPaidTicket();
       } else {
-        await this.userService.getCurrentUser(true);
-        await this.openStripePayoutModal();
+        const user = await this.userService.getCurrentUser(true);
+        if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
+          this.createPaidTicket();
+        } else {
+          await this.openStripePayoutModal();
+        }
       }
     }
   }
