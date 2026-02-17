@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { isPlatformBrowser } from '@angular/common';
+import { UserService } from '@/services/user.service';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { StripeService } from '@/services/stripe.service';
@@ -21,6 +22,7 @@ export class Settings implements OnInit {
   // services
   navigationService = inject(NavigationService);
   private authService = inject(AuthService);
+  private userService = inject(UserService);
   private modalService = inject(ModalService);
   private stripeService = inject(StripeService);
   private toasterService = inject(ToasterService);
@@ -157,6 +159,7 @@ export class Settings implements OnInit {
     if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
       this.navigationService.navigateForward('/subscription/plans');
     } else {
+      await this.userService.getCurrentUser(true);
       await this.openStripePayoutModal();
     }
   }

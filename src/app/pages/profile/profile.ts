@@ -418,6 +418,7 @@ export class Profile implements OnDestroy {
     if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
       this.navigationService.navigateForward('/subscription/plans');
     } else {
+      await this.userService.getCurrentUser(true);
       await this.openStripePayoutModal();
     }
   }
