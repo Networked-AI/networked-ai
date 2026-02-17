@@ -1,19 +1,23 @@
 import { IUser } from '@/interfaces/IUser';
+import { Component, inject } from '@angular/core';
 import { SocketService } from '@/services/socket.service';
-import { Component, inject, signal } from '@angular/core';
+import { IonSkeletonText } from '@ionic/angular/standalone';
 import { UserCardList } from '@/components/card/user-card-list';
 import { UserRecommendationsService } from '@/services/user-recommendations.service';
 
 @Component({
-  imports: [UserCardList],
+  imports: [UserCardList, IonSkeletonText],
   selector: 'profile-setup-user-suggestion',
   styleUrl: './profile-setup-user-suggestion.scss',
   templateUrl: './profile-setup-user-suggestion.html'
 })
 export class ProfileSetupUserSuggestion {
-  // signals
-  private recommendationsService = inject(UserRecommendationsService);
+  
+  // services
   private socketService = inject(SocketService);
+  recommendationsService = inject(UserRecommendationsService);
+  
+  // signals
   peopleCards = this.recommendationsService.peopleCards;
 
   constructor() {

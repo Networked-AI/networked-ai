@@ -1,16 +1,16 @@
-import { Injectable, inject, signal, effect, untracked } from '@angular/core';
 import { IUser } from '@/interfaces/IUser';
-import { NetworkService } from './network.service';
-import { ToasterService } from './toaster.service';
 import { AuthService } from './auth.service';
+import { NetworkService } from './network.service';
+import { Injectable, inject, signal, effect } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class UserRecommendationsService {
-  private networkService = inject(NetworkService);
-  private toasterService = inject(ToasterService);
+  // services
   private authService = inject(AuthService);
+  private networkService = inject(NetworkService);
 
   // Shared state for recommendations
+  isLoading = signal(false);
   peopleCards = signal<IUser[]>([]);
 
   constructor() {
@@ -27,11 +27,15 @@ export class UserRecommendationsService {
     const shouldLoad = this.peopleCards().length === 0;
     if (!shouldLoad) return;
 
+    this.isLoading.set(true);
+
     try {
       const recommendations = await this.networkService.getNetworkRecommendations(limit);
       this.peopleCards.set(recommendations);
     } catch (error) {
       console.error('Error loading recommendations:', error);
+    } finally {
+      this.isLoading.set(false);
     }
   }
 

@@ -1,10 +1,19 @@
 <div class="flex flex-col gap-4">
   <div class="heading-h2 neutral-01">Network Suggestion</div>
 
-  <!-- network suggestions list -->
-  <div class="mb-4">
-    @for (people of peopleCards(); track people.id) {
-      <user-card-list [user]="people" />
-    }
-  </div>
+  <!-- loading skeletons while recommendations are being fetched -->
+  @if (recommendationsService.isLoading()) {
+    <div class="mb-4 flex flex-col gap-3">
+      @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]; track i) {
+        <ion-skeleton-text class="h-[60px] rounded-xl" />
+      }
+    </div>
+  } @else {
+    <!-- network suggestions list -->
+    <div class="mb-4">
+      @for (people of peopleCards(); track people.id) {
+        <user-card-list [user]="people" />
+      }
+    </div>
+  }
 </div>
