@@ -52,7 +52,14 @@ export class QuestionnaireFormModal {
           required: [isRequired],
           visibility: [visibility],
           options: this.fb.array(
-            q.options ? q.options.map((opt: any) => this.fb.control(typeof opt === 'object' && opt.option ? opt.option : opt)) : []
+            q.options ? q.options.map((opt: any) => {
+              const optionValue = typeof opt === 'object' && opt.option ? opt.option : opt;
+              const optionId = typeof opt === 'object' && opt.id ? opt.id : null;
+              return this.fb.group({
+                id: [optionId],
+                value: [optionValue, Validators.required]
+              });
+            }) : []
           ),
           min: [q.min || null],
           max: [q.max || null],
@@ -129,7 +136,7 @@ export class QuestionnaireFormModal {
 
   createQuestion(type: string): FormGroup {
     const base = {
-      id: new FormControl(`question-${Date.now()}-${Math.random()}`, Validators.required),
+      id: new FormControl(),
       type: new FormControl(type, Validators.required),
       question: new FormControl('', Validators.required),
       required: new FormControl(false),
@@ -139,10 +146,12 @@ export class QuestionnaireFormModal {
     if (type === 'SingleChoice' || type === 'MultipleChoice') {
       return this.fb.group({
         ...base,
-        options: this.fb.array([this.fb.control('', Validators.required), this.fb.control('', Validators.required)])
+        options: this.fb.array([
+          this.fb.group({ id: [null], value: ['', Validators.required] }),
+          this.fb.group({ id: [null], value: ['', Validators.required] })
+        ])
       });
     }
-
     if (type === 'Number') {
       return this.fb.group({
         ...base,
@@ -181,7 +190,9 @@ export class QuestionnaireFormModal {
   }
 
   addOption(qIndex: number) {
-    this.getOptions(this.questions.at(qIndex)).push(this.fb.control('', Validators.required));
+    this.getOptions(this.questions.at(qIndex)).push(
+      this.fb.group({ id: [null], value: ['', Validators.required] })
+    );
   }
 
   removeOption(qIndex: number, optIndex: number) {
@@ -201,6 +212,7 @@ export class QuestionnaireFormModal {
     const formValue = this.form.value;
     const questions = (formValue.questions || []).map((q: any) => {
       const question: any = {
+        id: q.id,
         question: q.question,
         event_phase: this.type === 'pre-event' ? 'PreEvent' : 'PostEvent',
         question_type: q.type,
@@ -209,7 +221,13 @@ export class QuestionnaireFormModal {
       };
 
       if (q.type === 'SingleChoice' || q.type === 'MultipleChoice') {
-        question.options = (q.options || []).filter((opt: string) => opt && opt.trim() !== '');
+        question.options = (q.options || [])
+          .filter((opt: any) => opt.value && opt.value.trim() !== '')
+          .map((opt: any, optIndex: number) => {
+            return opt.id
+              ? { id: opt.id, option: opt.value, order: optIndex + 1 }
+              : { option: opt.value, order: optIndex + 1 };
+          });
       }
 
       if (q.type === 'Number') {
@@ -262,12 +280,9 @@ export class QuestionnaireFormModal {
 
   areOptionsInvalid(q: AbstractControl): boolean {
     if (!['SingleChoice', 'MultipleChoice'].includes(q.get('type')?.value)) return false;
-
     const options = q.get('options') as FormArray;
-
-    return options.controls.some((opt) => !opt.value || opt.value.trim() === '');
+    return options.controls.some((opt) => !opt.get('value')?.value || opt.get('value')?.value.trim() === '');
   }
-
   isFormInvalid(): boolean {
     const qArray = this.questions.controls as FormGroup[];
     return this.form.invalid || qArray.some((q) => this.isNumberInvalid(q) || this.isRatingInvalid(q) || this.areOptionsInvalid(q));

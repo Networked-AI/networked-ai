@@ -21,7 +21,7 @@
               class="rounded-full object-cover"
             />
           </div>
-          <span class="body-regular-14">{{ user.name }}</span>
+          <span class="body-regular-14">{{ user.name || 'User'}}</span>
         </div>
         <button type="button" class="p-0 m-0 bg-transparent border-none cursor-pointer shrink-0" (click)="onRemoveUser(user.user_id!)">
           <i class="pi pi-times text-lg text-neutral-04"></i>
