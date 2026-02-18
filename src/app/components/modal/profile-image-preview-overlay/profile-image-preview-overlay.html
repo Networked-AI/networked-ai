@@ -14,7 +14,7 @@
   </div>
 
   <!-- Action Buttons -->
-  <div class="action-buttons" (click)="$event.stopPropagation()">
+  <div class="action-buttons" (click)="$event.stopPropagation(); hapticService.onClick()">
     @if (showAddAsNetworkOnly()) {
       <!-- Other user, not connected: single prominent Add as Network -->
       <app-button

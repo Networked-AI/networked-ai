@@ -31,6 +31,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { environment } from 'src/environments/environment';
 import { EventService } from '@/services/event.service';
 import { IEvent } from '@/interfaces/event';
+import { HapticService } from '@/services/haptic.service';
 
 @Component({
   selector: 'chat-room',
@@ -72,6 +73,7 @@ export class ChatRoom implements OnInit, OnDestroy {
   private datePipe = new DatePipe('en-US');
   private sanitizer = inject(DomSanitizer);
   private eventService = inject(EventService);
+  hapticService = inject(HapticService);
 
   // Socket event handler references for cleanup
   private messageCreatedHandler?: (payload: { message: ChatMessage }) => void;
@@ -748,7 +750,7 @@ export class ChatRoom implements OnInit, OnDestroy {
 
     event.preventDefault();
     event.stopPropagation();
-
+    this.hapticService.onClick();
     const path = internalLink.getAttribute('data-path');
 
     if (path) {
@@ -765,6 +767,7 @@ export class ChatRoom implements OnInit, OnDestroy {
     if (Capacitor.isNativePlatform()) return;
     if (event.shiftKey) return;
     event.preventDefault();
+    this.hapticService.onClick();
     this.sendMessage();
   }
 }

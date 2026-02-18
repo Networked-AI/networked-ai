@@ -1,4 +1,4 @@
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy, inject } from '@angular/core';
 import { CommonModule, DatePipe, NgOptimizedImage } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { IonIcon } from '@ionic/angular/standalone';
@@ -6,6 +6,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { FormsModule } from '@angular/forms';
 import { FormControl } from '@angular/forms';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
+import { HapticService } from '@/services/haptic.service';
 
 export type SubscriptionCardType = 'event' | 'sponsor';
 
@@ -35,6 +36,7 @@ export type SubscriptionCardMode = 'plan' | 'subscription' | 'select';
   imports: [DatePipe, Button, IonIcon, CheckboxModule, FormsModule, NgOptimizedImage, CommonModule]
 })
 export class SubscriptionCard {
+  hapticService = inject(HapticService);
   data = input.required<ISubscription>();
   mode = input<SubscriptionCardMode>('plan');
 
@@ -63,6 +65,7 @@ export class SubscriptionCard {
 
   onDelete(event: Event): void {
     event.stopPropagation(); // Prevent card click event
+    this.hapticService.onClick();
     this.delete.emit(this.data());
   }
 

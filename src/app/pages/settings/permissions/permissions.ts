@@ -5,7 +5,7 @@ import { NativeSettings, AndroidSettings, IOSSettings } from 'capacitor-native-s
 import { App } from '@capacitor/app';
 import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
 import { FormsModule } from '@angular/forms';
-
+import { HapticService } from '@/services/haptic.service';
 export interface Permission {
   id: string;
   name: string;
@@ -26,7 +26,7 @@ export class Permissions implements OnInit, OnDestroy {
   // services
   navCtrl = inject(NavController);
   private permissionsService = inject(PermissionsService);
-
+  hapticService = inject(HapticService);
   // listener
   private appResumeListener?: PluginListenerHandle;
 

@@ -26,13 +26,13 @@
               }
             </div>
           </div>
-          <div class="pi pi-ellipsis-h neutral-03 text-[16px]! cursor-pointer" (click)="$event.stopPropagation(); openMenu()"></div>
+          <div class="pi pi-ellipsis-h neutral-03 text-[16px]! cursor-pointer" (click)="$event.stopPropagation(); hapticService.onClick(); openMenu()"></div>
         </div>
         @if (post().content) {
           <div
             class="body-12 mt-1 break-all whitespace-pre-wrap"
             [innerHTML]="renderText(post().content || '')"
-            (click)="onMentionClick($event)"
+            (click)="onMentionClick($event); hapticService.onClick()"
           ></div>
         }
       </div>
@@ -60,7 +60,7 @@
                       (error)="onImageError($event)"
                       [ngSrc]="getImageUrl(media.media_url)"
                       [loaderParams]="{ thumbnail: media.media_url }"
-                      (click)="$event.stopPropagation(); openFullscreen($index)"
+                      (click)="$event.stopPropagation(); hapticService.onClick(); openFullscreen($index)"
                     />
                   }
 
@@ -125,7 +125,7 @@
 
       <!-- ACTIONS -->
       <div class="flex items-center gap-4 neutral-03 pt-2">
-        <div class="flex items-center gap-1.5 cursor-pointer select-none" (click)="$event.stopPropagation(); toggleLike()">
+        <div class="flex items-center gap-1.5 cursor-pointer select-none" (click)="$event.stopPropagation(); hapticService.onClick(); toggleLike()">
           <i
             class="pi text-[16px]!"
             [class.pi-heart-fill]="post().is_like"
@@ -139,12 +139,12 @@
           </span>
         </div>
 
-        <div class="flex items-center gap-1.5" (click)="$event.stopPropagation(); onComment()">
+        <div class="flex items-center gap-1.5" (click)="$event.stopPropagation(); hapticService.onClick(); onComment()">
           <i class="pi pi-comment text-[16px]!"></i>
           <span class="body-14M">{{ post().total_comments || 0 }}</span>
         </div>
 
-        <div class="flex items-center gap-1.5" (click)="$event.stopPropagation(); sharePost()">
+        <div class="flex items-center gap-1.5" (click)="$event.stopPropagation(); hapticService.onClick(); sharePost()">
           <i class="pi pi-send text-[16px]!"></i>
           <span class="body-14M">{{ post().total_shares || 0 }}</span>
         </div>

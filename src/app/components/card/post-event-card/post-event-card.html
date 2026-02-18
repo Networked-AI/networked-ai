@@ -10,7 +10,7 @@
     <button
       type="button"
       class="absolute top-2 right-2 flex h-5 w-5 items-center justify-center text-surface-500 rounded-full"
-      (click)="onRemove.emit(event()); $event.stopPropagation()"
+      (click)="onRemove.emit(event()); $event.stopPropagation(); hapticService.onClick()"
     >
       <div class="pi pi-times text-[12px]!"></div>
     </button>

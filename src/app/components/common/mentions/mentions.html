@@ -13,7 +13,7 @@
           class="ngx-selectable-list-item flex items-center justify-between gap-2"
           [class.active]="i === activeIndex()"
           (click)="selectMention(user)"
-          (mousedown)="$event.preventDefault()"
+          (mousedown)="$event.preventDefault(); hapticService.onClick()"
         >
           <div class="flex items-center gap-2">
             <div class="relative w-8 h-8 flex-shrink-0 overflow-hidden rounded-full">

@@ -27,6 +27,7 @@ import {
 import { IUser } from '@/interfaces/IUser';
 import { IEventAttendee, IEventAttendeesCounts, IGetEventAttendeesParams, IPagination } from '@/interfaces/IEventAttendee';
 import { Button } from '@/components/form/button';
+import { HapticService } from '@/services/haptic.service';
 
 type GuestFilter = {
   attending: boolean;
@@ -73,8 +74,8 @@ export class GuestList implements OnInit, OnDestroy {
   toasterService = inject(ToasterService);
   networkService = inject(NetworkService);
   navigationService = inject(NavigationService);
+  hapticService = inject(HapticService);
   private socketService = inject(SocketService);
-
   isLoggedIn = computed(() => !!this.authService.currentUser());
 
   selectedGuestId = signal<string>('');

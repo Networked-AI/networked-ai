@@ -479,11 +479,13 @@ export class ModalService {
     return data;
   }
 
-  async showProfileImageConfirmationModal(file: File): Promise<{ action: 'confirm' | 'retake' | 'cancel'; file?: File }> {
+  async showProfileImageConfirmationModal(
+    file: File
+  ): Promise<{ action: 'confirm' | 'retake' | 'cancel'; file?: File }> {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = async (e: any) => {
-        const imageDataUrl = e.target.result;
+        const imageDataUrl = e.target.result as string;
 
         const modal = await this.modalCtrl.create({
           mode: 'ios',
@@ -501,7 +503,16 @@ export class ModalService {
         const { data } = await modal.onWillDismiss();
 
         if (data && data.action === 'confirm') {
-          resolve({ action: 'confirm', file });
+          const returnedUrl = (data.imageDataUrl as string) || imageDataUrl;
+
+          let croppedFile: any;
+
+          if (returnedUrl.startsWith('blob:')) {
+            const response = await fetch(returnedUrl);
+            const blob = await response.blob();
+            croppedFile = new File([blob], file.name, { type: blob.type || file.type });
+          }
+          resolve({ action: 'confirm', file: croppedFile });
         } else if (data && data.action === 'retake') {
           resolve({ action: 'retake' });
         } else {

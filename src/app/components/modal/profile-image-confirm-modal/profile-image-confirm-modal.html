@@ -10,17 +10,34 @@
 
 <div class="inner-content px-4">
   <div class="flex-1 flex items-center justify-center">
-    <div class="w-44 h-44 rounded-full overflow-hidden border-4 border-white">
-      <img [src]="imageDataUrl" alt="Profile preview" class="w-full h-full object-cover" />
+    <div class="w-full">
+      <div class="cropper-wrapper">
+        <image-cropper
+          [imageBase64]="imageDataUrl"
+          [maintainAspectRatio]="true"
+          [aspectRatio]="1"
+          [resizeToWidth]="512"
+          [roundCropper]="true"
+          format="png"
+          [transform]="transform"
+          (imageCropped)="imageCropped($event)"
+        ></image-cropper>
+      </div>
     </div>
   </div>
 </div>
 
 <ion-footer mode="md">
   <ion-toolbar mode="md">
-    <div class="p-4 flex gap-2">
-      <app-button label="Choose Another" color="secondary" (click)="retake()" class="w-full" />
-      <app-button label="Confirm" (click)="confirm()" class="w-full" />
+    <div class="p-4 flex flex-col gap-4">
+      <div class="w-full">
+        <ion-range min="1" max="3" step="0.1" [value]="zoom" (ionInput)="onZoomChange($event)" (ionChange)="onZoomChange($event)"></ion-range>
+      </div>
+
+      <div class="flex gap-2">
+        <app-button label="Choose Another" color="secondary" (click)="retake()" class="w-full" />
+        <app-button label="Confirm" (click)="confirm()" class="w-full" />
+      </div>
     </div>
   </ion-toolbar>
 </ion-footer>

@@ -1,6 +1,7 @@
 import { ButtonModule } from 'primeng/button';
 import { IonIcon } from '@ionic/angular/standalone';
-import { input, output, Component } from '@angular/core';
+import { HapticService } from '@/services/haptic.service';
+import { input, output, Component, inject } from '@angular/core';
 
 @Component({
   selector: 'app-button',
@@ -26,9 +27,12 @@ export class Button {
   // outputs
   click = output<void>();
 
+  private hapticService = inject(HapticService);
+
   onClick(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
+    this.hapticService.onClick();
     this.click.emit();
   }
 }

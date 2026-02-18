@@ -1,5 +1,6 @@
+import { HapticService } from '@/services/haptic.service';
 import { CommonModule } from '@angular/common';
-import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, output, inject } from '@angular/core';
 
 @Component({
   selector: 'ticket-type-card',
@@ -15,10 +16,11 @@ export class TicketTypeCard {
 
   click = output<void>();
 
-  constructor() {}
+  hapticService = inject(HapticService);
 
   onClick(event: Event): void {
     event.stopPropagation();
+    this.hapticService.onClick();
     this.click.emit();
   }
 }

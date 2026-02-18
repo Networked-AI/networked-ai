@@ -3,6 +3,7 @@ import { NgOptimizedImage } from '@angular/common';
 import { input, output, Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { NavigationService } from '@/services/navigation.service';
+import { HapticService } from '@/services/haptic.service';
 
 @Component({
   imports: [Button, NgOptimizedImage],
@@ -21,7 +22,7 @@ export class UserNetworkRequestCard {
 
   // services
   private navigationService = inject(NavigationService);
-
+  hapticService = inject(HapticService);
   // computed
   userImage = computed(() => {
     const user = this.user();
@@ -61,6 +62,7 @@ export class UserNetworkRequestCard {
 
   onReject(event: Event): void {
     event?.stopPropagation();
+    this.hapticService.onClick();
     this.reject.emit(this.user().id);
   }
 
