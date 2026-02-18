@@ -347,6 +347,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   getGuestAttendance(index: number): 'going' | 'maybe' {
     return this.guestAttendances().get(index) || 'going';
   }
+
   async dismiss(): Promise<void> {
     if (!this.validateAllForms()) {
       this.toasterService.showError('Please fill all details.');
@@ -366,6 +367,10 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
       }
     }
 
+    this.finalizeRsvpAndClose();
+  }
+
+  async finalizeRsvpAndClose(): Promise<void> {
     const guestDetails = Array.from({ length: this.guestForms.length }, (_, i) => {
       const guestForm = this.guestForms.at(i) as FormGroup;
       return {
