@@ -112,7 +112,7 @@
               <!-- Fixed Right Actions -->
               <div class="flex items-center gap-2 shrink-0">
                 @if (!s?.is_checked_in) {
-                  <p-button label="Check In" type="text" (click)="$event.stopPropagation(); checkIn(s.id)" [style]="{ height: '36px' }"></p-button>
+                  <p-button label="Check In" type="text" (click)="$event.stopPropagation(); hapticService.onClick(); checkIn(s.id);" [style]="{ height: '36px' }"></p-button>
                 } @else if (isChecking() && s.id === selectedGuestId()) {
                   <ion-spinner name="crescent" class="w-5 h-5"></ion-spinner>
                 }
@@ -122,7 +122,7 @@
                   type="text"
                   [style]="{ height: '44px' }"
                   severity="secondary"
-                  (click)="$event.stopPropagation(); openPopover($event, s)"
+                  (click)="$event.stopPropagation(); hapticService.onClick(); openPopover($event, s)"
                 ></p-button>
               </div>
             </div>

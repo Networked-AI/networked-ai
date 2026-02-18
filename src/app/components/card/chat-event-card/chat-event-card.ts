@@ -4,6 +4,7 @@ import { DatePipe, NgOptimizedImage } from '@angular/common';
 import { Component, inject, input, computed } from '@angular/core';
 import { NavigationService } from '@/services/navigation.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
+import { HapticService } from '@/services/haptic.service';
 
 @Component({
   selector: 'app-chat-event-card',
@@ -14,7 +15,7 @@ import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 export class ChatEventCard {
   private datePipe = new DatePipe('en-US');
   private navigationService = inject(NavigationService);
-
+  hapticService = inject(HapticService);
   event = input<IEvent | null>();
   inPost = input<boolean>(false);
   frontendUrl = environment.frontendUrl;

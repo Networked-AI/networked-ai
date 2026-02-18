@@ -16,6 +16,7 @@ import { Router } from '@angular/router';
 import { NetworkService } from '@/services/network.service';
 import { SocketService } from '@/services/socket.service';
 import { IUser } from '@/interfaces/IUser';
+import { HapticService } from '@/services/haptic.service';
 
 @Component({
   selector: 'post-card',
@@ -41,6 +42,7 @@ export class PostCard {
   navigationService = inject(NavigationService);
   router = inject(Router);
   private socketService = inject(SocketService);
+  hapticService = inject(HapticService);
 
   private networkService = inject(NetworkService);
 
@@ -392,6 +394,7 @@ export class PostCard {
 
   onMentionClick(event: Event): void {
     event.stopPropagation();
+    this.hapticService.onClick();
     const target = event.target as HTMLElement;
     const mentionLink = target.closest('.mention-link') as HTMLElement;
     if (mentionLink) {
@@ -435,6 +438,7 @@ export class PostCard {
 
   handleEventCardClick(event: Event, slug: string): void {
     event.stopPropagation();
+    this.hapticService.onClick();
     this.navigateToEvent(slug);
   }
 

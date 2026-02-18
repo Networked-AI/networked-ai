@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { ModalService } from '@/services/modal.service';
 import { FormGroup, Validators, FormBuilder, AbstractControl, ControlContainer, ReactiveFormsModule } from '@angular/forms';
+import { HapticService } from '@/services/haptic.service';
 @Component({
   imports: [ReactiveFormsModule],
   selector: 'profile-image-input',
@@ -32,6 +33,7 @@ export class ProfileImageInput implements OnInit {
   isSubmitted = input(true);
   controlName = input.required<string>();
 
+  hapticService = inject(HapticService);
   // signals
   selectedFile = signal<File | null>(null);
   imagePreview = signal<string | null>(null);

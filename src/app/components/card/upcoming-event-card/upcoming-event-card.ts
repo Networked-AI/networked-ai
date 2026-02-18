@@ -7,7 +7,7 @@ import { NgOptimizedImage, DatePipe } from '@angular/common';
 import { NavigationService } from '@/services/navigation.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { input, Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
-
+import { HapticService } from '@/services/haptic.service';
 @Component({
   imports: [NgOptimizedImage, DatePipe, Button],
   selector: 'upcoming-event-card',
@@ -20,7 +20,7 @@ export class UpcomingEventCard {
   private eventService = inject(EventService);
   private modalService = inject(ModalService);
   private navigationService = inject(NavigationService);
-
+  hapticService = inject(HapticService);
   event = input.required<IEvent>();
 
   isLoggedIn = computed(() => !!this.authService.currentUser());
@@ -77,6 +77,7 @@ export class UpcomingEventCard {
 
   viewTickets(event: any) {
     event?.stopPropagation();
+    this.hapticService.onClick();
     this.modalService.openMyTicketsModal(this.event());
   }
 

@@ -52,7 +52,7 @@
               <div class="body-12 text-neutral-03 mt-1">{{ notification.created_at | timeAgo: refreshTick() }}</div>
 
               @if (notification.related_user && notification.related_user.connection_status === 'RequestReceived') {
-                <div class="flex gap-3 mt-2" (click)="$event.stopPropagation()">
+                <div class="flex gap-3 mt-2" (click)="$event.stopPropagation(); hapticService.onClick()">
                   <app-button height="40px" label="Accept" color="primary" (click)="acceptNetwork(notification.related_user.id)" />
                   <app-button height="40px" label="Decline" color="secondary" variant="text" (click)="rejectNetwork(notification.related_user.id)" />
                 </div>
@@ -94,7 +94,7 @@
               <div class="body-14R text-neutral-01 line-clamp-2" [innerHTML]="notification.body"></div>
               <div class="body-12 text-neutral-03 mt-1">{{ notification.created_at | timeAgo: refreshTick() }}</div>
               @if (notification.event && (!notification.event.feedbacks || notification.event.feedbacks.length === 0)) {
-                <div class="mt-2 w-fit" (click)="$event.stopPropagation()">
+                <div class="mt-2 w-fit" (click)="$event.stopPropagation(); hapticService.onClick()">
                   <app-button height="40px" label="Share Your Feedback" color="primary" (click)="openShareFeedback(notification)" />
                 </div>
               }
@@ -129,7 +129,7 @@
               <div class="body-12 text-neutral-03 mt-1">{{ notification.created_at | timeAgo: refreshTick() }}</div>
 
               @if (notification.event && notification.event.rsvp_requests?.length && notification.event.rsvp_requests?.[0]?.status === 'Pending') {
-                <div class="flex gap-3 mt-2" (click)="$event.stopPropagation()">
+                <div class="flex gap-3 mt-2" (click)="$event.stopPropagation(); hapticService.onClick()">
                   <app-button height="40px" label="Accept" color="primary" (click)="acceptRsvpRequest(notification)" />
                   <app-button height="40px" label="Decline" color="secondary" variant="text" (click)="rejectRsvpRequest(notification)" />
                 </div>

@@ -16,7 +16,7 @@ import { IonContent, IonHeader, IonIcon, IonToolbar, NavController } from '@ioni
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { IonRefresher, IonInfiniteScroll, IonRefresherContent, RefresherCustomEvent, IonInfiniteScrollContent } from '@ionic/angular/standalone';
 import { BaseApiService } from '@/services/base-api.service';
-
+import { HapticService } from '@/services/haptic.service';
 @Component({
   selector: 'notification',
   styleUrl: './notification.scss',
@@ -47,13 +47,13 @@ export class Notification {
   private authService = inject(AuthService);
   private navigationService = inject(NavigationService);
   private modalService = inject(ModalService);
+  hapticService = inject(HapticService);
 
   // signals
   isLoadingMore = signal(false);
   refreshTick = signal(0);
   notifications = this.notificationsService.notifications;
   notificationFilter = signal<NotificationType>(NotificationType.ALL);
-
   // computed
   isLoading = computed(() => this.notificationsService.isLoading());
   pagination = computed(() => this.notificationsService.pagination());

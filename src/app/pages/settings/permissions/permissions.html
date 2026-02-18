@@ -22,7 +22,7 @@
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <ion-toggle [(ngModel)]="permission.enabled" (ionChange)="onToggleChange(permission.id, $event)" (click)="$event.stopPropagation()" />
+              <ion-toggle [(ngModel)]="permission.enabled" (ionChange)="onToggleChange(permission.id, $event)" (click)="$event.stopPropagation(); hapticService.onClick()" />
             </div>
           </div>
           @if (!$last) {

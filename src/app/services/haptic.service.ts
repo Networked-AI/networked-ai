@@ -15,7 +15,7 @@ export class HapticService {
     });
   }
 
-  private onClick = (): void => {
+  onClick = (): void => {
     void Haptics.impact({ style: ImpactStyle.Light });
   };
 }

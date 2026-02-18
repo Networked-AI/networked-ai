@@ -32,6 +32,7 @@ import { OverlayModule } from '@angular/cdk/overlay';
 import { OgService } from '@/services/og.service';
 import { Textarea } from 'primeng/textarea';
 import { Capacitor } from '@capacitor/core';
+import { HapticService } from '@/services/haptic.service';
 
 @Component({
   selector: 'post-comments',
@@ -71,7 +72,7 @@ export class PostComments implements OnInit, OnDestroy {
   route = inject(ActivatedRoute);
   ogService = inject(OgService);
   private document = inject(DOCUMENT);
-
+  hapticService = inject(HapticService);
   currentUser = this.authService.currentUser;
 
   textCtrl: FormControl = new FormControl('');
@@ -461,6 +462,7 @@ export class PostComments implements OnInit, OnDestroy {
     const mentionLink = target.closest('.mention-link') as HTMLElement;
     if (mentionLink) {
       event.preventDefault();
+      this.hapticService.onClick();
       if (!(await this.ensureLoggedIn())) return;
       const username = mentionLink.getAttribute('data-username');
       if (username) {
@@ -495,6 +497,7 @@ export class PostComments implements OnInit, OnDestroy {
     if (Capacitor.isNativePlatform()) return;
     if (event.shiftKey) return;
     event.preventDefault();
+    this.hapticService.onClick();
     this.sendComment();
   }
 }

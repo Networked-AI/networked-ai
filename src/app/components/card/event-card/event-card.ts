@@ -9,6 +9,7 @@ import { NavigationService } from '@/services/navigation.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { ManageEventService } from '@/services/manage-event.service';
 import { input, Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+import { HapticService } from '@/services/haptic.service';
 
 @Component({
   selector: 'event-card',
@@ -24,7 +25,7 @@ export class EventCard {
   private eventService = inject(EventService);
   private authService = inject(AuthService);
   manageService = inject(ManageEventService);
-
+  hapticService = inject(HapticService);
   event = input.required<IEvent>();
   showBlur = input<boolean>(true);
   variant = input<'default' | 'compact'>('default');
@@ -146,6 +147,7 @@ export class EventCard {
   async likeEvent(event: Event) {
     if (!this.showBlur()) return;
     event.stopPropagation();
+    this.hapticService.onClick();
     const eventId = this.event().id;
     if (!eventId) return;
 
@@ -182,11 +184,13 @@ export class EventCard {
 
   async openMenu(event: Event) {
     event.stopPropagation();
+    this.hapticService.onClick();
     this.manageService.openMenu(this.event());
   }
 
   openEventChat(event: Event): void {
     event.stopPropagation();
+    this.hapticService.onClick();
     const currentUserId = this.authService.currentUser()?.id;
     if (this.currentEvent()?.id && currentUserId) {
       this.navigationService.navigateForward('/chat-room', false, {

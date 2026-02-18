@@ -11,6 +11,7 @@ import { NetworkService } from '@/services/network.service';
 import { ConnectionStatus } from '@/enums/connection-status.enum';
 import { Button } from '@/components/form/button';
 import { Clipboard } from '@capacitor/clipboard';
+import { HapticService } from '@/services/haptic.service';
 
 const CONFIRM_DANGER_OPTIONS = {
   icon: 'assets/svg/alert-white.svg',
@@ -36,7 +37,7 @@ export class ProfileImagePreviewOverlay {
   private modalService = inject(ModalService);
   private navigationService = inject(NavigationService);
   private networkService = inject(NetworkService);
-
+  hapticService = inject(HapticService);
   isAddingToNetwork = signal(false);
   isWithdrawingInvitation = signal(false);
 

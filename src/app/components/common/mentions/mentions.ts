@@ -9,6 +9,7 @@ import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, catchError, of, from } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+import { HapticService } from '@/services/haptic.service';
 @Component({
   selector: 'mentions',
   standalone: true,
@@ -31,7 +32,7 @@ export class Mentions {
   private userService = inject(UserService);
   private destroyRef = inject(DestroyRef);
   private searchSubject = new Subject<string>();
-
+  hapticService = inject(HapticService);
   // Signals
   showMentions = signal(false);
   activeIndex = signal(0);
