@@ -75,7 +75,7 @@
         <div class="w-full py-6 px-4 max-w-[672px] mx-auto">
           @if (isViewingOtherProfile() || userName()) {
             <div class="relative flex items-center justify-between">
-              <ion-icon name="arrow-back" class="text-[20px] cursor-pointer neutral-03" (click)="navCtrl.back()"></ion-icon>
+              <ion-icon name="arrow-back" class="text-[20px] cursor-pointer neutral-03" (click)="navigationService.back()"></ion-icon>
               <div class="body-14SB neutral-01 absolute left-1/2 -translate-x-1/2">{{ currentUser()?.username || currentUser()?.name }}</div>
               @if (isLoggedIn() && currentUser()) {
                 <ion-icon src="/assets/svg/menu-dot.svg" (click)="openProfileOptionsPopover($event)" class="text-[20px] cursor-pointer" />

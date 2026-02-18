@@ -16,6 +16,7 @@ import { IUser } from '@/interfaces/IUser';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { NavigationService } from '@/services/navigation.service';
 import { Capacitor } from '@capacitor/core';
+import { extractUsernameFromQR } from '@/utils/helper';
 
 @Component({
   selector: 'add-network',
@@ -188,12 +189,12 @@ export class AddNetwork implements OnDestroy {
 
   private async handleQRCodeScanned(decodedText: string): Promise<void> {
     try {
-      const username = decodedText;
-      if (username) {
-        this.navigationService.navigateForward(`/${username}`);
-      } else {
+      const username = extractUsernameFromQR(decodedText);
+      if (!username) {
         this.toasterService.showError('Invalid QR code. Please scan a valid profile QR code.');
+        return;
       }
+      await this.navigationService.navigateForward(`/${username}`);
     } catch (error) {
       console.error('Error parsing QR code:', error);
       this.toasterService.showError('Invalid QR code format.');

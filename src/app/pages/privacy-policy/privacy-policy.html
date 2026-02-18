@@ -22,7 +22,7 @@
         <ul class="list-disc pl-6 flex flex-col gap-2">
           <li>
             <div class="body-12M">
-              Visit our website at <a href="http://app.net-worked.ai/" class="a" target="_blank">http://app.net-worked.ai</a>, or any website of ours
+              Visit our website at <a [href]="frontendUrl" class="a" target="_blank">{{ frontendUrl }}</a>, or any website of ours
               that links to this Privacy Notice
             </div>
           </li>
@@ -41,33 +41,33 @@
         <div class="body-12M">
           This summary provides key points from our Privacy Notice, but you can find out more details about any of these topics by clicking the link
           following each key point or by using our table of contents below to find the section you are looking for. You can also click
-          <a href="https://app.net-worked.ai/privacy" class="a" target="_blank">here</a>
+          <a [href]="frontendUrl + '/policy'" class="a" target="_blank">here</a>
           to go directly to our table of contents.
         </div>
         <div class="body-12M">
           What personal information do we collect? When you visit, use, or navigate our Services, we may collect personal information depending on how
           you interact with Networked LLC and the Services, the choices you make, and the products and features you use. Click
-          <a href="https://app.net-worked.ai/privacy" class="a" target="_blank">here</a>
+          <a [href]="frontendUrl + '/policy'" class="a" target="_blank">here</a>
           to learn more.
         </div>
         <div class="body-12M">
           Why do we collect personal information? We collect, use, and disclose personal information to provide, improve, and administer our Services,
           communicate with you, for security and fraud prevention, for marketing purposes, and to comply with law. We do not sell your personal
           information. We may also collect, use, or disclose personal information for other purposes with your consent. Click
-          <a href="https://app.net-worked.ai/privacy" class="a" target="_blank">here</a>
+          <a [href]="frontendUrl + '/policy'" class="a" target="_blank">here</a>
           to learn more.
         </div>
         <div class="body-12M">
           In what situations and with which types of parties do we disclose personal information? We may disclose information in specific situations
           and with specific categories of third parties. Click
-          <a href="https://app.net-worked.ai/privacy" class="a" target="_blank">here</a>
+          <a [href]="frontendUrl + '/policy'" class="a" target="_blank">here</a>
           to learn more.
         </div>
         <div class="body-12M">
-          How do users disclose information on Net-Worked.Ai? Your public profile, which is customizable, is available to other users on the platform.
+          How do users disclose information on app.getnetworked.com? Your public profile, which is customizable, is available to other users on the platform.
           Additionally, you may optionally choose to disclose other information to certain users by responding to event questionnaires and posting
           content on the platform. Click
-          <a href="https://app.net-worked.ai/privacy" class="a" target="_blank">here</a>
+          <a [href]="frontendUrl + '/policy'" class="a" target="_blank">here</a>
           to learn more.
         </div>
         <div class="body-12M">
@@ -75,13 +75,13 @@
           personal information. However, no electronic transmission over the internet or information storage technology can be guaranteed to be 100%
           secure, so we cannot promise or guarantee that hackers, cybercriminals, or other unauthorized third parties will not be able to defeat our
           security and improperly collect, access, steal, or modify your information. Click
-          <a href="https://app.net-worked.ai/privacy" class="a" target="_blank">here</a>
+          <a [href]="frontendUrl + '/policy'" class="a" target="_blank">here</a>
           to learn more.
         </div>
         <div class="body-12M">
           What are your rights? Depending on where you are located geographically, the applicable privacy law may mean you have certain rights
           regarding your personal information. Click
-          <a href="https://app.net-worked.ai/privacy" class="a" target="_blank">here</a>
+          <a [href]="frontendUrl + '/policy'" class="a" target="_blank">here</a>
           to learn more.
         </div>
         <div class="body-12M">
@@ -337,13 +337,13 @@
       </div>
 
       <div class="flex flex-col gap-4">
-        <div class="body-16SB">4. HOW DO USERS DISCLOSE INFORMATION ON NET-WORKED.AI?</div>
+        <div class="body-16SB">4. HOW DO USERS DISCLOSE INFORMATION ON APP.GETNETWORKED.COM?</div>
         <div class="body-12M">
           In Short: Your public profile information, which is customizable, is available to other users on the platform. You also disclose information
           to other users via responding to event questionnaires and posting content on the platform.
         </div>
         <div class="body-12M">
-          Your public profile is configurable by you. The profile contains a name and any Net-worked.ai badges you have been awarded, and optionally
+          Your public profile is configurable by you. The profile contains a name and any app.getnetworked.com badges you have been awarded, and optionally
           includes other information such as a profile picture, a bio or social handles. This public profile is available to be viewed by other users
           on the platform. Your phone number is only visible to you and is never displayed to other users, unless you explicitly disclose it.
         </div>
@@ -472,12 +472,12 @@
       <div class="flex flex-col gap-4">
         <div class="body-16SB">11. YOUR CHOICES</div>
         <div class="body-12M">
-          Opt out of marketing communications. You may respond "STOP" to any Net-worked.ai text message to stop receiving all text messages from
-          Net-worked.ai.
+          Opt out of marketing communications. You may respond "STOP" to any app.getnetworked.com text message to stop receiving all text messages from
+          app.getnetworked.com.
         </div>
         <div class="body-12M">
           Opt out of receiving invitations from past hosts or mutuals. Past hosts and mutuals may send you invitations to other events via
-          Net-worked.ai, unless you have opted out of receiving future invitations from the host or mutual. If you receive an invitation, you may
+          app.getnetworked.com, unless you have opted out of receiving future invitations from the host or mutual. If you receive an invitation, you may
           respond â€œXâ€ to the text message to stop receiving future invitations from that host or mutual.
         </div>
         <div class="body-12M">
@@ -545,7 +545,7 @@
           administration of the services, and as otherwise necessary (a) to comply with relevant laws or to respond to subpoenas or warrants served on
           us; (b) to protect and defend our or othersâ€™ rights or property; (c) in connection with a legal investigation; and/or (d) to investigate
           or assist in preventing any violation or potential violation of the law, this Privacy Notice, or our
-          <a href="https://app.net-worked.ai/terms" class="a" target="_blank"> Terms of Service </a>
+          <a [href]="frontendUrl + '/terms'" class="a" target="_blank"> Terms of Service </a>
           .
         </div>
       </div>

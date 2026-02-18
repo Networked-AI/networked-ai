@@ -15,6 +15,7 @@ import { ModalService } from '@/services/modal.service';
 import { IonContent, IonHeader, IonIcon, IonToolbar, NavController } from '@ionic/angular/standalone';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { IonRefresher, IonInfiniteScroll, IonRefresherContent, RefresherCustomEvent, IonInfiniteScrollContent } from '@ionic/angular/standalone';
+import { BaseApiService } from '@/services/base-api.service';
 
 @Component({
   selector: 'notification',
@@ -231,15 +232,15 @@ export class Notification {
       const result = await this.modalService.openQuestionnairePreviewModal(postEventQuestions, false);
 
       if (result?.responses?.length) {
-        const saved = await this.savePostEventFeedback(eventId, result.responses);
+        const saved: any = await this.savePostEventFeedback(eventId, result.responses);
         if (saved) {
-          this.toasterService.showSuccess('Thank you for sharing your feedback!');
+          this.toasterService.showSuccess(saved?.message || 'Thank you for sharing your feedback!');
           this.notificationsService.fetchUnreadCount();
         }
       }
     } catch (error) {
       console.error('Error opening share feedback:', error);
-      this.toasterService.showError('Failed to load feedback form. Please try again.');
+      BaseApiService.getErrorMessage(error, "Failed to load feedback form. Please try again.");
     }
   }
 
@@ -304,8 +305,7 @@ export class Notification {
       const feedback = this.buildFeedbackPayloadFromResponses(responses);
       if (feedback.length === 0) return true;
 
-      await this.eventService.saveEventFeedback(eventId, { feedback });
-      return true;
+      return this.eventService.saveEventFeedback(eventId, { feedback });
     } catch (error) {
       console.error('Error saving post-event feedback:', error);
       this.toasterService.showError('Failed to save feedback. Please try again.');

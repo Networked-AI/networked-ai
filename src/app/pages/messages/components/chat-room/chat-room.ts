@@ -711,7 +711,7 @@ export class ChatRoom implements OnInit, OnDestroy {
   renderMessageText(text: string): SafeHtml {
     if (!text) return '';
 
-    const frontendUrl = environment.frontendUrl || 'https://dev.app.net-worked.ai';
+    const frontendUrl = environment.frontendUrl;
 
     let modifiedText = text;
     const processedUrls = new Set<string>();

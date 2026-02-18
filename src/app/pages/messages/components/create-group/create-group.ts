@@ -8,7 +8,7 @@ import { ModalService } from '@/services/modal.service';
 import { NetworkService } from '@/services/network.service';
 import { UserService } from '@/services/user.service';
 import { ToasterService } from '@/services/toaster.service';
-import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
+import { extractUsernameFromQR, getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -500,13 +500,13 @@ export class CreateGroup {
 
   private async handleQRCodeForContact(decodedText: string): Promise<void> {
     try {
-      const trimmedText = decodedText.trim();
-      if (!trimmedText) {
+      const username = extractUsernameFromQR(decodedText);
+      if (!username) {
         this.toasterService.showError('Invalid QR code. Please scan a valid profile QR code.');
         return;
       }
 
-      const user = await this.userService.getUser(trimmedText);
+      const user = await this.userService.getUser(username);
 
       if (!user || !user.id) {
         this.toasterService.showError('User not found.');
@@ -524,6 +524,8 @@ export class CreateGroup {
         return;
       }
 
+      if (user.id == this.authService.currentUser()?.id) return;
+      
       this.selectedMembers.update((list) => [...list, user]);
 
       if (user.connection_status === ConnectionStatus.CONNECTED) {

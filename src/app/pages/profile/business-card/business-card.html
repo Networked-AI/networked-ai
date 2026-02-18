@@ -75,7 +75,7 @@
                 <!-- QR Code -->
                 <div class="flex justify-center">
                   <div class="bg-white p-2 rounded-2xl border border-neutral-200 gradient-border flex items-center justify-center">
-                    <qr-code [value]="user()?.username" [size]="128" errorCorrectionLevel="M"></qr-code>
+                    <qr-code [value]="profileLink()" [size]="128" errorCorrectionLevel="M"></qr-code>
                   </div>
                 </div>
               </div>
