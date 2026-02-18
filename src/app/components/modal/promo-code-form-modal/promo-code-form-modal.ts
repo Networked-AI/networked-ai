@@ -28,7 +28,10 @@ export class PromoCodeFormModal {
     this.fb.group({
       id: [''],
       type: ['Fixed', [Validators.required]],
-      capped_amount: [null]
+      capped_amount: [null],
+      quantity: [500],
+      max_uses_per_user: [1],
+
     })
   );
   promotionType = signal<'Percentage' | 'Fixed'>('Fixed');

@@ -290,11 +290,10 @@ export class Event implements OnInit, OnDestroy {
 
     // Map attendees to IUser format and add Going/Maybe sections
     const mapAttendeeToUser = (attendee: any): IUser | null => {
-      if (!attendee?.user) return null;
       return {
         id: attendee.id,
-        username: attendee.parent_user_id ? '' : attendee.user.username,
-        thumbnail_url: attendee.parent_user_id ? '' : attendee.user.thumbnail_url
+        username: attendee?.parent_user_id ? '' : attendee?.user?.username,
+        thumbnail_url: attendee?.parent_user_id ? '' : attendee?.user?.thumbnail_url
       };
     };
 

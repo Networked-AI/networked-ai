@@ -271,7 +271,7 @@ export class EventSettings {
       .filter((q: any) => q.event_phase === eventPhase)
       .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
       .map((q: any, index: number) => ({
-        id: q.id || `question-${index}`,
+        id: q.id,
         question: q.question
       }));
   }
