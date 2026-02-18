@@ -68,6 +68,7 @@
     "ionicons": "^8.0.13",
     "ng-otp-input": "^2.0.9",
     "ng-qrcode": "^20.0.1",
+    "ngx-image-cropper": "^9.1.6",
     "ngx-stripe": "^20.8.0",
     "primeclt": "^0.1.5",
     "primeicons": "^7.0.0",
