@@ -46,7 +46,7 @@ export class QuestionnaireFormModal {
         const visibility = q.is_public !== undefined ? (q.is_public ? 'public' : 'private') : q.visibility || 'public';
 
         return this.fb.group({
-          id: [q.id || `question-${Date.now()}-${Math.random()}`, Validators.required],
+          id: [q.id],
           question: [q.question, Validators.required],
           type: [q.question_type || q.type, Validators.required],
           required: [isRequired],

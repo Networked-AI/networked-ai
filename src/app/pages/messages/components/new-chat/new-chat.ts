@@ -16,7 +16,7 @@ import {
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged, from, switchMap } from 'rxjs';
-import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
+import { onImageError, getImageUrlOrDefault, extractUsernameFromQR } from '@/utils/helper';
 import { NgOptimizedImage } from '@angular/common';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Capacitor } from '@capacitor/core';
@@ -223,13 +223,13 @@ export class NewChat {
 
   private async handleQRCodeForContact(decodedText: string): Promise<void> {
     try {
-      const trimmedText = decodedText.trim();
-      if (!trimmedText) {
+      const username = extractUsernameFromQR(decodedText);
+      if (!username) {
         this.toasterService.showError('Invalid QR code. Please scan a valid profile QR code.');
         return;
       }
 
-      const user = await this.userService.getUser(trimmedText);
+      const user = await this.userService.getUser(username);
 
       if (!user || !user.id) {
         this.toasterService.showError('User not found.');

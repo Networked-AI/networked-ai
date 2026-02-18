@@ -95,3 +95,20 @@ export function onImageError(event: Event, defaultImagePath = 'assets/images/pro
   // show the fallback div
   fallback.classList.remove('hidden');
 }
+
+export function extractUsernameFromQR(decodedText: string): string | null {
+  if (!decodedText) return null;
+
+  const value = decodedText.trim();
+
+  if (value.startsWith('http')) {
+    try {
+      const url = new URL(value);
+      const pathSegments = url.pathname.split('/').filter(Boolean);
+      return pathSegments[0] || null;
+    } catch {
+      return null;
+    }
+  }
+  return value || null;
+}

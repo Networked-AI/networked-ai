@@ -17,7 +17,7 @@ export class ChatEventCard {
 
   event = input<IEvent | null>();
   inPost = input<boolean>(false);
-  frontendUrl = environment.frontendUrl || 'https://dev.app.net-worked.ai';
+  frontendUrl = environment.frontendUrl;
   eventLinkText = computed(() => `${this.frontendUrl}/event/${this.event()?.slug}`);
 
   getImageUrl(imageUrl = ''): string {
@@ -32,9 +32,8 @@ export class ChatEventCard {
     const event: any = this.event();
     if (!event) return '';
 
-    const frontendUrl = environment.frontendUrl || 'https://dev.app.net-worked.ai';
+    const frontendUrl = environment.frontendUrl;
 
-    const eventLink = `${frontendUrl}/event/${event.slug}`;
     const formattedDateTime = this.formatDateTime(event.start_date, event.end_date);
 
     return `You're Invited: ${event.title}
@@ -42,7 +41,7 @@ export class ChatEventCard {
 Hosted by ${event.created_by_user?.name}. ${formattedDateTime} at ${event.address}
 
 Get out. Get Networked.
-Powered by Net-worked.ai
+Powered by ${frontendUrl}
 `;
   }
 

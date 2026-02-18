@@ -386,12 +386,11 @@ export class RsvpModal implements OnInit, OnDestroy {
         subTotal = this.hostPaysFees ? subTotal - fees : subTotal;
       }
 
-      newTotalsByTier[ticketId] = Math.trunc(total);
+      newTotalsByTier[ticketId] = Math.max(0, Math.trunc(total));
       newPlatformFeesByTier[ticketId] = fees;
       newHostFeesByTier[ticketId] = additionalCharge;
-      newTicketPricesByTier[ticketId] = Math.trunc(subTotal);
+      newTicketPricesByTier[ticketId] = Math.max(0, Math.trunc(subTotal));
       newActualPricesByTier[ticketId] = originalPriceInCents * ticketCount;
-      // Store free ticket discount amount
       newDiscountAmountsByTier[ticketId] = freeTicketDiscountAmount;
     });
 
@@ -1002,8 +1001,8 @@ export class RsvpModal implements OnInit, OnDestroy {
           ...attendee,
           event_promo_code_id: isEligibleForPromo ? promoCodeId : null,
           platform_fee_amount: platformFeeInDollars,
-          amount_paid: amountPaid,
-          host_payout_amount: hostPayoutAmount
+          amount_paid: Math.max(0, amountPaid), // ✅ Ensure non-negative
+          host_payout_amount: Math.max(0,hostPayoutAmount)
         };
       });
 

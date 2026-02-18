@@ -137,15 +137,13 @@ export class EventUserList implements OnInit, OnDestroy {
   }
 
   private mapAttendeeToUser(attendee: IEventAttendee) {
-    if (!attendee.user) return null;
-
     return {
-      id: attendee.user.id,
-      name: attendee.name,
-      username: attendee.parent_user_id ? '' : attendee.user.username,
-      thumbnail_url: attendee.parent_user_id ? '' : attendee.user.thumbnail_url,
-      total_gamification_points: attendee.user.total_gamification_points,
-      connection_status: attendee.user.connection_status,
+      id: attendee.user_id,
+      name: attendee.parent_user_id ? attendee?.name : attendee?.user?.name,
+      username: attendee.parent_user_id ? '' : attendee?.user?.username,
+      thumbnail_url: attendee.parent_user_id ? '' : attendee?.user?.thumbnail_url,
+      total_gamification_points: attendee?.user?.total_gamification_points,
+      connection_status: attendee?.user?.connection_status,
       parent_user_id: attendee.parent_user_id
     };
   }

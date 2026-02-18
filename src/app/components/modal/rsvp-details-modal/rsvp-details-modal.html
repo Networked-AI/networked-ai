@@ -189,6 +189,7 @@
             [validateAllForms]="validateAllForms()"
             (paymentError)="onPaymentError($event)"
             (paymentSuccess)="onPaymentSuccess($event)"
+            (applePaySuccess)="finalizeRsvpAndClose()"
             (paymentProcessing)="onPaymentProcessing($event)"
           />
         </div>

@@ -35,6 +35,7 @@ export class StripePaymentComponent {
   paymentSuccess = output<StripePaymentSuccessEvent>();
   paymentError = output<StripePaymentErrorEvent>();
   paymentProcessing = output<boolean>();
+  applePaySuccess = output<void>();
 
   isLoading = signal<boolean>(false);
   errorMessage = signal<string>('');
@@ -306,6 +307,8 @@ export class StripePaymentComponent {
 
         if (this.isModalMode) {
           this.modalCtrl.dismiss({ success: true }, 'success');
+        } else {
+          this.applePaySuccess.emit();
         }
       } else {
         this.failApplePay('Apple Pay was cancelled or failed');
