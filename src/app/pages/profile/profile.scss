@@ -8,3 +8,9 @@ swiper-container {
 swiper-slide {
   min-height: 400px;
 }
+
+p-toggleswitch {
+  width: 45px !important;
+  height: 24px !important;
+  --p-toggleswitch-width: 3.2rem;
+}

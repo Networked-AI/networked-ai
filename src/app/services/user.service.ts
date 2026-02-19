@@ -289,4 +289,8 @@ export class UserService extends BaseApiService {
       throw error;
     }
   }
+
+  async updateProfileSubscription(userId: string): Promise<{ success: boolean; message: string; data: { notification_enabled: boolean } }> {
+    return await this.put<{ success: boolean; message: string; data: { notification_enabled: boolean } }>(`/users/${userId}/profile-subscription`);
+  }
 }
