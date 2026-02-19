@@ -121,7 +121,10 @@
             </div>
 
             @if (selectedIndex() === msg.id && editingIndex() === null && !msg.is_deleted) {
-              <div class="absolute right-0 bottom-[-15px] bg-white shadow-lg rounded-xl px-3 py-2 flex gap-4 z-50" (click)="$event.stopPropagation(); hapticService.onClick()">
+              <div
+                class="absolute right-0 bottom-[-15px] bg-white shadow-lg rounded-xl px-3 py-2 flex gap-4 z-50"
+                (click)="$event.stopPropagation(); hapticService.onClick()"
+              >
                 @if (msg.type != 'Event' && msg.type != 'Post') {
                   <img src="assets/svg/editIcon.svg" class="w-5 h-5 cursor-pointer" (click)="editMessage(msg.id)" />
                 }
@@ -255,16 +258,22 @@
             rows="1"
             pTextarea
             [autoResize]="true"
-            class="w-full px-10! max-h-30 overflow-y-auto! resize-none scrollbar-hide"
+            class="w-full px-4! max-h-30 overflow-y-auto! resize-none scrollbar-hide"
             [value]="newMessage()"
             placeholder="Edit message..."
             (input)="onMessageInput($event)"
             (keydown)="onMessageKeydown($event)"
           ></textarea>
-          <app-button (click)="sendMessage()" [iconName]="'pi-check'" iconPos="left" height="32px" width="32px" />
+          <app-button (click)="sendMessage()" [iconName]="'pi-check'" iconPos="left" height="32px" width="32px" [isLoading]="isSendingMessage()" />
         </div>
       </div>
     } @else {
+      @if (isCurrentUserHost()) {
+        <div class="px-4 pt-2">
+          <p-checkbox binary="true" [ngModel]="broadcastEmail()" (ngModelChange)="broadcastEmail.set($event)"></p-checkbox>
+          <label class="body-14 cursor-pointer ps-3">Broadcast Email</label>
+        </div>
+      }
       <!-- Normal Message Input (matches Figma) -->
       <div class="flex items-center gap-2 px-4 py-3 max-w-[672px] mx-auto w-full">
         <!-- Message Input with Icons Inside -->
@@ -297,7 +306,15 @@
         </div>
 
         <!-- Send Button (square, matches Figma) -->
-        <app-button width="40px" height="40px" iconPos="left" [radius]="'8px'" (click)="sendMessage()" [iconName]="'pi-send'" />
+        <app-button
+          width="40px"
+          height="40px"
+          iconPos="left"
+          [radius]="'8px'"
+          (click)="sendMessage()"
+          [iconName]="'pi-send'"
+          [isLoading]="isSendingMessage()"
+        />
       </div>
     }
   </ion-toolbar>

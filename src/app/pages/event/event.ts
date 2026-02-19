@@ -31,6 +31,7 @@ import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { ManageEventService } from '@/services/manage-event.service';
 import { OnInit, inject, signal, computed, Component, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
 import { BaseApiService } from '@/services/base-api.service';
+import { MessagesService } from '@/services/messages.service';
 
 @Component({
   selector: 'event',
@@ -64,6 +65,7 @@ export class Event implements OnInit, OnDestroy {
   platformId = inject(PLATFORM_ID);
   ogService = inject(OgService);
   loadingCtrl = inject(LoadingController);
+  messagesService = inject(MessagesService);
 
   // subscriptions
   routeParamsSubscription?: Subscription;
@@ -671,6 +673,15 @@ export class Event implements OnInit, OnDestroy {
           try {
             await this.saveRsvpAttendees(result, result?.stripe_payment_intent_id || '');
             await loadingModal.dismiss();
+            const roomParams = {
+              is_personal: false,
+              event_id: this.eventIdFromData() || ''
+            };
+            this.messagesService.createOrGetChatRoom(roomParams).then((result: any) => {
+              if (result.room_id) {
+                this.messagesService.joinRoom(result.room_id, [this.authService.currentUser()?.id || '']);
+              }
+            });
             await this.modalService.openRsvpConfirmModal(displayData, {
               showFinishProfileSetup: result.isNewUser === true
             });

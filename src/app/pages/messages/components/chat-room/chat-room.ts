@@ -32,6 +32,8 @@ import { environment } from 'src/environments/environment';
 import { EventService } from '@/services/event.service';
 import { IEvent } from '@/interfaces/event';
 import { HapticService } from '@/services/haptic.service';
+import { CheckboxModule } from 'primeng/checkbox';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'chat-room',
@@ -55,7 +57,9 @@ import { HapticService } from '@/services/haptic.service';
     PickerComponent,
     NgOptimizedImage,
     ChatFeedCard,
-    ChatEventCard
+    ChatEventCard,
+    CheckboxModule,
+    FormsModule
   ]
 })
 export class ChatRoom implements OnInit, OnDestroy {
@@ -91,6 +95,8 @@ export class ChatRoom implements OnInit, OnDestroy {
   editingIndex = signal<string | null>(null);
   selectedFile = signal<File | null>(null);
   showEmojiPicker = signal<boolean>(false);
+  broadcastEmail = signal<boolean>(false);
+  isSendingMessage = signal<boolean>(false);
 
   messages = signal<ChatMessage[]>([]);
 
@@ -108,6 +114,11 @@ export class ChatRoom implements OnInit, OnDestroy {
     }
 
     return event.questionnaire.some((q: any) => q.is_public === true && ['SingleChoice', 'MultipleChoice', 'Rating'].includes(q.question_type));
+  });
+  
+  isCurrentUserHost = computed(() => {
+    const event = this.eventData();
+    return event?.participants?.some((p: any) => p.user_id === this.authService.currentUser()?.id && p.role === 'Host');
   });
 
   /**
@@ -591,6 +602,7 @@ export class ChatRoom implements OnInit, OnDestroy {
     const text = this.newMessage().trim();
     const file = this.selectedFile();
     const roomId = this.chatId();
+    const isBroadcastEmail = this.isCurrentUserHost() ? this.broadcastEmail() : false;
 
     // Don't send if no text and no file
     if (!text && !file) return;
@@ -601,12 +613,15 @@ export class ChatRoom implements OnInit, OnDestroy {
       if (file) {
         this.selectedFile.set(null);
       }
+      this.isSendingMessage.set(true);
       try {
         await this.messagesService.updateMessage(editingMessageId, roomId, text);
         this.editingIndex.set(null);
         this.newMessage.set('');
       } catch (error) {
         console.error('Error updating message:', error);
+      } finally {
+        this.isSendingMessage.set(false);
       }
       return;
     }
@@ -617,11 +632,12 @@ export class ChatRoom implements OnInit, OnDestroy {
     this.newMessage.set('');
     this.selectedFile.set(null);
 
+    this.isSendingMessage.set(true);
     try {
       if (messageFile) {
-        await this.messagesService.sendMessageWithFile(roomId, messageText, messageFile);
+        await this.messagesService.sendMessageWithFile(roomId, messageText, messageFile, isBroadcastEmail);
       } else {
-        await this.messagesService.sendMessage(roomId, messageText);
+        await this.messagesService.sendMessage(roomId, messageText, undefined, undefined, isBroadcastEmail);
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -629,6 +645,9 @@ export class ChatRoom implements OnInit, OnDestroy {
       if (messageFile) {
         this.selectedFile.set(messageFile);
       }
+    }
+    finally {
+      this.isSendingMessage.set(false);
     }
   }
 
