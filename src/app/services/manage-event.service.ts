@@ -7,7 +7,7 @@ import { Capacitor } from '@capacitor/core';
 import { NavigationService } from './navigation.service';
 import { ToasterService } from './toaster.service';
 import { EventService } from './event.service';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { CapacitorBarcodeScanner, CapacitorBarcodeScannerTypeHintALLOption } from '@capacitor/barcode-scanner';
 import { IEvent } from '@/interfaces/event';
 
 @Injectable({ providedIn: 'root' })
@@ -191,26 +191,13 @@ export class ManageEventService extends BaseApiService {
   }
   async scanQRCode(): Promise<void> {
     try {
-      const result = await BarcodeScanner.scan();
-
-      if (result.barcodes && result.barcodes.length > 0) {
-        const barcode = result.barcodes[0];
-        const scannedValue = barcode.displayValue || barcode.rawValue || '';
-
-        if (scannedValue) {
-          await this.handleQRCodeScanned(scannedValue);
-        } else {
-          this.toasterService.showError('No QR code data found');
-        }
+      const { ScanResult } = await CapacitorBarcodeScanner.scanBarcode({ hint: CapacitorBarcodeScannerTypeHintALLOption.ALL });
+      if (ScanResult) {
+        await this.handleQRCodeScanned(ScanResult);
       } else {
         this.toasterService.showError('No QR code detected');
       }
-    } catch (error: any) {
-      if (error.message && (error.message.includes('cancel') || error.message.includes('dismiss'))) {
-        // User cancelled, no need to show error
-        return;
-      }
-      console.error('Error scanning QR code:', error);
+    } catch (error) {
       this.toasterService.showError('Failed to scan QR code');
     }
   }

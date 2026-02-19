@@ -13,7 +13,7 @@ import { inject, signal, computed, Component, afterEveryRender, ChangeDetectionS
 import { Subject, debounceTime, distinctUntilChanged, switchMap, from, map, catchError, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { IUser } from '@/interfaces/IUser';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { CapacitorBarcodeScanner, CapacitorBarcodeScannerTypeHintALLOption } from '@capacitor/barcode-scanner';
 import { NavigationService } from '@/services/navigation.service';
 import { Capacitor } from '@capacitor/core';
 import { extractUsernameFromQR } from '@/utils/helper';
@@ -163,26 +163,13 @@ export class AddNetwork implements OnDestroy {
 
   async scanQRCode(): Promise<void> {
     try {
-      const result = await BarcodeScanner.scan();
-
-      if (result.barcodes && result.barcodes.length > 0) {
-        const barcode = result.barcodes[0];
-        const scannedValue = barcode.displayValue || barcode.rawValue || '';
-
-        if (scannedValue) {
-          await this.handleQRCodeScanned(scannedValue);
-        } else {
-          this.toasterService.showError('No QR code data found');
-        }
+      const { ScanResult } = await CapacitorBarcodeScanner.scanBarcode({ hint: CapacitorBarcodeScannerTypeHintALLOption.ALL });
+      if (ScanResult) {
+        await this.handleQRCodeScanned(ScanResult);
       } else {
         this.toasterService.showError('No QR code detected');
       }
     } catch (error: any) {
-      if (error.message && (error.message.includes('cancel') || error.message.includes('dismiss'))) {
-        // User cancelled, no need to show error
-        return;
-      }
-      console.error('Error scanning QR code:', error);
       this.toasterService.showError('Failed to scan QR code');
     }
   }
