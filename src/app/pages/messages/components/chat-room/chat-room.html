@@ -269,7 +269,7 @@
       </div>
     } @else {
       @if (isCurrentUserHost()) {
-        <div class="px-4 pt-2">
+        <div class="px-4 pt-2 max-w-[672px] mx-auto">
           <p-checkbox binary="true" [ngModel]="broadcastEmail()" (ngModelChange)="broadcastEmail.set($event)"></p-checkbox>
           <label class="body-14 cursor-pointer ps-3">Broadcast Email</label>
         </div>
