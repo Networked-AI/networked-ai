@@ -133,6 +133,7 @@
                         <div
                           class="relative rounded-xl p-[2px] transition cursor-pointer"
                           [style.background]="getBannerBorderStyle(option.type, discountType() === option.type)"
+                          (click)="planForm().get('discountType')?.setValue(option.type)"
                         >
                           <div
                             class="relative rounded-xl px-4 pt-8 pb-4 h-full"
@@ -155,6 +156,7 @@
                           class="relative rounded-xl border-2 px-4 pt-8 pb-4 transition cursor-pointer"
                           [style.border-color]="getBannerBorderStyle(option.type, discountType() === option.type)"
                           [style.background-color]="discountType() === option.type ? bannerColors().background : '#FFFFFF'"
+                          (click)="planForm().get('discountType')?.setValue(option.type)"
                         >
                           <!-- Badge -->
                           <div

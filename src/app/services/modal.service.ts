@@ -263,7 +263,7 @@ export class ModalService {
       initialBreakpoint: 1,
       component: NetworkTagModal,
       backdropDismiss: true,
-      cssClass: 'modal-600px-height ',
+      cssClass: 'modal-60-percent-height ',
       componentProps: {
         title: 'Networked Meta Tags',
         subtitle: 'Select up to 5',
@@ -285,7 +285,7 @@ export class ModalService {
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      cssClass: 'modal-600px-height',
+      cssClass: 'modal-60-percent-height',
       component: AIPromptModal,
       componentProps: {
         conversation,
@@ -312,7 +312,7 @@ export class ModalService {
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: TicketFormModal,
-      cssClass: 'modal-600px-height',
+      cssClass: 'modal-60-percent-height',
       backdropDismiss: false,
       componentProps: {
         ticketType,
@@ -354,7 +354,7 @@ export class ModalService {
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: PromoCodeFormModal,
-      cssClass: 'modal-600px-height',
+      cssClass: 'modal-60-percent-height',
       backdropDismiss: false,
       componentProps: {
         initialData
@@ -374,7 +374,7 @@ export class ModalService {
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: SubscriptionPlansModal,
-      cssClass: 'modal-600px-height',
+      cssClass: 'modal-60-percent-height',
       backdropDismiss: true,
       componentProps: {
         plans,
@@ -655,7 +655,7 @@ export class ModalService {
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: ManageRoleModal,
-      cssClass: 'modal-600px-height',
+      cssClass: 'modal-60-percent-height',
       componentProps: { participants, eventId }
     });
 
@@ -686,7 +686,7 @@ export class ModalService {
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: ShareModal,
-      cssClass: 'modal-600px-height',
+      cssClass: 'modal-60-percent-height',
       componentProps: { id, type }
     });
     await modal.present();
@@ -828,7 +828,7 @@ export class ModalService {
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      cssClass: 'modal-600px-height',
+      cssClass: 'modal-60-percent-height',
       component: RsvpModal,
       componentProps: {
         tickets,
@@ -860,7 +860,7 @@ export class ModalService {
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      cssClass: 'modal-600px-height',
+      cssClass: 'modal-60-percent-height',
       component: QuestionnairePreviewModal,
       componentProps: {
         questions,
@@ -887,7 +887,7 @@ export class ModalService {
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
-      cssClass: 'modal-600px-height',
+      cssClass: 'modal-60-percent-height',
       component: RsvpDetailsModal,
       componentProps: { eventTitle, date, location, eventId, rsvpData, hostPaysFees, additionalFees, hostName }
     });
@@ -907,7 +907,7 @@ export class ModalService {
       componentProps: {
         selectedCity: selectedCity
       },
-      cssClass: 'modal-600px-height'
+      cssClass: 'modal-60-percent-height'
     });
 
     await modal.present();
@@ -1090,7 +1090,7 @@ export class ModalService {
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: TicketsListModal,
-      cssClass: 'modal-600px-height',
+      cssClass: 'modal-60-percent-height',
       componentProps: { tickets }
     });
 

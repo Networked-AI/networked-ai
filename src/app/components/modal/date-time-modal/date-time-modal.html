@@ -8,10 +8,10 @@
   <div class="flex items-center justify-center">
     <ion-datetime
       mode="md"
-      [value]="getFormattedValue()"
+      [value]="value"
       [preferWheel]="true"
       [presentation]="type"
-      [min]="getMinValue()"
+      [min]="min"
       [max]="getMaxValue()"
       [showDefaultButtons]="false"
       (ionChange)="value = $any($event).detail.value"

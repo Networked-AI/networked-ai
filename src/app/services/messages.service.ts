@@ -164,7 +164,7 @@ export class MessagesService extends BaseApiService {
    * Create or get existing chat room
    */
   async createOrGetChatRoom(params: {
-    user_ids: string[];
+    user_ids?: string[];
     name?: string | null;
     is_personal?: boolean;
     event_id?: string | null;
@@ -173,7 +173,7 @@ export class MessagesService extends BaseApiService {
   }): Promise<{ room_id: string; room?: ChatRoom; message?: string }> {
     try {
       const payload: {
-        user_ids: string[];
+        user_ids?: string[];
         name?: string | null;
         is_personal?: boolean;
         event_id?: string | null;
@@ -234,13 +234,20 @@ export class MessagesService extends BaseApiService {
   /**
    * Send/create a message in a chat room
    */
-  async sendMessage(roomId: string, message: string, postId?: string, eventId?: string): Promise<{ message: ChatMessage }> {
+  async sendMessage(
+    roomId: string,
+    message: string,
+    postId?: string,
+    eventId?: string,
+    isBroadcastEmail = false
+  ): Promise<{ message: ChatMessage }> {
     try {
       const payload: {
         message: string;
         room_id: string;
         post_id?: string;
         event_id?: string;
+        is_broadcast_email?: boolean;
       } = {
         message,
         room_id: roomId
@@ -252,6 +259,9 @@ export class MessagesService extends BaseApiService {
 
       if (eventId) {
         payload.event_id = eventId;
+      }
+      if (isBroadcastEmail) {
+        payload.is_broadcast_email = true;
       }
 
       const response = await this.post<{ success: boolean; message: string; data: { message: ChatMessage; media: any } }>('/messages/', payload);
@@ -266,12 +276,13 @@ export class MessagesService extends BaseApiService {
   /**
    * Send/create a message with file attachment in a chat room
    */
-  async sendMessageWithFile(roomId: string, message: string, file: File): Promise<{ message: ChatMessage }> {
+  async sendMessageWithFile(roomId: string, message: string, file: File, isBroadcastEmail = false): Promise<{ message: ChatMessage }> {
     try {
       const payload: {
         message?: string;
         room_id: string;
         file: File;
+        is_broadcast_email?: boolean;
       } = {
         room_id: roomId,
         file: file
@@ -279,6 +290,9 @@ export class MessagesService extends BaseApiService {
 
       if (message && message.trim()) {
         payload.message = message.trim();
+      }
+      if (isBroadcastEmail) {
+        payload.is_broadcast_email = true;
       }
 
       const response = await this.postFormData<{ success: boolean; message: string; data: { message: ChatMessage; media: any } }>(

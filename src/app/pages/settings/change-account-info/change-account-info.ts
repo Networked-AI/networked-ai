@@ -168,7 +168,8 @@ export class ChangeAccountInfo implements OnInit {
         await this.modalService.openSuccessModal({
           title: 'Password Successfully Updated',
           description: "You've updated your password. Use this for login next time.",
-          buttonLabel: 'Close'
+          buttonLabel: 'Close',
+          navigateBack: true
         });
       } catch (error: any) {
         console.error('Error changing password:', error);
@@ -253,10 +254,9 @@ export class ChangeAccountInfo implements OnInit {
         await this.modalService.openSuccessModal({
           title: 'Username Successfully Updated',
           description: "You've updated your username.",
-          buttonLabel: 'Close'
+          buttonLabel: 'Close',
+          navigateBack: true
         });
-
-        this.navigationService.back();
       }
     } catch (error: any) {
       console.error(`Error updating ${this.type()}:`, error);

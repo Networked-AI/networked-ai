@@ -8,6 +8,7 @@ import { NavigationService } from '@/services/navigation.service';
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 
 let isLogoutModalOpen = false;
+let isPasswordNotSetModalOpen = false;
 
 export const apiInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
@@ -16,7 +17,7 @@ export const apiInterceptor: HttpInterceptorFn = (req, next) => {
   const navigationService = inject(NavigationService);
 
   // URLs that should skip token addition (e.g., login)
-  const skipUrls = ['auth/login', 'https://api.maptiler.com', 'users/check', 'https://api.openai.com', 'https://api.github.com', 'https://places.googleapis.com'];
+  const skipUrls = ['https://api.maptiler.com', 'users/check', 'https://api.openai.com', 'https://api.github.com', 'https://places.googleapis.com'];
   const shouldSkip = skipUrls.some((url) => req.url.includes(url));
 
   // check if URL is relative (starts with /) and not absolute (starts with http:// or https://)
@@ -46,13 +47,14 @@ export const apiInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(clonedReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      handleInvalidToken(router, error, authService, modalService, navigationService);
+      handleApiError(req, router, error, authService, modalService, navigationService);
       return throwError(() => error);
     })
   );
 };
 
-const handleInvalidToken = async (
+const handleApiError = async (
+  req: any,
   router: Router,
   error: HttpErrorResponse,
   authService: AuthService,
@@ -93,6 +95,35 @@ const handleInvalidToken = async (
       // If already on login page, just sign out silently
       authService.signOut();
       isLogoutModalOpen = false;
+    }
+  } else if (error.error?.errorCode === 'PASSWORD_NOT_SET' && !isPasswordNotSetModalOpen) {
+    isPasswordNotSetModalOpen = true;
+
+    try {
+      const email = req?.body?.email;
+
+      // wait 500ms to close the login loading modal
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const result = await modalService.openConfirmModal({
+        iconName: 'pi-lock',
+        iconPosition: 'center',
+        iconBgColor: '#F5BC61',
+        title: 'Forgot password?',
+        cancelButtonLabel: 'Close',
+        confirmButtonColor: 'primary',
+        description: error.error?.message,
+        confirmButtonLabel: 'Forgot password'
+      });
+
+      if (result?.role === 'confirm') {
+        const route = email ? `/forgot-password?email=${encodeURIComponent(email)}` : '/forgot-password';
+        await navigationService.navigateForward(route, false);
+      }
+    } catch (err) {
+      console.error('Error handling PASSWORD_NOT_SET:', err);
+    } finally {
+      setTimeout(() => (isPasswordNotSetModalOpen = false), 500);
     }
   }
 };

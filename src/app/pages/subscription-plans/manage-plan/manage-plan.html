@@ -40,10 +40,10 @@
   </div>
 </ion-content>
 
+@if (tabValue() === 'details') {
 <ion-footer mode="md">
   <ion-toolbar mode="md">
     <div class="p-6 max-w-[672px] mx-auto">
-      @if (tabValue() === 'details') {
         <div class="flex items-center gap-2">
           <app-button label="Cancel" height="40px" color="secondary" class="flex-1" (click)="back()" />
           <app-button
@@ -55,7 +55,7 @@
             (click)="saveChanges()"
           />
         </div>
-      }
-    </div>
-  </ion-toolbar>
-</ion-footer>
+      </div>
+    </ion-toolbar>
+  </ion-footer>
+}

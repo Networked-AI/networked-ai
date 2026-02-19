@@ -2,7 +2,17 @@ import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } 
 import { CommonModule, DatePipe } from '@angular/common';
 import { UserService } from 'src/app/services/user.service';
 import { PaymentTransactionItem } from './components/payment-transaction-item';
-import { NavController, IonHeader, IonToolbar, IonContent, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
+import {
+  NavController,
+  IonHeader,
+  IonToolbar,
+  IonContent,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+  IonRefresher,
+  IonRefresherContent,
+  IonSpinner
+} from '@ionic/angular/standalone';
 
 export interface PaymentTransaction {
   id: string;
@@ -18,11 +28,24 @@ export interface PaymentTransaction {
   templateUrl: './payment-history.html',
   styleUrl: './payment-history.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, IonHeader, IonToolbar, IonContent, CommonModule, IonInfiniteScroll, PaymentTransactionItem, IonInfiniteScrollContent]
+  imports: [
+    IonSpinner,
+    IonRefresherContent,
+    IonRefresher,
+    DatePipe,
+    IonHeader,
+    IonToolbar,
+    IonContent,
+    CommonModule,
+    IonInfiniteScroll,
+    PaymentTransactionItem,
+    IonInfiniteScrollContent
+  ]
 })
 export class PaymentHistory implements OnInit {
   private navCtrl = inject(NavController);
   private userService = inject(UserService);
+  private datePipe = new DatePipe('en-US');
 
   isDownloading = signal(false);
   isLoading = signal(false);
@@ -39,7 +62,7 @@ export class PaymentHistory implements OnInit {
 
   async loadPaymentHistory(event?: CustomEvent): Promise<void> {
     if (this.isLoading() || !this.hasMore()) {
-      event?.target && (event.target as HTMLIonInfiniteScrollElement).complete();
+      (event?.target as HTMLIonInfiniteScrollElement)?.complete();
       return;
     }
 
@@ -47,7 +70,6 @@ export class PaymentHistory implements OnInit {
       this.isLoading.set(true);
 
       const response = await this.userService.paymentHistory(this.page, this.limit);
-
       const newTransactions = response?.data ?? [];
 
       this.transactions.update((prev) => [...prev, ...newTransactions]);
@@ -61,7 +83,19 @@ export class PaymentHistory implements OnInit {
       console.error('Error loading payment history', error);
     } finally {
       this.isLoading.set(false);
-      event?.target && (event.target as HTMLIonInfiniteScrollElement).complete();
+      (event?.target as HTMLIonInfiniteScrollElement)?.complete();
+    }
+  }
+
+  async onRefresh(event: CustomEvent) {
+    try {
+      this.page = 1;
+      this.hasMore.set(true);
+      this.transactions.set([]);
+
+      await this.loadPaymentHistory();
+    } finally {
+      (event.target as HTMLIonRefresherElement).complete();
     }
   }
 
@@ -71,7 +105,7 @@ export class PaymentHistory implements OnInit {
     const groups = new Map<string, any[]>();
 
     transactions.forEach((tx) => {
-      const dateKey = this.formatDateKey(tx.created_at);
+      const dateKey = this.datePipe.transform(tx.created_at, 'yyyy-MM-dd') ?? '';
 
       if (!groups.has(dateKey)) {
         groups.set(dateKey, []);
@@ -82,26 +116,12 @@ export class PaymentHistory implements OnInit {
 
     return Array.from(groups.entries()).map(([dateKey, transactions]) => ({
       dateKey,
-      date: new Date(dateKey),
+      date: dateKey,
       transactions
     }));
   });
 
   hasTransactions = computed(() => this.transactions().length > 0);
-
-  private formatDateKey(dateValue?: string | null): string {
-    if (!dateValue) {
-      return new Date().toISOString().split('T')[0];
-    }
-
-    const date = new Date(dateValue);
-
-    if (isNaN(date.getTime())) {
-      return new Date().toISOString().split('T')[0];
-    }
-
-    return date.toISOString().split('T')[0];
-  }
 
   back(): void {
     this.navCtrl.back();

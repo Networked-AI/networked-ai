@@ -10,6 +10,7 @@ import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { UsernameInput } from '@/components/form/username-input';
 import { input, inject, Component, ViewChild } from '@angular/core';
 import { UserSettingToggle } from '@/components/form/user-setting-toggle';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'user-personal-info',
@@ -24,6 +25,7 @@ export class UserPersonalInfo {
 
   // services
   private modalService = inject(ModalService);
+  private datePipe = new DatePipe('en-US');
 
   // view child
   @ViewChild(MobileInput) mobileInput?: MobileInput;
@@ -87,7 +89,7 @@ export class UserPersonalInfo {
     this.formGroup().patchValue({ address, latitude, longitude });
   }
 
-  getMaxDate(): string {
-    return new Date().toISOString().split('T')[0];
+  getMaxDate() {
+    return this.datePipe.transform(new Date(), 'yyyy-MM-dd');
   }
 }

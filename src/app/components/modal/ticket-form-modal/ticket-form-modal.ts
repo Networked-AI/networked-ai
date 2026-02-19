@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { CheckboxModule } from 'primeng/checkbox';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
@@ -37,6 +38,7 @@ export class TicketFormModal implements OnInit {
   private modalService = inject(ModalService);
   private descriptionGenerator = inject(DescriptionGeneratorService);
   private toasterService = inject(ToasterService);
+  private datePipe = new DatePipe('en-US');
 
   // inputs
   @Input() ticketType: TicketType = 'Free';
@@ -66,91 +68,61 @@ export class TicketFormModal implements OnInit {
     const isFree = this.ticketType === 'Free';
     this.isFreeTicket.set(isFree);
 
-    // Get current date and time for defaults
     const now = new Date();
-    const currentDate = now.toISOString().split('T')[0];
-    const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const currentDate = this.datePipe.transform(now, 'yyyy-MM-dd')!;
+    const currentTime = this.datePipe.transform(now, 'HH:mm')!;
 
-    // Initialize date/time values for form controls
-    let salesStartDateValue = '';
-    let salesStartTimeValue = '';
-    if (this.initialData?.sales_start_date && this.initialData?.sale_start_time) {
-      // Use separate date and time strings directly
-      salesStartDateValue = this.initialData.sales_start_date;
-      salesStartTimeValue = this.initialData.sale_start_time;
-    } else {
-      // Set default to current date and time
-      salesStartDateValue = currentDate;
-      salesStartTimeValue = currentTime;
-    }
+    const salesStartDateValue = this.initialData?.sales_start_date ?? currentDate;
+    const salesStartTimeValue = this.initialData?.sale_start_time ?? currentTime;
 
     const endSaleOnEventStart = this.initialData?.end_at_event_start ?? true;
     this.endSaleOnEventStart.set(endSaleOnEventStart);
 
-    let salesEndDateValue = '';
-    let salesEndTimeValue = '';
-    if (this.initialData?.sales_end_date && this.initialData?.sale_end_time) {
-      // Use separate date and time strings directly
-      salesEndDateValue = this.initialData.sales_end_date;
-      salesEndTimeValue = this.initialData.sale_end_time;
-    } else if (!endSaleOnEventStart && this.eventDate && this.eventEndTime) {
-      // Set default to event end date and time if end_at_event_start is false
-      salesEndDateValue = this.eventDate;
-      salesEndTimeValue = this.eventEndTime;
-    }
+    const salesEndDateValue = this.initialData?.sales_end_date ?? (!endSaleOnEventStart && this.eventDate ? this.eventDate : '');
+
+    const salesEndTimeValue = this.initialData?.sale_end_time ?? (!endSaleOnEventStart && this.eventEndTime ? this.eventEndTime : '');
 
     const form = this.fb.group({
-      name: [this.initialData?.name || '', [Validators.required]],
-      price: [isFree ? '0.00' : this.initialData?.price || '5.00', [Validators.required]],
-      quantity: [this.initialData?.quantity || 500, [Validators.required]],
-      description: [this.initialData?.description || ''],
-      sales_start_date: [salesStartDateValue, [Validators.required]],
-      sale_start_time: [salesStartTimeValue, [Validators.required]],
+      name: [this.initialData?.name ?? '', Validators.required],
+      price: [isFree ? '0.00' : (this.initialData?.price ?? '5.00'), Validators.required],
+      quantity: [this.initialData?.quantity ?? 500, Validators.required],
+      description: [this.initialData?.description ?? ''],
+
+      sales_start_date: [salesStartDateValue, Validators.required],
+      sale_start_time: [salesStartTimeValue, Validators.required],
+
       sales_end_date: [salesEndDateValue],
       sale_end_time: [salesEndTimeValue],
+
       end_at_event_start: [endSaleOnEventStart],
       free_for_subscribers: [this.initialData?.free_for_subscribers ?? false]
     });
+
     this.ticketForm.set(form);
 
-    if (isFree) {
-      form.get('price')?.disable();
-    }
+    if (isFree) form.get('price')?.disable();
+
+    const salesEndDateControl = form.get('sales_end_date');
+    const salesEndTimeControl = form.get('sale_end_time');
 
     form.get('end_at_event_start')?.valueChanges.subscribe((value) => {
-      this.endSaleOnEventStart.set(value ?? true);
+      const isEndAtEventStart = value ?? true;
+      this.endSaleOnEventStart.set(isEndAtEventStart);
 
-      // Update validators for sales_end_date and sale_end_time based on checkbox value
-      const salesEndDateControl = form.get('sales_end_date');
-      const salesEndTimeControl = form.get('sale_end_time');
-
-      if (value) {
-        // If end_at_event_start is true, remove required validators
+      if (isEndAtEventStart) {
         salesEndDateControl?.clearValidators();
         salesEndTimeControl?.clearValidators();
-        // Clear values when checkbox is checked
         salesEndDateControl?.setValue('');
         salesEndTimeControl?.setValue('');
       } else {
-        // If end_at_event_start is false, add required validators
-        salesEndDateControl?.setValidators([Validators.required]);
-        salesEndTimeControl?.setValidators([Validators.required]);
-        // Set default values to event end date/time if fields are empty, otherwise current date/time
-        if (!salesEndDateControl?.value) {
-          if (this.eventDate) {
-            salesEndDateControl?.setValue(this.eventDate);
-          } else {
-            const now = new Date();
-            salesEndDateControl?.setValue(now.toISOString().split('T')[0]);
-          }
+        salesEndDateControl?.setValidators(Validators.required);
+        salesEndTimeControl?.setValidators(Validators.required);
+
+        if (!salesEndDateControl?.value && this.eventDate) {
+          salesEndDateControl?.setValue(this.eventDate);
         }
-        if (!salesEndTimeControl?.value) {
-          if (this.eventEndTime) {
-            salesEndTimeControl?.setValue(this.eventEndTime);
-          } else {
-            const now = new Date();
-            salesEndTimeControl?.setValue(`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
-          }
+        if (!salesEndTimeControl?.value && this.eventEndTime) {
+          salesEndTimeControl?.setValue(this.eventEndTime);
         }
       }
 
@@ -258,7 +230,7 @@ export class TicketFormModal implements OnInit {
     const currentDate = form.get(type)?.value || '';
 
     const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
+    const todayStr = this.datePipe.transform(today, 'yyyy-MM-dd') ?? '';
     const maxDate = this.eventDate || undefined;
 
     let minDate: string | undefined = todayStr;

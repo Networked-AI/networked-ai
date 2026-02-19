@@ -82,7 +82,7 @@
                 <!-- Name + points -->
                 <div class="flex items-center gap-2 min-w-0">
                   <span class="font-medium truncate block max-w-full">
-                    {{s?.parent_user_id ? s?.name || 'Guest' : s?.user?.name }}
+                    {{ s?.parent_user_id ? s?.name || 'Guest' : s?.user?.name }}
                   </span>
 
                   @if (!s?.parent_user_id) {
@@ -106,13 +106,21 @@
                   } @else if (s?.event_ticket?.ticket_type != 'Free') {
                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-[#9E660A]"> Unpaid </span>
                   }
+                  @if (s?.parent_user_id) {
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-[#092a85]"> guest </span>
+                  }
                 </div>
               </div>
 
               <!-- Fixed Right Actions -->
               <div class="flex items-center gap-2 shrink-0">
                 @if (!s?.is_checked_in) {
-                  <p-button label="Check In" type="text" (click)="$event.stopPropagation(); hapticService.onClick(); checkIn(s.id);" [style]="{ height: '36px' }"></p-button>
+                  <p-button
+                    label="Check In"
+                    type="text"
+                    (click)="$event.stopPropagation(); hapticService.onClick(); checkIn(s.id)"
+                    [style]="{ height: '36px' }"
+                  ></p-button>
                 } @else if (isChecking() && s.id === selectedGuestId()) {
                   <ion-spinner name="crescent" class="w-5 h-5"></ion-spinner>
                 }

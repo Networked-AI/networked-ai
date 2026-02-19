@@ -28,7 +28,7 @@ import { EditorInput } from '@/components/form/editor-input';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { NetworkTag } from '@/components/modal/network-tag-modal';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
-import { CommonModule, DOCUMENT, NgOptimizedImage } from '@angular/common';
+import { CommonModule, DOCUMENT, DatePipe, NgOptimizedImage } from '@angular/common';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { DescriptionGeneratorService } from '@/services/description-generator.service';
 
@@ -41,6 +41,8 @@ import { DescriptionGeneratorService } from '@/services/description-generator.se
   imports: [Button, TextInput, EditorInput, DragDropModule, CheckboxModule, ReactiveFormsModule, CommonModule, NgOptimizedImage]
 })
 export class EventDetails implements OnInit {
+  private datePipe = new DatePipe('en-US');
+
   eventForm = input.required<FormGroup>();
   isSubmitted = input(false);
   maxDescriptionLength = 2500;
@@ -284,21 +286,11 @@ export class EventDetails implements OnInit {
     return Array.isArray(value) ? value : [value];
   }
 
-  private getTodayDate(): string {
-    const today = new Date();
-
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-
-    return `${year}-${month}-${day}`; // LOCAL YYYY-MM-DD
-  }
-
   async openDateModal(): Promise<void> {
     const form = this.eventForm();
     const currentDate = form.get('date')?.value || '';
 
-    const minDate = this.getTodayDate();
+    const minDate = this.datePipe.transform(new Date(), 'yyyy-MM-dd') ?? undefined;
 
     const date = await this.modalService.openDateTimeModal('date', currentDate, minDate);
 
@@ -313,26 +305,36 @@ export class EventDetails implements OnInit {
     const startTime = form.get('start_time')?.value;
     const selectedDate = form.get('date')?.value || '';
 
-    let min: string | undefined = undefined;
+    let min: string | undefined;
 
-    if (type === 'end_time' && startTime) {
-      min = this.addMinutesToTime(startTime, 30);
+    const toISO = (date: string, time: string) => `${date}T${time.length === 5 ? time : time + ':00'}`;
+
+    if (type === 'end_time' && startTime && selectedDate) {
+      min = toISO(selectedDate, startTime);
     }
 
-    // If date is today, ensure time is after current time
-    if (selectedDate && this.isToday(selectedDate)) {
-      const currentTimeStr = this.getCurrentTime();
-      if (!min || this.isTimeAfter(currentTimeStr, min)) {
-        min = currentTimeStr;
+    if (type === 'start_time' && selectedDate && this.eventService.isToday(selectedDate)) {
+      const nowTime = this.eventService.getCurrentTime();
+      const nowISO = toISO(selectedDate, nowTime);
+
+      if (!min || nowISO > min) {
+        min = nowISO;
       }
     }
 
-    const time = await this.modalService.openDateTimeModal('time', currentTime, min);
+    let value = currentTime;
+    if (value && selectedDate && !value.includes('T')) {
+      value = toISO(selectedDate, value);
+    }
+
+    const time = await this.modalService.openDateTimeModal('time', value, min);
+
     if (time) {
-      form.patchValue({ [type]: time });
+      const timePart = time.includes('T') ? time.split('T')[1] : time;
+      const timeOnly = timePart?.slice(0, 5);
+      form.patchValue({ [type]: timeOnly });
     }
   }
-
   async openLocationModal(): Promise<void> {
     const locationData = await this.modalService.openLocationModal();
     if (locationData) {
@@ -417,7 +419,7 @@ export class EventDetails implements OnInit {
 
       const selectedCategory = categories.find((cat) => cat.id === selectedCategoryId);
       if (selectedCategory?.name) {
-        form.get('category')?.setValue(selectedCategory.name, { emitEvent: true });
+        form.get('category')?.setValue(`${selectedCategory.icon}   ${selectedCategory.name}`, { emitEvent: true });
       }
     }
   }
@@ -459,35 +461,6 @@ export class EventDetails implements OnInit {
 
   getFieldValue<T>(field: string): T | null {
     return this.eventForm().get(field)?.value ?? null;
-  }
-
-  addMinutesToTime(time: string, minutes: number): string {
-    const [hours, mins] = time.split(':').map(Number);
-    const date = new Date();
-    date.setHours(hours, mins + minutes, 0, 0);
-    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-  }
-
-  isToday(dateString: string): boolean {
-    if (!dateString) return false;
-    const today = new Date();
-    const date = new Date(dateString);
-    return date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate();
-  }
-
-  getCurrentTime(): string {
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
-  }
-
-  isTimeAfter(time1: string, time2: string): boolean {
-    const [hours1, mins1] = time1.split(':').map(Number);
-    const [hours2, mins2] = time2.split(':').map(Number);
-    const totalMins1 = hours1 * 60 + mins1;
-    const totalMins2 = hours2 * 60 + mins2;
-    return totalMins1 > totalMins2;
   }
 
   handleGenerateClick = (): void => {

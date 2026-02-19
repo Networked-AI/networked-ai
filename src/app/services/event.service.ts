@@ -331,55 +331,85 @@ export class EventService extends BaseApiService {
 
   formatTime(timeString: string): string {
     if (!timeString) return '';
+
     const [hours, minutes] = timeString.split(':').map(Number);
     const date = new Date();
     date.setHours(hours, minutes, 0, 0);
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-  }
 
-  getTodayDate(): string {
-    return new Date().toISOString().split('T')[0];
+    return this.datePipe.transform(date, 'hh:mm a') ?? '';
   }
 
   getCurrentTime(): string {
     const now = new Date();
-    return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    return this.datePipe.transform(now, 'HH:mm') ?? '';
   }
 
   addMinutesToTime(time: string, minutes: number): string {
     const [hours, mins] = time.split(':').map(Number);
+
     const date = new Date();
-    date.setHours(hours, mins + minutes, 0, 0);
-    return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    date.setHours(hours, mins, 0, 0);
+    date.setMinutes(date.getMinutes() + minutes);
+
+    return this.datePipe.transform(date, 'HH:mm') ?? '';
   }
 
   isTimeAfter(time1: string, time2: string): boolean {
-    const [hours1, mins1] = time1.split(':').map(Number);
-    const [hours2, mins2] = time2.split(':').map(Number);
-    const totalMinutes1 = hours1 * 60 + mins1;
-    const totalMinutes2 = hours2 * 60 + mins2;
-    return totalMinutes1 > totalMinutes2;
+    const [h1, m1] = time1.split(':').map(Number);
+    const [h2, m2] = time2.split(':').map(Number);
+
+    return h1 * 60 + m1 > h2 * 60 + m2;
+  }
+
+  isToday(dateString: string): boolean {
+    if (!dateString) return false;
+
+    const today = new Date();
+
+    // parse YYYY-MM-DD as local date
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+
+    return date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate();
+  }
+
+  /** Combines date (YYYY-MM-DD) and time (HH:mm) into a Date for display/formatting. */
+  combineDateAndTimeToDate(dateStr: string | null | undefined, timeStr: string | null | undefined): Date | null {
+    if (!dateStr || !timeStr) return null;
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return new Date(year, month - 1, day, hours, minutes, 0, 0);
+  }
+
+  formatDisplayDate(date: Date): string {
+    return this.datePipe.transform(date, 'd MMM') ?? '';
+  }
+
+  formatDisplayTime(date: Date): string {
+    return this.datePipe.transform(date, 'hh:mm a') ?? '';
   }
 
   combineDateAndTime(dateStr: string | null, timeStr: string | null): string | null {
-    if (!dateStr || !timeStr) {
-      return null;
-    }
+    if (!dateStr || !timeStr) return null;
+
+    const [year, month, day] = dateStr.split('-').map(Number);
     const [hours, minutes] = timeStr.split(':').map(Number);
-    const date = new Date(dateStr);
-    date.setHours(hours, minutes, 0, 0);
-    return date.toISOString();
+
+    const localDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
+
+    return this.datePipe.transform(localDate, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", 'UTC') ?? null;
   }
 
   parseDateTime(dateTimeStr: string): { date: string; time: string } | null {
     if (!dateTimeStr) return null;
+
     const date = new Date(dateTimeStr);
     if (isNaN(date.getTime())) return null;
 
-    const dateStr = date.toISOString().split('T')[0];
-    const timeStr = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-
-    return { date: dateStr, time: timeStr };
+    return {
+      date: this.datePipe.transform(date, 'yyyy-MM-dd') ?? '',
+      time: this.datePipe.transform(date, 'HH:mm') ?? ''
+    };
   }
 
   getUserSections(participants: any[], attendees?: any[]): UserSection[] {
@@ -483,7 +513,7 @@ export class EventService extends BaseApiService {
       if (!dateTimeStr) return null;
       const date = new Date(dateTimeStr);
       if (isNaN(date.getTime())) return null;
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = this.datePipe.transform(date, 'yyyy-MM-dd') ?? '';
       const timeStr = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
       return { date: dateStr, time: timeStr };
     };
@@ -847,7 +877,7 @@ export class EventService extends BaseApiService {
       }
       return { option: String(opt), order: index + 1 };
     });
-  } 
+  }
 
   formatTickets(tickets: any[], eventDate: string | null, eventStartTime: string | null): any[] {
     return tickets.map((ticket, index) => {

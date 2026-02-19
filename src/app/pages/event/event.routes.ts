@@ -12,13 +12,14 @@ import { QuestionnaireResponse } from '@/pages/event/questionnaire-response';
 import { AnalyticsUserList } from '@/pages/event/components/analytics-user-list';
 import { QuestionnaireUserList } from '@/pages/event/components/questionnaire-user-list';
 import { authGuard } from '@/guards/auth.guard';
+import { LeaveGuard } from '@/guards/leave.guard';
 
 export default [
-  { path: '', component: CreateEvent, canActivate: [authGuard] },
+  { path: '', component: CreateEvent, canActivate: [authGuard], canDeactivate: [LeaveGuard] },
 
   { path: 'all', component: AllEvents },
   { path: 'city', component: CityEvents },
-  { path: 'edit/:id', component: CreateEvent, canActivate: [authGuard] },
+  { path: 'edit/:id', component: CreateEvent, canActivate: [authGuard], canDeactivate: [LeaveGuard] },
   { path: 'guests/:id', component: GuestList, canActivate: [authGuard] },
   { path: 'analytics/:id', component: EventAnalytics, canActivate: [authGuard] },
   { path: 'analytics/guests/:id', component: AnalyticsUserList, canActivate: [authGuard] },
