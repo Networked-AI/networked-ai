@@ -1,5 +1,5 @@
 import { Subscription } from 'rxjs';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
@@ -53,6 +53,7 @@ const EVENT_STEPS = {
 })
 export class CreateEvent implements OnInit, OnDestroy {
   @ViewChild(EventTickets) eventTickets!: EventTickets;
+  private datePipe = new DatePipe('en-US');
 
   // inputs
   @Input() isModalMode: boolean = false;
@@ -110,6 +111,7 @@ export class CreateEvent implements OnInit, OnDestroy {
     })
   );
 
+  allowLeave = signal(false);
   isLoading = signal(false);
   isCreating = signal(false);
   isEditMode = signal(false);
@@ -312,7 +314,13 @@ export class CreateEvent implements OnInit, OnDestroy {
     });
   }
 
+  beforeUnloadHandler = (event: BeforeUnloadEvent) => {
+    event.preventDefault();
+    event.returnValue = '';
+  };
+
   ngOnInit(): void {
+    window.addEventListener('beforeunload', this.beforeUnloadHandler);
     if (this.isModalMode) {
       return;
     }
@@ -364,8 +372,8 @@ export class CreateEvent implements OnInit, OnDestroy {
       }
 
       form.patchValue({
-        date: this.getTodayDate(),
-        start_time: this.addMinutesToTime(this.eventService.getCurrentTime(), 30),
+        date: this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
+        start_time: this.eventService.addMinutesToTime(this.eventService.getCurrentTime(), 30),
         is_public: true,
         participants: defaultParticipants
       });
@@ -376,8 +384,8 @@ export class CreateEvent implements OnInit, OnDestroy {
         const endTimeControl = form.get('end_time');
         const currentEndTime = endTimeControl?.value;
 
-        if (!currentEndTime || this.isTimeAfter(value, currentEndTime)) {
-          endTimeControl?.setValue(this.addMinutesToTime(value, 30));
+        if (!currentEndTime || this.eventService.isTimeAfter(value, currentEndTime)) {
+          endTimeControl?.setValue(this.eventService.addMinutesToTime(value, 30));
         }
       }
     });
@@ -442,29 +450,54 @@ export class CreateEvent implements OnInit, OnDestroy {
     return this.eventForm().get('tickets')?.value ?? [];
   }
 
-  getTodayDate(): string {
-    return this.eventService.getTodayDate();
-  }
-
-  addMinutesToTime(time: string, minutes: number): string {
-    return this.eventService.addMinutesToTime(time, minutes);
-  }
-
-  isTimeAfter(time1: string, time2: string): boolean {
-    return this.eventService.isTimeAfter(time1, time2);
-  }
-
-  previousStep(): void {
+  async previousStep(): Promise<void> {
     if (this.currentStep() === EVENT_STEPS.EVENT_DETAILS) {
       if (this.isModalMode) {
         this.modalService.close();
-      } else {
-        this.navigationService.back();
+        return;
+      }
+      const confirmed = await this.showLeaveConfirm();
+
+      if (confirmed) {
+        this.allowLeave.set(true);
+
+        if (this.router.currentNavigation()?.previousNavigation) {
+          this.navigationService.back();
+        } else {
+          this.navigationService.navigateForward('/', true);
+        }
       }
     } else {
       const previousStep = this.currentStep() - 1;
       this.navigateToStep(previousStep);
     }
+  }
+
+  private async showLeaveConfirm(): Promise<boolean> {
+    const confirmed = await this.modalService.openConfirmModal({
+      icon: 'assets/svg/alert-white.svg',
+      title: 'Unsaved Changes',
+      description: 'Are you sure you want to go back? Any unsaved changes will be lost.',
+      confirmButtonLabel: 'Go',
+      cancelButtonLabel: 'Stay',
+      confirmButtonColor: 'danger',
+      iconBgColor: '#C73838',
+      iconPosition: 'left'
+    });
+
+    return confirmed?.data;
+  }
+
+  async confirmLeave(): Promise<boolean> {
+    if (this.allowLeave()) return true;
+
+    const confirmed = await this.showLeaveConfirm();
+
+    if (confirmed) {
+      this.allowLeave.set(true);
+    }
+
+    return confirmed;
   }
 
   navigateToStep(step: number): void {
@@ -595,50 +628,51 @@ export class CreateEvent implements OnInit, OnDestroy {
   generateRepeatingEvents(): void {
     const form = this.eventForm();
     const values = form.getRawValue();
+
     const { repeating_frequency: frequency, repeat_count: count, custom_repeat_count: customCount, date } = values;
 
     const finalCount = count === 'custom' ? customCount || 0 : count || 0;
-    if (finalCount <= 0) {
-      return;
-    }
+    if (!date || finalCount <= 0) return;
 
-    const baseDateObj = new Date(date ?? this.getTodayDate());
+    const [year, month, day] = date.split('-').map(Number);
+    const baseDate = new Date(year, month - 1, day);
+
     const events: Array<Record<string, unknown>> = [];
 
-    const baseDay = baseDateObj.getDate();
-    const baseMonth = baseDateObj.getMonth();
-    const baseYear = baseDateObj.getFullYear();
-    const lastDayOfBaseMonth = new Date(baseYear, baseMonth + 1, 0).getDate();
+    const baseDay = baseDate.getDate();
+    const lastDayOfBaseMonth = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0).getDate();
+
     const isLastDayOfMonth = baseDay === lastDayOfBaseMonth;
 
     for (let i = 2; i <= finalCount; i++) {
-      const eventDate = new Date(baseDateObj);
+      let eventDate = new Date(baseDate);
+
       if (frequency === 'weekly') {
-        eventDate.setDate(baseDateObj.getDate() + (i - 1) * 7);
+        eventDate.setDate(baseDate.getDate() + (i - 1) * 7);
       } else if (frequency === 'monthly') {
-        const targetMonth = baseDateObj.getMonth() + (i - 1);
-        const targetYear = baseDateObj.getFullYear() + Math.floor(targetMonth / 12);
-        const actualMonth = targetMonth % 12;
+        const targetMonthIndex = baseDate.getMonth() + (i - 1);
 
-        const lastDayOfTargetMonth = new Date(targetYear, actualMonth + 1, 0).getDate();
+        const targetYear = baseDate.getFullYear() + Math.floor(targetMonthIndex / 12);
+        const targetMonth = targetMonthIndex % 12;
 
-        if (isLastDayOfMonth) {
-          eventDate.setFullYear(targetYear, actualMonth, lastDayOfTargetMonth);
-        } else {
-          const targetDay = baseDay > lastDayOfTargetMonth ? lastDayOfTargetMonth : baseDay;
-          eventDate.setFullYear(targetYear, actualMonth, targetDay);
-        }
+        const lastDayOfTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+
+        const targetDay = isLastDayOfMonth ? lastDayOfTargetMonth : Math.min(baseDay, lastDayOfTargetMonth);
+
+        eventDate = new Date(targetYear, targetMonth, targetDay);
       }
 
       events.push({
         ...values,
-        id: `repeating-event-${i}-${Date.now()}`,
+        id: `repeating-event-${i}-${Date.now()}-${i}`,
         eventNumber: i,
-        date: eventDate.toISOString().split('T')[0]
+        date: this.datePipe.transform(eventDate, 'yyyy-MM-dd') ?? ''
       });
     }
 
-    form.patchValue({ repeating_events: events as unknown as IEvent[] });
+    form.patchValue({
+      repeating_events: events as unknown as IEvent[]
+    });
   }
 
   async uploadAndFormatMedia(mediaItems: Array<{ id: string; type: string; file?: File; url: string }>): Promise<any[]> {
@@ -739,20 +773,20 @@ export class CreateEvent implements OnInit, OnDestroy {
   }
 
   async updateSingleEvent(formData: any): Promise<void> {
-      // Show modal with two options
-      const result = await this.showRepublishEventConfirmationModal();
-      if (result.dismissed) return;
-    
+    // Show modal with two options
+    const result = await this.showRepublishEventConfirmationModal();
+    if (result.dismissed) return;
+
     const eventPayload = await this.processEventData(formData);
-    
+
     // Add notify flag if user chose to notify
     if (result.notify) eventPayload.notify = true;
-    
+
     const response: any = await this.eventService.updateEvent(this.editingEventId()!, eventPayload);
     await this.modalService.openConfirmModal({
       icon: 'assets/svg/launch.svg',
       title: 'Event Republished!',
-      description: result.notify 
+      description: result.notify
         ? 'Your event has been successfully republished and attendees and participants will be notified.'
         : 'Your event has been successfully republished.',
       confirmButtonLabel: 'Done',
@@ -763,6 +797,7 @@ export class CreateEvent implements OnInit, OnDestroy {
         await this.modalService.openShareModal(response?.data.id, 'Event');
       }
     });
+    this.allowLeave.set(true);
     if (this.isModalMode) {
       this.modalCtrl.dismiss(response, 'updated');
     } else {
@@ -815,7 +850,7 @@ export class CreateEvent implements OnInit, OnDestroy {
           price: 0,
           quantity: 999,
           description: 'This event is exclusively for subscribers. Join us for this special experience!',
-          sales_start_date: new Date().toISOString().split('T')[0],
+          sales_start_date: this.datePipe.transform(new Date(), 'yyyy-MM-dd') ?? '',
           sales_end_date: endDate,
           end_at_event_start: true,
           order: 1
@@ -870,6 +905,7 @@ export class CreateEvent implements OnInit, OnDestroy {
           await this.modalService.openShareModal(createResponse?.data?.events[0].id, 'Event');
         }
       });
+      this.allowLeave.set(true);
       if (slug) {
         this.navigationService.navigateForward(`/event/${slug}`, true);
       } else {
@@ -910,7 +946,7 @@ export class CreateEvent implements OnInit, OnDestroy {
       confirmButtonColor: 'primary',
       cancelButtonLabel: 'Republish Only',
       confirmButtonLabel: 'Republish and Notify',
-      description: 'Please review your changes. Once confirmed, the event will be updated with the new information.',
+      description: 'Please review your changes. Once confirmed, the event will be updated with the new information.'
     });
 
     if (result?.role === 'confirm') {
@@ -925,5 +961,6 @@ export class CreateEvent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.queryParamsSubscription?.unsubscribe();
     this.previewFormValueSubscription?.unsubscribe();
+    window.removeEventListener('beforeunload', this.beforeUnloadHandler);
   }
 }

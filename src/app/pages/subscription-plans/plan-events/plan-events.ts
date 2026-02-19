@@ -673,7 +673,7 @@ export class PlanEvents implements OnInit, OnDestroy {
 
     const dayOfWeek = this.datePipe.transform(startDate, 'EEE') || '';
     const day = startDate.getDate().toString();
-    const dateStr = startDate.toISOString().split('T')[0];
+    const dateStr = this.datePipe.transform(startDate, 'yyyy-MM-dd') ?? '';
 
     const startTime = startDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
     let timeStr = startTime;

@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Component, input, output, ChangeDetectionStrategy, computed } from '@angular/core';
 
 @Component({
@@ -13,6 +13,7 @@ export class RepeatingEventItem {
   isMainEvent = input<boolean>(false);
   edit = output<any>();
   delete = output<string>();
+  private datePipe = new DatePipe('en-US');
 
   eventImage = computed(() => {
     const eventData = this.event();
@@ -55,10 +56,8 @@ export class RepeatingEventItem {
 
   formatDate(dateString: string): string {
     if (!dateString) return '';
-    const date = new Date(dateString);
-    const day = date.getDate();
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const month = monthNames[date.getMonth()];
-    return `${day} ${month}`;
+
+    const [y, m, d] = dateString.split('-').map(Number);
+    return this.datePipe.transform(new Date(y, m - 1, d), 'd MMM') ?? '';
   }
 }

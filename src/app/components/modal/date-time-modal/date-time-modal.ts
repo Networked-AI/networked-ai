@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { ModalService } from '@/services/modal.service';
 import { Input, inject, OnInit, Component, ChangeDetectionStrategy } from '@angular/core';
@@ -21,6 +22,7 @@ export class DateTimeModal implements OnInit {
   // services
   private modalCtrl = inject(ModalController);
   private modalService = inject(ModalService);
+  private datePipe = new DatePipe('en-US');
 
   ngOnInit(): void {
     if (!this.value) {
@@ -40,90 +42,15 @@ export class DateTimeModal implements OnInit {
     }
   }
 
-  getFormattedValue(): string {
-    if (!this.value) return '';
-
-    if (this.type === 'time') {
-      if (this.value.includes('T')) {
-        return this.value;
-      }
-      return this.convertTimeToISO(this.value);
-    }
-
-    return this.value;
-  }
-
-  private formatReturnValue(value: string): string {
-    if (!value) return value;
-    if (value.includes('T')) {
-      if (this.type === 'time') {
-        try {
-          const date = new Date(value);
-          const hours = date.getHours().toString().padStart(2, '0');
-          const minutes = date.getMinutes().toString().padStart(2, '0');
-          return `${hours}:${minutes}`;
-        } catch {
-          return value;
-        }
-      } else {
-        return value.split('T')[0];
-      }
-    }
-
-    return value;
-  }
-
   dismiss(): void {
-    const formattedValue = this.formatReturnValue(this.value);
-    this.modalCtrl.dismiss(formattedValue);
+    this.modalCtrl.dismiss(this.value);
     this.modalService.close();
   }
 
-  private convertTimeToISO(timeString: string): string {
-    if (!timeString || !timeString.includes(':')) {
-      return '';
-    }
-    const [hours, minutes] = timeString.split(':').map(Number);
-    const today = new Date();
-    // Create ISO string with today's date and specified time
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    const hour = String(hours).padStart(2, '0');
-    const minute = String(minutes).padStart(2, '0');
-    return `${year}-${month}-${day}T${hour}:${minute}:00`;
-  }
-
-  getMinValue(): string | undefined {
-    if (this.type === 'time') {
-      if (!this.min) return undefined;
-      if (this.min.includes('T')) {
-        return this.min;
-      }
-      return this.convertTimeToISO(this.min);
-    }
-
-    // For date type, return undefined if min is not provided to allow all dates including past dates
-    if (!this.min) {
-      return undefined;
-    }
-
-    return this.min;
-  }
-
   getMaxValue(): string | undefined {
-    if (this.type === 'time') {
-      if (!this.max) return undefined;
-      if (this.max.includes('T')) {
-        return this.max;
-      }
-      return this.convertTimeToISO(this.max);
-    }
-
     if (!this.max) {
-      const futureDate = new Date();
-      futureDate.setFullYear(2050, 11, 31); // December 31, 2050
-      return futureDate.toISOString().split('T')[0];
+      const futureDate = new Date(2050, 11, 31);
+      return this.datePipe.transform(futureDate, 'yyyy-MM-dd') ?? '';
     }
 
     return this.max;

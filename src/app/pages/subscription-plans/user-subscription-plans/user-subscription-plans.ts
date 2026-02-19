@@ -433,12 +433,6 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
 
   private transformEventForPlanPreview(event: any): any {
     if (!event.start_date) {
-      // Parse address to extract city, state, country
-      const addressParts = event.address ? event.address.split(',') : [];
-      const city = addressParts.length > 1 ? addressParts[0].trim() : '';
-      const state = addressParts.length > 2 ? addressParts[1].trim() : '';
-      const country = addressParts.length > 3 ? addressParts[2].trim() : addressParts[addressParts.length - 1]?.trim() || '';
-
       return {
         id: event.id || '',
         title: event.title || '',
@@ -457,7 +451,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
 
     const dayOfWeek = this.datePipe.transform(startDate, 'EEE') || '';
     const day = startDate.getDate().toString();
-    const dateStr = startDate.toISOString().split('T')[0];
+    const dateStr = this.datePipe.transform(startDate, 'yyyy-MM-dd') ?? '';
 
     const startTime = startDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
     let timeStr = startTime;
@@ -465,12 +459,6 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
       const endTime = endDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
       timeStr = `${startTime} - ${endTime}`;
     }
-
-    // Parse address to extract city, state, country
-    const addressParts = event.address ? event.address.split(',') : [];
-    const city = addressParts.length > 1 ? addressParts[0].trim() : '';
-    const state = addressParts.length > 2 ? addressParts[1].trim() : '';
-    const country = addressParts.length > 3 ? addressParts[2].trim() : addressParts[addressParts.length - 1]?.trim() || '';
 
     return {
       id: event.id || '',

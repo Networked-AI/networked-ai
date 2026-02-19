@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Browser } from '@capacitor/browser';
 import { environment } from 'src/environments/environment';
 import { Calendar } from '@awesome-cordova-plugins/calendar/ngx';
@@ -20,6 +21,7 @@ export class AddToCalendarModal implements OnInit {
   private calendar = inject(Calendar);
   private document = inject(DOCUMENT);
   private toasterService = inject(ToasterService);
+  private datePipe = new DatePipe('en-US');
   isNative = isPlatform('capacitor') && isPlatform('ios');
 
   @Input() eventData: any;
@@ -36,8 +38,7 @@ export class AddToCalendarModal implements OnInit {
 
   // 🔹 Google date formatter (CORRECT)
   formatGoogleDate(date: Date | string | number): string {
-    const d = new Date(date);
-    return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    return this.datePipe.transform(date, "yyyyMMdd'T'HHmmss") ?? '';
   }
 
   // 🔹 Build calendar links
