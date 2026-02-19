@@ -1,10 +1,10 @@
 import { maskEmail } from '@/utils/helper';
+import { ActivatedRoute } from '@angular/router';
 import { Button } from '@/components/form/button';
 import { isPlatformBrowser } from '@angular/common';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { validateFields } from '@/utils/form-validation';
-import { inject, signal, Component, viewChild, PLATFORM_ID } from '@angular/core';
 import { EmailInput } from '@/components/form/email-input';
 import { ToasterService } from '@/services/toaster.service';
 import { BaseApiService } from '@/services/base-api.service';
@@ -12,6 +12,7 @@ import { PasswordInput } from '@/components/form/password-input';
 import { NavigationService } from '@/services/navigation.service';
 import { IonHeader, IonFooter, IonContent, IonToolbar } from '@ionic/angular/standalone';
 import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { inject, signal, Component, viewChild, PLATFORM_ID, AfterViewInit } from '@angular/core';
 
 interface ForgotPasswordForm {
   email?: FormControl<string | null>;
@@ -25,9 +26,10 @@ interface ForgotPasswordForm {
   templateUrl: './forgot-password.html',
   imports: [Button, IonHeader, IonFooter, IonToolbar, IonContent, EmailInput, PasswordInput, ReactiveFormsModule]
 })
-export class ForgotPassword {
+export class ForgotPassword implements AfterViewInit {
   // services
   fb = inject(FormBuilder);
+  route = inject(ActivatedRoute);
   authService = inject(AuthService);
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
@@ -42,8 +44,13 @@ export class ForgotPassword {
   isSubmitted = signal(false);
   step = signal<1 | 2 | 3>(1);
   maskedEmail = signal<string>('');
-  forgotPasswordForm = signal<FormGroup<ForgotPasswordForm>>(this.fb.group({}));
   emailInput = viewChild(EmailInput);
+  forgotPasswordForm = signal<FormGroup<ForgotPasswordForm>>(this.fb.group({}));
+
+  ngAfterViewInit(): void {
+    const email = this.route.snapshot.queryParamMap.get('email');
+    if (email) this.forgotPasswordForm().patchValue({ email }, { emitEvent: false });
+  }
 
   goBack() {
     if (this.step() === 2) {

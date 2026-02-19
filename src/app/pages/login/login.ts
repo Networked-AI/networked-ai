@@ -246,7 +246,9 @@ export class Login implements OnInit, OnDestroy {
       await this.modalService.dismissAllModals();
     }
 
-    this.navigationService.navigateForward('/forgot-password');
+    const email = this.loginForm().get('email')?.value;
+    const route = email ? `/forgot-password?email=${encodeURIComponent(email)}` : '/forgot-password';
+    await this.navigationService.navigateForward(route, false);
   }
 
   ngOnDestroy() {
