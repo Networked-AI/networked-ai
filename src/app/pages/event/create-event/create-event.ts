@@ -315,6 +315,8 @@ export class CreateEvent implements OnInit, OnDestroy {
   }
 
   beforeUnloadHandler = (event: BeforeUnloadEvent) => {
+    if (!this.eventForm().dirty) return;
+
     event.preventDefault();
     event.returnValue = '';
   };
@@ -473,19 +475,22 @@ export class CreateEvent implements OnInit, OnDestroy {
     }
   }
 
-  private async showLeaveConfirm(): Promise<boolean> {
-    const confirmed = await this.modalService.openConfirmModal({
-      icon: 'assets/svg/alert-white.svg',
-      title: 'Unsaved Changes',
-      description: 'Are you sure you want to go back? Any unsaved changes will be lost.',
-      confirmButtonLabel: 'Go',
-      cancelButtonLabel: 'Stay',
-      confirmButtonColor: 'danger',
-      iconBgColor: '#C73838',
-      iconPosition: 'left'
-    });
+  private async showLeaveConfirm() {
+    if (this.eventForm().dirty) {
+      const confirmed = await this.modalService.openConfirmModal({
+        icon: 'assets/svg/alert-white.svg',
+        title: 'Unsaved Changes',
+        description: 'Are you sure you want to go back? Any unsaved changes will be lost.',
+        confirmButtonLabel: 'Go',
+        cancelButtonLabel: 'Stay',
+        confirmButtonColor: 'danger',
+        iconBgColor: '#C73838',
+        iconPosition: 'left'
+      });
 
-    return confirmed?.data;
+      return confirmed?.data;
+    }
+    return true;
   }
 
   async confirmLeave(): Promise<boolean> {
