@@ -18,7 +18,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, debounceTime, distinctUntilChanged, from, switchMap } from 'rxjs';
 import { onImageError, getImageUrlOrDefault, extractUsernameFromQR } from '@/utils/helper';
 import { NgOptimizedImage } from '@angular/common';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { CapacitorBarcodeScanner, CapacitorBarcodeScannerTypeHintALLOption } from '@capacitor/barcode-scanner';
 import { Capacitor } from '@capacitor/core';
 import { ToasterService } from '@/services/toaster.service';
 import { UserService } from '@/services/user.service';
@@ -197,26 +197,13 @@ export class NewChat {
 
   async scanQRCodeForContact(): Promise<void> {
     try {
-      const result = await BarcodeScanner.scan();
-
-      if (result.barcodes && result.barcodes.length > 0) {
-        const barcode = result.barcodes[0];
-        const scannedValue = barcode.displayValue || barcode.rawValue || '';
-
-        if (scannedValue) {
-          await this.handleQRCodeForContact(scannedValue);
-        } else {
-          this.toasterService.showError('No QR code data found');
-        }
+      const { ScanResult } = await CapacitorBarcodeScanner.scanBarcode({ hint: CapacitorBarcodeScannerTypeHintALLOption.ALL });
+      if (ScanResult) {
+        await this.handleQRCodeForContact(ScanResult);
       } else {
         this.toasterService.showError('No QR code detected');
       }
-    } catch (error: any) {
-      if (error.message && (error.message.includes('cancel') || error.message.includes('dismiss'))) {
-        // User cancelled, no need to show error
-        return;
-      }
-      console.error('Error scanning QR code:', error);
+    } catch (error) {
       this.toasterService.showError('Failed to scan QR code');
     }
   }

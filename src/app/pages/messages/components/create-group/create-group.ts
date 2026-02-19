@@ -27,7 +27,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { Menu, MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged, from, switchMap } from 'rxjs';
-import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
+import { CapacitorBarcodeScanner, CapacitorBarcodeScannerTypeHintALLOption } from '@capacitor/barcode-scanner';
 import { Capacitor } from '@capacitor/core';
 import { Clipboard } from '@capacitor/clipboard';
 import { ConnectionStatus } from '@/enums/connection-status.enum';
@@ -468,32 +468,14 @@ export class CreateGroup {
   }
 
   async scanQRCodeForContact(): Promise<void> {
-    if (!this.isNativePlatform()) {
-      this.toasterService.showError('QR code scanning is only available on mobile devices');
-      return;
-    }
-
     try {
-      const result = await BarcodeScanner.scan();
-
-      if (result.barcodes && result.barcodes.length > 0) {
-        const barcode = result.barcodes[0];
-        const scannedValue = barcode.displayValue || barcode.rawValue || '';
-
-        if (scannedValue) {
-          await this.handleQRCodeForContact(scannedValue);
-        } else {
-          this.toasterService.showError('No QR code data found');
-        }
+      const { ScanResult } = await CapacitorBarcodeScanner.scanBarcode({ hint: CapacitorBarcodeScannerTypeHintALLOption.ALL });
+      if (ScanResult) {
+        await this.handleQRCodeForContact(ScanResult);
       } else {
         this.toasterService.showError('No QR code detected');
       }
-    } catch (error: any) {
-      if (error.message && (error.message.includes('cancel') || error.message.includes('dismiss'))) {
-        // User cancelled, no need to show error
-        return;
-      }
-      console.error('Error scanning QR code:', error);
+    } catch (error) {
       this.toasterService.showError('Failed to scan QR code');
     }
   }
@@ -525,7 +507,7 @@ export class CreateGroup {
       }
 
       if (user.id == this.authService.currentUser()?.id) return;
-      
+
       this.selectedMembers.update((list) => [...list, user]);
 
       if (user.connection_status === ConnectionStatus.CONNECTED) {
