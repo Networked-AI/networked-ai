@@ -59,6 +59,7 @@ export interface IUser {
   has_subscribed?: boolean;
   subscription_plan_count?: number;
   distance?: number;
+  notification_enabled?: boolean;
 }
 
 export interface IUserResponse {

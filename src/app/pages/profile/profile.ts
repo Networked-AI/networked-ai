@@ -47,6 +47,8 @@ import { OgService } from '@/services/og.service';
 import { IUser } from '@/interfaces/IUser';
 import { Browser } from '@capacitor/browser';
 import { BaseApiService } from '@/services/base-api.service';
+import { FormsModule } from '@angular/forms';
+import { ToggleSwitch } from 'primeng/toggleswitch';
 
 type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement';
 
@@ -85,7 +87,9 @@ interface TabConfig {
     NgOptimizedImage,
     ProfileImagePreviewOverlay,
     ScrollHandlerDirective,
-    IonSkeletonText
+    IonSkeletonText,
+    FormsModule,
+    ToggleSwitch
   ]
 })
 export class Profile implements OnDestroy {
@@ -93,7 +97,7 @@ export class Profile implements OnDestroy {
   username = input<string>();
   // services
   navigationService = inject(NavigationService);
-  private authService = inject(AuthService);
+  authService = inject(AuthService);
   private userService = inject(UserService);
   private networkService = inject(NetworkService);
   private popoverService = inject(PopoverService);
@@ -119,6 +123,7 @@ export class Profile implements OnDestroy {
   currentSlide = signal<ProfileTabs>('hosted-events');
   isLoggedIn = computed(() => !!this.authService.currentUser());
   currentUser = signal<any>(null);
+  user = signal<IUser | null>(null);
   isLoading = signal(false);
   userName = signal<string>('');
   userNotFound = signal(false);
@@ -272,6 +277,8 @@ export class Profile implements OnDestroy {
     return (!hasEmail && !hasMobile) || allSocialsMissing;
   });
 
+  notificationEnabled = computed(() => !!this.currentUser()?.notification_enabled);
+
   constructor() {
     const routeParamSubscription = this.route.params.subscribe(() => {
       this.handleProfileLoad();
@@ -290,6 +297,13 @@ export class Profile implements OnDestroy {
 
       if (!loading && user) {
         this.ogService.setOgTagInProfile(user);
+      }
+    });
+
+    effect(() => {
+      const currentUserId = this.currentUser()?.id;
+      if (currentUserId && currentUserId !== this.user()?.id) {
+        this.user.set(this.currentUser());
       }
     });
 
@@ -415,10 +429,10 @@ export class Profile implements OnDestroy {
       this.toasterService.showError('Please add your email to your profile to add subscription plans.');
       return;
     }
-      if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
-        this.navigationService.navigateForward('/subscription/plans');
-      } else {
-        await this.openStripePayoutModal();
+    if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
+      this.navigationService.navigateForward('/subscription/plans');
+    } else {
+      await this.openStripePayoutModal();
     }
   }
 
@@ -639,5 +653,22 @@ export class Profile implements OnDestroy {
 
   onCreatePost() {
     this.navigationService.navigateForward('/new-post');
+  }
+
+  async onNotificationToggle(checked: boolean): Promise<void> {
+    const userId = this.currentUser()?.id;
+    if (!userId) return;
+
+    const previousValue = this.currentUser()?.notification_enabled;
+    this.currentUser.update((u) => (u ? { ...u, notification_enabled: checked } : u));
+    try {
+      const response: any = await this.userService.updateProfileSubscription(userId);
+      const value = response.data.notification_enabled;
+      this.currentUser.update((u) => (u ? { ...u, notification_enabled: value } : u));
+    } catch (e) {
+      this.currentUser.update((u) => (u ? { ...u, notification_enabled: previousValue } : u));
+      const message = BaseApiService.getErrorMessage(e, 'Failed to update notification toggle.')
+      this.toasterService.showError(message);
+    }
   }
 }
