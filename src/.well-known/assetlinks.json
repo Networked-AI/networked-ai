@@ -4,7 +4,10 @@
       "target": {
         "namespace": "android_app",
         "package_name": "app.networked.ai",
-        "sha256_cert_fingerprints": ["B6:7E:7F:E5:16:7F:EE:20:6F:4D:11:22:16:E5:38:C0:83:E6:EC:51:26:BB:BA:1D:46:73:F1:39:21:20:FE:F3"]
+        "sha256_cert_fingerprints": [
+          "2D:5C:BF:23:43:D9:11:4C:DC:4F:3B:B0:1C:03:D3:1F:76:DE:BE:18:57:B8:84:2C:42:B9:4C:14:55:A5:79:84",
+          "B6:7E:7F:E5:16:7F:EE:20:6F:4D:11:22:16:E5:38:C0:83:E6:EC:51:26:BB:BA:1D:46:73:F1:39:21:20:FE:F3"
+        ]
       }
     }
 ]
