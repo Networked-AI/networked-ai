@@ -565,7 +565,11 @@ export class PlanEvents implements OnInit, OnDestroy {
   }
 
   back(): void {
-    this.navigationService.back();
+    if (this.viewMode() === 'add') {
+      this.cancelAddMode();
+    } else {
+      this.navigationService.back();
+    }
   }
 
   private groupEventsByMonth(events: Event[]): { [key: string]: Event[] } {

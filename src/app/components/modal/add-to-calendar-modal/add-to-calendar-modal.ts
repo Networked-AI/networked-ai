@@ -1,10 +1,10 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, isPlatformBrowser } from '@angular/common';
 import { Capacitor } from '@capacitor/core';
 import { Button } from '@/components/form/button';
 import { ToasterService } from '@/services/toaster.service';
 import { environment } from 'src/environments/environment';
 import { Calendar } from '@awesome-cordova-plugins/calendar/ngx';
-import { Component, Input, inject, OnInit, DOCUMENT } from '@angular/core';
+import { Component, Input, inject, OnInit, DOCUMENT, PLATFORM_ID } from '@angular/core';
 import { IonHeader, IonToolbar, ModalController, isPlatform } from '@ionic/angular/standalone';
 
 @Component({
@@ -26,6 +26,10 @@ export class AddToCalendarModal implements OnInit {
   @Input() eventData: any;
 
   calendarLink: any;
+  
+  // platform
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
 
   ngOnInit() {
     this.calendarLink = this.getCalendarLink();
@@ -112,7 +116,7 @@ export class AddToCalendarModal implements OnInit {
 
   // 🔹 Button actions
   async addToGoogleCalendar() {
-    if (!this.calendarLink) return;
+    if (!this.calendarLink && !this.isBrowser) return;
 
     window.open(this.calendarLink, '_blank');
   }

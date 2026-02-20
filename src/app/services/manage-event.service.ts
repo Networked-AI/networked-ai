@@ -90,7 +90,7 @@ export class ManageEventService extends BaseApiService {
     }
 
     // Ticket Scanner
-    if (isHost && this.isNativePlatform()) {
+    if (isHost && this.isNativePlatform() && !isCompleted) {
       const scannerItem: MenuItem = {
         label: 'Ticket Scanner',
         icon: 'assets/svg/scanner.svg',
