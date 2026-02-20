@@ -1,7 +1,7 @@
 <div class="bg-white p-2 border border-gray-200 rounded-xl" (click)="onPostClick()">
   <!-- HEADER -->
   <div class="flex items-center gap-3 mb-3">
-    <div class="relative w-[40px] h-[40px] flex-shrink-0 overflow-hidden rounded-full">
+    <div class="relative w-[40px] h-[40px] shrink-0 overflow-hidden rounded-full">
       <img
         fill
         placeholder
@@ -18,22 +18,26 @@
 
   <!-- MEDIA (FULL WIDTH IMAGE) -->
   @if (firstMedia()) {
-    <div class="w-full relative h-[160px] overflow-hidden">
-      @if (firstMedia()?.media_type === 'Image') {
+    @if (firstMedia()?.media_type === 'Image') {
+      <div class="relative h-[160px] overflow-hidden">
         <img
           fill
           placeholder
-          class="object-cover cursor-pointer"
+          class="object-contain cursor-pointer"
           (error)="onImageError($event)"
           [ngSrc]="getImageUrl(firstMedia()?.media_url)"
           [loaderParams]="{ thumbnail: firstMedia()?.media_url }"
         />
-      }
+      </div>
+    }
 
-      @if (firstMedia()?.media_type === 'Video') {
-        <video [src]="firstMedia()?.media_url" controls class="w-full h-full object-cover"></video>
-      }
-    </div>
+    @if (firstMedia()?.media_type === 'Video') {
+      <div class="relative h-[200px] overflow-hidden">
+        <div class="h-full! w-full!">
+          <video-js-player [src]="getImageUrl(firstMedia()?.media_url)" />
+        </div>
+      </div>
+    }
   }
   @if (feed()?.events?.length) {
     <app-chat-event-card [event]="feed()?.events[0]" [inPost]="true" />

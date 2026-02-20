@@ -1,12 +1,13 @@
 import { NgOptimizedImage } from '@angular/common';
 import { ChatEventCard } from '../chat-event-card';
+import { VideoJsPlayerComponent } from '@/components/common/video-js-player';
 import { NavigationService } from '@/services/navigation.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { Component, computed, inject, input } from '@angular/core';
 
 @Component({
   selector: 'app-chat-feed-card',
-  imports: [NgOptimizedImage, ChatEventCard],
+  imports: [NgOptimizedImage, ChatEventCard, VideoJsPlayerComponent],
   templateUrl: './chat-feed-card.html',
   styleUrl: './chat-feed-card.scss'
 })
@@ -17,12 +18,7 @@ export class ChatFeedCard {
   firstMedia = computed(() => {
     const medias = this.feed()?.medias ?? [];
 
-    console.log(
-      'medias:',
-      medias.find((m: any) => m.order === 1)
-    );
-
-    return medias.find((m: any) => m.order === 1) ?? null;
+    return medias.find((m: any) => m.order === 1 || m.order === 0) ?? null;
   });
 
   onPostClick(): void {

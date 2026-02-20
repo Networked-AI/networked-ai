@@ -27,13 +27,14 @@ import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { isPlatformBrowser, NgOptimizedImage } from '@angular/common';
 import { AvatarGroupComponent } from '@/components/common/avatar-group';
 import { HostEventPromoCard } from '@/components/card/host-event-promo-card';
+import { VideoJsPlayerComponent } from '../video-js-player';
 @Component({
   selector: 'event-display',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   styleUrl: './event-display.scss',
   templateUrl: './event-display.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SegmentButton, AvatarGroupComponent, HostEventPromoCard, IonIcon, Button, NgOptimizedImage]
+  imports: [SegmentButton, AvatarGroupComponent, HostEventPromoCard, IonIcon, Button, NgOptimizedImage, VideoJsPlayerComponent]
 })
 export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy {
   eventData = input.required<Partial<EventDisplayData>>();
@@ -85,6 +86,19 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   async openMapFromLatLng(mapCenter: number[]): Promise<void> {
     if (!this.showHostPromo()) return;
     if (!mapCenter || mapCenter.length !== 2) return;
+
+    const confirmed = await this.modalService.openConfirmModal({
+      icon: 'assets/svg/alert-white.svg',
+      title: 'Leave App?',
+      description: 'You will be redirected outside the app to open map. Continue?',
+      confirmButtonLabel: 'Open',
+      cancelButtonLabel: 'Stay',
+      confirmButtonColor: 'primary',
+      iconBgColor: '#F5BC61',
+      iconPosition: 'left'
+    });
+
+    if (!confirmed?.data) return;
 
     const [lng, lat] = mapCenter;
     const platform = Capacitor.getPlatform();

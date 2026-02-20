@@ -129,10 +129,7 @@
             {{ section.title }}
           </div>
 
-          <i
-            class="pi pi-arrow-right neutral-02 text-[16px]! cursor-pointer shrink-0"
-            (click)="handleUserListClick(section.title)"
-          ></i>
+          <i class="pi pi-arrow-right neutral-02 text-[16px]! cursor-pointer shrink-0" (click)="handleUserListClick(section.title)"></i>
         </div>
 
         <avatar-group
@@ -160,21 +157,22 @@
             @for (media of displayMediasForDisplay(); track media.id || $index) {
               <swiper-slide>
                 <div class="slide-content">
-                  <div class="slide-image">
-                    @if (media.type === 'Video') {
-                      <video [src]="media.url" class="w-full h-[361px] object-contain bg-black" controls></video>
-                    }
+                  <div class="slide-image bg-black">
                     @if (media.type === 'Image') {
-                      <div class="relative w-full h-[361px] bg-black">
-                        <img
-                          fill
-                          placeholder
-                          priority
-                          [alt]="eventData().title + ' image ' + ($index + 1)"
-                          class="object-contain"
-                          (error)="onImageError($event)"
-                          [ngSrc]="getImageUrl(media.url || '')"
-                        />
+                      <img
+                        fill
+                        placeholder
+                        priority
+                        [alt]="eventData().title + ' image ' + ($index + 1)"
+                        class="object-contain cursor-pointer"
+                        (error)="onImageError($event)"
+                        [ngSrc]="getImageUrl(media.url || '')"
+                      />
+                    }
+
+                    @if (media.type === 'Video') {
+                      <div class="h-full! w-full!">
+                        <video-js-player [src]="media.url" />
                       </div>
                     }
                   </div>

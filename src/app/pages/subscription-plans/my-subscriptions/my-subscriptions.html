@@ -17,8 +17,45 @@
     </ion-refresher>
     <div class="p-5 h-full">
       @if (isLoading()) {
-        <div class="flex items-center justify-center h-full min-h-[400px]">
-          <div class="body-14M neutral-03">Loading subscriptions...</div>
+        <div class="flex flex-col gap-4">
+          @for (item of [1, 2, 3, 4]; track item) {
+            <div class="bg-white rounded-xl p-4 shadow-sm animate-pulse">
+              <!-- Top Row -->
+              <div class="flex items-center gap-3 border-b border-gray-200 pb-3">
+                <!-- Icon skeleton -->
+                <div class="w-12 h-12 bg-gray-200 rounded-xl"></div>
+
+                <!-- Title + creator -->
+                <div class="flex-1 space-y-2">
+                  <div class="h-4 w-40 bg-gray-200 rounded"></div>
+                  <div class="flex items-center gap-2">
+                    <div class="w-5 h-5 bg-gray-200 rounded-full"></div>
+                    <div class="h-3 w-24 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bottom Row -->
+              <div class="mt-4 flex justify-between items-end">
+                <div class="flex gap-8">
+                  <!-- Labels -->
+                  <div class="space-y-2">
+                    <div class="h-3 w-16 bg-gray-200 rounded"></div>
+                    <div class="h-3 w-12 bg-gray-200 rounded"></div>
+                  </div>
+
+                  <!-- Values -->
+                  <div class="space-y-2">
+                    <div class="h-3 w-24 bg-gray-200 rounded"></div>
+                    <div class="h-3 w-16 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+
+                <!-- Arrow -->
+                <div class="w-5 h-5 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          }
         </div>
       } @else if (hasSubscriptions()) {
         <div class="flex flex-col gap-4">

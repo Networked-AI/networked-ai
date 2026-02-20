@@ -395,7 +395,8 @@ export class CreatePlan implements OnInit {
       order_by: 'start_date',
       order_direction: 'DESC',
       roles: 'Host',
-      user_id: userId
+      user_id: userId,
+      is_upcoming_event: true
     });
   }
 

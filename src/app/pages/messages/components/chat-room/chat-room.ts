@@ -34,6 +34,7 @@ import { IEvent } from '@/interfaces/event';
 import { HapticService } from '@/services/haptic.service';
 import { CheckboxModule } from 'primeng/checkbox';
 import { FormsModule } from '@angular/forms';
+import { VideoJsPlayerComponent } from '@/components/common/video-js-player';
 
 @Component({
   selector: 'chat-room',
@@ -59,11 +60,11 @@ import { FormsModule } from '@angular/forms';
     ChatFeedCard,
     ChatEventCard,
     CheckboxModule,
-    FormsModule
+    FormsModule,
+    VideoJsPlayerComponent
   ]
 })
 export class ChatRoom implements OnInit, OnDestroy {
-  // @ViewChild(IonContent) content?: IonContent;
   content = viewChild<IonContent>('content');
 
   private route = inject(ActivatedRoute);
@@ -115,7 +116,7 @@ export class ChatRoom implements OnInit, OnDestroy {
 
     return event.questionnaire.some((q: any) => q.is_public === true && ['SingleChoice', 'MultipleChoice', 'Rating'].includes(q.question_type));
   });
-  
+
   isCurrentUserHost = computed(() => {
     const event = this.eventData();
     return event?.participants?.some((p: any) => p.user_id === this.authService.currentUser()?.id && p.role === 'Host');
@@ -567,12 +568,23 @@ export class ChatRoom implements OnInit, OnDestroy {
   getMessageClasses(msg: ChatMessage): { [key: string]: boolean } {
     const isDeleted = msg.is_deleted ?? false;
     const isEditing = this.editingIndex() === msg.id;
+    const isMedia = msg.type.toLowerCase() === 'video' && !msg.is_deleted;
+    const isPost = msg.type.toLowerCase() === 'post' && !msg.is_deleted;
 
     return {
       'bg-primary': !isDeleted && !isEditing,
       'bg-gray-200': isDeleted || isEditing,
       'text-gray-500': isDeleted,
-      'text-gray-900': !isDeleted && !isEditing
+      'text-gray-900': !isDeleted && !isEditing,
+      'w-full!': isMedia || isPost,
+    };
+  }
+
+  getOtherMessageClasses(msg: ChatMessage): { [key: string]: boolean } {
+    const isMedia = msg.type.toLowerCase() === 'video' && !msg.is_deleted;
+    const isPost = msg.type.toLowerCase() === 'post' && !msg.is_deleted;
+    return {
+      'w-full!': isMedia || isPost,
     };
   }
 

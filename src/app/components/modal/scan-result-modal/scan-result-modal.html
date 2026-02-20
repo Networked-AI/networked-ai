@@ -1,0 +1,30 @@
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="px-4 flex items-end justify-end">
+      <div class="pi pi-times cursor-pointer" (click)="close()"></div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+<div class="inner-content pb-4 px-4">
+  <!-- ICON -->
+  <div class="flex justify-center items-center">
+    <ion-icon
+      [name]="isSuccess ? 'checkmark-circle-outline' : 'close-circle-outline'"
+      [ngClass]="{
+        'text-green-500': isSuccess,
+        'text-red-500': !isSuccess,
+        'text-[100px]': true
+      }"
+    ></ion-icon>
+  </div>
+  <!-- MESSAGE -->
+  <div class="body-16SB neutral-01 text-center mb-10">
+    {{ message }}
+  </div>
+
+  <!-- BUTTON -->
+  <div class="flex gap-2">
+    <app-button label="Close" color="secondary" (click)="close()" class="flex-1" />
+    <app-button label="Scan Another" (click)="scanAgain()" class="flex-1" />
+  </div>
+</div>

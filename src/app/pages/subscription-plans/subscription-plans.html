@@ -19,8 +19,39 @@
     </ion-refresher>
     <div class="p-5 h-full">
       @if (isLoading()) {
-        <div class="flex items-center justify-center h-full min-h-[400px]">
-          <div class="body-14M neutral-03">Loading subscription plans...</div>
+        <div class="flex flex-col gap-4 mb-6">
+          @for (i of [1, 2, 3, 4]; track i) {
+            <div class="flex flex-col gap-4">
+              <!-- Top Row -->
+              <div class="flex items-center gap-3 relative">
+                <!-- Icon -->
+                <div class="bg-white rounded-2xl shadow-md p-2 flex items-center">
+                  <ion-skeleton-text animated class="w-10 h-10 rounded-lg"></ion-skeleton-text>
+                </div>
+
+                <!-- Plan Details -->
+                <div class="flex-1 min-w-0 pr-10 flex flex-col gap-2">
+                  <!-- Plan name -->
+                  <ion-skeleton-text animated style="width: 60%; height: 18px"></ion-skeleton-text>
+
+                  <!-- Subscribers + price -->
+                  <div class="flex items-center gap-3">
+                    <ion-skeleton-text animated style="width: 110px; height: 12px"></ion-skeleton-text>
+                    <ion-skeleton-text animated style="width: 90px; height: 12px"></ion-skeleton-text>
+                  </div>
+                </div>
+
+                <!-- Delete icon placeholder -->
+                <ion-skeleton-text animated class="w-5 h-5 rounded absolute top-0 right-0"></ion-skeleton-text>
+              </div>
+
+              <!-- Buttons row -->
+              <div class="flex items-center gap-2 pt-2">
+                <ion-skeleton-text animated class="flex-1 h-10 rounded-lg"></ion-skeleton-text>
+                <ion-skeleton-text animated class="flex-1 h-10 rounded-lg"></ion-skeleton-text>
+              </div>
+            </div>
+          }
         </div>
       } @else if (hasPlans()) {
         <div class="flex flex-col gap-4 mb-6">
@@ -92,35 +123,37 @@
 
 <ion-footer mode="md">
   <ion-toolbar>
-    @if (hasPlans()) {
+    @if (!isLoading()) {
       <div class="p-5 max-w-[672px] mx-auto">
-        <app-button
-          iconName="pi-plus"
-          [label]="segmentValue() === 'event' ? 'Create New Event Plan' : 'Create New Sponsor Plan'"
-          [color]="segmentValue() === 'event' ? 'info' : 'primary'"
-          (click)="onCreatePlan(segmentValue())"
-        />
+        @if (hasPlans()) {
+          <app-button
+            iconName="pi-plus"
+            [label]="segmentValue() === 'event' ? 'Create New Event Plan' : 'Create New Sponsor Plan'"
+            [color]="segmentValue() === 'event' ? 'info' : 'primary'"
+            (click)="onCreatePlan(segmentValue())"
+          />
+        } @else {
+          <!-- Event-specific button (when sponsor has plans but event doesn't) -->
+          @if (showEventEmptyState()) {
+            <div class="p-5 max-w-[672px] mx-auto">
+              <app-button label="Create Event Subscription Plan" color="info" iconName="pi-crown" (click)="onCreatePlan('event')" />
+            </div>
+          }
+          <!-- Sponsor-specific button (when event has plans but sponsor doesn't) -->
+          @else if (showSponsorEmptyState()) {
+            <div class="p-5 max-w-[672px] mx-auto">
+              <app-button label="Create Sponsor Subscription Plan" color="primary" iconName="pi-crown" (click)="onCreatePlan('sponsor')" />
+            </div>
+          }
+          <!-- Generic buttons (when both have no plans) -->
+          @else if (showGenericEmptyState()) {
+            <div class="flex flex-col gap-2 w-full p-3">
+              <app-button label="Create Event Subscription Plan" color="info" iconName="pi-crown" (click)="onCreatePlan('event')" />
+              <app-button label="Create Sponsor Subscription Plan" color="primary" iconName="pi-crown" (click)="onCreatePlan('sponsor')" />
+            </div>
+          }
+        }
       </div>
-    } @else {
-      <!-- Event-specific button (when sponsor has plans but event doesn't) -->
-      @if (showEventEmptyState()) {
-        <div class="p-5 max-w-[672px] mx-auto">
-          <app-button label="Create Event Subscription Plan" color="info" iconName="pi-crown" (click)="onCreatePlan('event')" />
-        </div>
-      }
-      <!-- Sponsor-specific button (when event has plans but sponsor doesn't) -->
-      @else if (showSponsorEmptyState()) {
-        <div class="p-5 max-w-[672px] mx-auto">
-          <app-button label="Create Sponsor Subscription Plan" color="primary" iconName="pi-crown" (click)="onCreatePlan('sponsor')" />
-        </div>
-      }
-      <!-- Generic buttons (when both have no plans) -->
-      @else if (showGenericEmptyState()) {
-        <div class="flex flex-col gap-2 w-full p-3">
-          <app-button label="Create Event Subscription Plan" color="info" iconName="pi-crown" (click)="onCreatePlan('event')" />
-          <app-button label="Create Sponsor Subscription Plan" color="primary" iconName="pi-crown" (click)="onCreatePlan('sponsor')" />
-        </div>
-      }
     }
   </ion-toolbar>
 </ion-footer>

@@ -31,6 +31,7 @@ import { FeedPost } from '@/interfaces/IFeed';
 import { IUser } from '@/interfaces/IUser';
 import { SwiperContainer } from 'swiper/element';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
+import { VideoJsPlayerComponent } from '@/components/common/video-js-player';
 
 @Component({
   selector: 'new-post',
@@ -51,7 +52,8 @@ import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
     ReactiveFormsModule,
     NgOptimizedImage,
     Mentions,
-    OverlayModule
+    OverlayModule,
+    VideoJsPlayerComponent
   ]
 })
 export class NewPost implements OnInit {

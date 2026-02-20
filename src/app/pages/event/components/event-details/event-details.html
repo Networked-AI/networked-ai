@@ -36,7 +36,9 @@
 
                 <!-- VIDEO -->
                 @if (item.type === 'video') {
-                  <video [src]="item.url" controls></video>
+                  <div class="h-full! w-full!">
+                    <video-js-player [src]="item.url" [pauseOthers]="true" />
+                  </div>
                 }
 
                 <div

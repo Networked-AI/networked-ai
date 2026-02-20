@@ -26,7 +26,10 @@
               }
             </div>
           </div>
-          <div class="pi pi-ellipsis-h neutral-03 text-[16px]! cursor-pointer" (click)="$event.stopPropagation(); hapticService.onClick(); openMenu()"></div>
+          <div
+            class="pi pi-ellipsis-h neutral-03 text-[16px]! cursor-pointer"
+            (click)="$event.stopPropagation(); hapticService.onClick(); openMenu()"
+          ></div>
         </div>
         @if (post().content) {
           <div
@@ -65,7 +68,9 @@
                   }
 
                   @if (media.media_type === 'Video') {
-                    <video [src]="media.media_url" controls class="w-full h-full object-cover"></video>
+                    <div class="h-full! w-full!">
+                      <video-js-player [src]="getImageUrl(media.media_url)" />
+                    </div>
                   }
                 </div>
               </div>

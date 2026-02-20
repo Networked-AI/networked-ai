@@ -17,6 +17,7 @@ export class Button {
   icon = input<string>('');
   label = input<string>('');
   iconName = input<string>('');
+  ionIconName = input<string>('');
   disabled = input<boolean>(false);
   isLoading = input<boolean>(false);
   iconPos = input<'right' | 'left'>('left');

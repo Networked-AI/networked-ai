@@ -62,7 +62,7 @@
             [class.pointer-events-none]="editingIndex() !== null && editingIndex() !== msg.id"
             (click)="onLongPress(msg.id)"
           >
-            <div class="rounded-xl max-w-[80%] w-fit message-bubble overflow-hidden" [class]="getMessageClasses(msg)">
+            <div class="rounded-xl w-auto max-w-[80%] message-bubble overflow-hidden" [class]="getMessageClasses(msg)">
               @if (msg.is_deleted) {
                 <div class="px-4 py-2">This message was deleted</div>
               } @else {
@@ -86,11 +86,11 @@
                     }
                     @if (msg.type === 'Video' || msg.type === 'video') {
                       <div
-                        class="relative max-w-[300px] max-h-[400px] overflow-hidden"
+                        class="relative h-[300px]! max-h-[400px]! overflow-hidden"
                         [class.rounded-t-xl]="msg.message"
                         [class.rounded-xl]="!msg.message"
                       >
-                        <video [src]="getImageUrl(msg.media_url)" controls class="w-full h-auto max-h-[400px] object-contain"></video>
+                        <video-js-player [src]="getImageUrl(msg.media_url)" [pauseOthers]="true" />
                       </div>
                     }
                   </div>
@@ -160,6 +160,7 @@
                 class="bg-gray-200 rounded-xl max-w-[80%] w-fit overflow-hidden"
                 [class.text-gray-500]="msg.is_deleted"
                 [class.text-gray-900]="!msg.is_deleted"
+                [class]="getOtherMessageClasses(msg)"
               >
                 @if (msg.is_deleted) {
                   <div class="px-4 py-2">This message was deleted</div>
@@ -184,11 +185,11 @@
                       }
                       @if (msg.type === 'Video' || msg.type === 'video') {
                         <div
-                          class="relative max-w-[300px] max-h-[400px] overflow-hidden"
+                          class="relative h-[300px]! max-h-[400px]! overflow-hidden"
                           [class.rounded-t-xl]="msg.message"
                           [class.rounded-xl]="!msg.message"
                         >
-                          <video [src]="getImageUrl(msg.media_url)" controls class="w-full h-auto max-h-[400px] object-contain"></video>
+                          <video-js-player [src]="getImageUrl(msg.media_url)" [pauseOthers]="true" />
                         </div>
                       }
                     </div>
@@ -201,7 +202,7 @@
                   <!-- Text (with or without media) -->
                   @if (msg.message) {
                     <div
-                      class="px-4 py-2"
+                      class="px-4 py-2 whitespace-pre-line"
                       [class.pt-2]="msg.media_url"
                       [innerHTML]="renderMessageText(msg.message)"
                       (click)="onProfileLinkClick($event)"

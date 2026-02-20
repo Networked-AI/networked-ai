@@ -31,6 +31,7 @@ import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { CommonModule, DOCUMENT, DatePipe, NgOptimizedImage } from '@angular/common';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { DescriptionGeneratorService } from '@/services/description-generator.service';
+import { VideoJsPlayerComponent } from '@/components/common/video-js-player';
 
 @Component({
   selector: 'event-details',
@@ -38,7 +39,7 @@ import { DescriptionGeneratorService } from '@/services/description-generator.se
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './event-details.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, TextInput, EditorInput, DragDropModule, CheckboxModule, ReactiveFormsModule, CommonModule, NgOptimizedImage]
+  imports: [Button, TextInput, EditorInput, DragDropModule, CheckboxModule, ReactiveFormsModule, CommonModule, NgOptimizedImage, VideoJsPlayerComponent]
 })
 export class EventDetails implements OnInit {
   private datePipe = new DatePipe('en-US');

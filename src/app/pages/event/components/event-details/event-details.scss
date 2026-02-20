@@ -58,7 +58,8 @@ swiper-container {
   height: 100%;
   overflow: hidden;
   border-radius: 12px;
-  --swiper-pagination-bottom: 55px;
+  --swiper-pagination-bottom: 3px;
+  background: black !important;
 }
 
 swiper-slide {
@@ -86,7 +87,7 @@ swiper-slide {
   aspect-ratio: 1 / 1;
   max-height: 30vh;
   display: flex;
-  margin: 0 auto 40px;
+  margin: 0 auto 13px;
   align-items: center;
   justify-content: center;
   position: relative;
