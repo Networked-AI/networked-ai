@@ -55,7 +55,8 @@ swiper-container {
   overflow: hidden;
   align-items: center;
   justify-content: center;
-  --swiper-pagination-bottom: 55px;
+  --swiper-pagination-bottom: 3px;
+  background: black !important;
 }
 
 .slide-content {
@@ -65,7 +66,6 @@ swiper-container {
   align-items: center;
   box-sizing: border-box;
   flex-direction: column;
-  padding: 10px;
   justify-content: space-between;
 }
 
@@ -75,7 +75,7 @@ swiper-container {
   aspect-ratio: 1 / 1;
   max-height: 30vh;
   display: flex;
-  margin: 0 auto 40px;
+  margin: 0 auto 22px;
   align-items: center;
   justify-content: center;
   position: relative;

@@ -40,7 +40,8 @@
             ],
             "styles": [
               "src/assets/styles.scss",
-              "node_modules/intl-tel-input/build/css/intlTelInput.min.css"
+              "node_modules/intl-tel-input/build/css/intlTelInput.min.css",
+              "node_modules/video.js/dist/video-js.css"
             ],
             "scripts": [],
             "outputMode": "server",

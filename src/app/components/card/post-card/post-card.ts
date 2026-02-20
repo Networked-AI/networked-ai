@@ -17,13 +17,14 @@ import { NetworkService } from '@/services/network.service';
 import { SocketService } from '@/services/socket.service';
 import { IUser } from '@/interfaces/IUser';
 import { HapticService } from '@/services/haptic.service';
+import { VideoJsPlayerComponent } from '@/components/common/video-js-player';
 
 @Component({
   selector: 'post-card',
   styleUrl: './post-card.scss',
   templateUrl: './post-card.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  imports: [Button, NgOptimizedImage],
+  imports: [Button, NgOptimizedImage, VideoJsPlayerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PostCard {
