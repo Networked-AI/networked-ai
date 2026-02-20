@@ -451,7 +451,7 @@ export class GuestList implements OnInit, OnDestroy {
       this.counts.update((counts: any) =>
         counts ? { ...counts, total_checkedin_guest: counts.total_checkedin_guest - 1 } : { total_checkedin_guest: 0 }
       );
-      this.toasterService.showSuccess('Check-in successfully');
+      this.toasterService.showSuccess('Uncheck-in successfully');
     } catch (error) {
       console.error(error);
       this.toasterService.showError('Failed to check in');

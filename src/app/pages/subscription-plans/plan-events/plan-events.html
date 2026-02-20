@@ -25,16 +25,37 @@
         </div>
       }
 
-      @if (viewMode() === 'included' && isLoading()) {
-        <div class="flex items-center justify-center py-8">
-          <div class="body-14M neutral-03">Loading...</div>
-        </div>
-      } @else if (viewMode() === 'add' && isLoadingEvents()) {
-        <div class="flex items-center justify-center py-8">
-          <div class="body-14M neutral-03">Loading events...</div>
+      @if (isLoading() || isLoadingEvents()) {
+        <div class="flex flex-col gap-3">
+          @for (i of [1, 2, 3, 4, 5]; track i) {
+            <div class="flex items-center justify-between gap-3 w-full min-w-0">
+              <!-- Card Content -->
+              <div class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-gray-50 flex-1 min-w-0">
+                <!-- Date Box -->
+                <div class="flex flex-col items-center justify-center w-16 h-20 rounded-lg bg-white flex-shrink-0 gap-2 p-2">
+                  <ion-skeleton-text animated style="width: 60%; height: 12px"></ion-skeleton-text>
+                  <ion-skeleton-text animated style="width: 70%; height: 18px"></ion-skeleton-text>
+                </div>
+
+                <!-- Event Details -->
+                <div class="flex-1 flex flex-col gap-2 min-w-0">
+                  <ion-skeleton-text animated style="width: 70%; height: 14px"></ion-skeleton-text>
+                  <ion-skeleton-text animated style="width: 50%; height: 12px"></ion-skeleton-text>
+                  <ion-skeleton-text animated style="width: 40%; height: 12px"></ion-skeleton-text>
+                </div>
+
+                <!-- Image -->
+                <ion-skeleton-text animated class="w-[72px] min-w-[72px] h-[72px] rounded-lg"> </ion-skeleton-text>
+              </div>
+
+              <!-- Checkbox -->
+              <div class="flex items-center justify-center flex-shrink-0">
+                <ion-skeleton-text animated class="w-5 h-5 rounded"></ion-skeleton-text>
+              </div>
+            </div>
+          }
         </div>
       }
-
       <!-- Events List -->
       @if ((viewMode() === 'included' && showIncludedEventsList()) || (viewMode() === 'add' && showAvailableEventsList())) {
         <div class="w-full">
@@ -56,8 +77,8 @@
                     <subscription-event-card
                       [event]="event"
                       [selected]="isEventSelected(event.id)"
-                      [showCheckbox]="showCheckbox()"
-                      (toggle)="toggleEventSelection(event.id)"
+                      [showCheckbox]="showCheckbox() && !isEventCompleted(event)"
+                      (toggle)="!isEventCompleted(event) && toggleEventSelection(event.id)"
                     />
                   </div>
                 }

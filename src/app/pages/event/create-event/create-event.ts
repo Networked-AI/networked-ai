@@ -462,12 +462,7 @@ export class CreateEvent implements OnInit, OnDestroy {
 
       if (confirmed) {
         this.allowLeave.set(true);
-
-        if (this.router.currentNavigation()?.previousNavigation) {
           this.navigationService.back();
-        } else {
-          this.navigationService.navigateForward('/', true);
-        }
       }
     } else {
       const previousStep = this.currentStep() - 1;
