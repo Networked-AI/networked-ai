@@ -13,10 +13,10 @@ import {
   IonContent,
   IonFooter,
   IonIcon,
-  ViewWillEnter,
   RefresherCustomEvent,
   IonRefresherContent,
-  IonRefresher
+  IonRefresher,
+  IonSkeletonText
 } from '@ionic/angular/standalone';
 
 @Component({
@@ -24,9 +24,21 @@ import {
   templateUrl: './subscription-plans.html',
   styleUrl: './subscription-plans.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonRefresher, IonRefresherContent, IonHeader, IonToolbar, IonContent, IonFooter, IonIcon, Button, SubscriptionCard, SegmentButton]
+  imports: [
+    IonSkeletonText,
+    IonRefresher,
+    IonRefresherContent,
+    IonHeader,
+    IonToolbar,
+    IonContent,
+    IonFooter,
+    IonIcon,
+    Button,
+    SubscriptionCard,
+    SegmentButton
+  ]
 })
-export class SubscriptionPlans implements OnInit, ViewWillEnter {
+export class SubscriptionPlans implements OnInit {
   // services
   navigationService = inject(NavigationService);
   subscriptionService = inject(SubscriptionService);
@@ -98,11 +110,6 @@ export class SubscriptionPlans implements OnInit, ViewWillEnter {
   }
 
   async ngOnInit(): Promise<void> {
-    await this.loadPlans();
-  }
-
-  async ionViewWillEnter(): Promise<void> {
-    // Reload plans when returning to this page (e.g., after editing)
     await this.loadPlans();
   }
 

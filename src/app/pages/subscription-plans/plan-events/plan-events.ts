@@ -12,7 +12,16 @@ import { SubscriptionService } from '@/services/subscription.service';
 import { SubscriptionEventCard } from '@/components/card/subscription-event-card';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
 import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, OnDestroy } from '@angular/core';
-import { IonHeader, IonToolbar, IonContent, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonFooter } from '@ionic/angular/standalone';
+import {
+  IonHeader,
+  IonToolbar,
+  IonContent,
+  IonIcon,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+  IonFooter,
+  IonSkeletonText
+} from '@ionic/angular/standalone';
 
 interface Event {
   id: string;
@@ -33,6 +42,7 @@ interface Event {
   styleUrl: './plan-events.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    IonSkeletonText,
     IonFooter,
     Button,
     IonIcon,
@@ -166,10 +176,7 @@ export class PlanEvents implements OnInit, OnDestroy {
   });
 
   showTabs = computed(() => {
-    if (this.viewMode() === 'included') {
-      return this.hasAnyIncludedEvents();
-    }
-    return true;
+    return this.viewMode() === 'included' && this.hasAnyIncludedEvents();
   });
 
   showIncludedEventsList = computed(() => {
@@ -287,9 +294,6 @@ export class PlanEvents implements OnInit, OnDestroy {
           // Events are already included in the response
           const transformedEvents = planData.events.map((event: IEvent) => this.transformEventToSubscriptionEvent(event));
           this.includedEvents.set(transformedEvents);
-        } else if (planData.event_ids && planData.event_ids.length > 0) {
-          // Need to fetch events by IDs
-          await this.loadIncludedEvents(planData.event_ids);
         } else {
           this.includedEvents.set([]);
         }
@@ -300,47 +304,6 @@ export class PlanEvents implements OnInit, OnDestroy {
       this.navigationService.back();
     } finally {
       this.isLoading.set(false);
-    }
-  }
-
-  async loadIncludedEvents(eventIds: string[]): Promise<void> {
-    if (eventIds.length === 0) {
-      this.includedEvents.set([]);
-      return;
-    }
-
-    try {
-      this.isLoadingEvents.set(true);
-
-      // Fetch events by getting all user's events and filtering by IDs
-      const currentUser = this.authService.currentUser();
-      const userId = currentUser?.id;
-
-      if (!userId) {
-        this.includedEvents.set([]);
-        return;
-      }
-
-      const response = await this.eventService.getEvents({
-        page: 1,
-        limit: 100,
-        order_by: 'start_date',
-        order_direction: 'DESC',
-        roles: 'Host',
-        user_id: userId
-      });
-
-      const allEvents = response?.data?.data || [];
-      const includedEventsData = allEvents.filter((event: IEvent) => event.id && eventIds.includes(event.id));
-
-      const transformedEvents = includedEventsData.map((event: IEvent) => this.transformEventToSubscriptionEvent(event));
-
-      this.includedEvents.set(transformedEvents);
-    } catch (error) {
-      console.error('Error loading included events:', error);
-      this.toasterService.showError('Failed to load events');
-    } finally {
-      this.isLoadingEvents.set(false);
     }
   }
 
@@ -362,7 +325,7 @@ export class PlanEvents implements OnInit, OnDestroy {
       order_direction: 'DESC',
       roles: 'Host',
       user_id: userId,
-      ...(isUpcoming ? { is_upcoming_event: true } : {})
+      is_upcoming_event: true
     });
   }
 
@@ -442,6 +405,7 @@ export class PlanEvents implements OnInit, OnDestroy {
   }
 
   switchToAddMode(): void {
+    this.tabValue.set('upcoming');
     this.viewMode.set('add');
     this.selectedEventIds.set([]);
     this.currentPage.set(1);

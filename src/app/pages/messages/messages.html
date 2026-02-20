@@ -40,7 +40,7 @@
           @for (room of getFilteredChatRooms(); track room.id) {
             <ion-item-sliding>
               <ion-item (click)="goToChat(room)">
-                <ion-avatar class="relative">
+                <ion-avatar class="relative shrink-0">
                   <!-- Main avatar image -->
                   <div class="relative w-full h-full rounded-full overflow-hidden">
                     <img
@@ -71,9 +71,9 @@
                   }
                 </ion-avatar>
 
-                <ion-label class="pl-3">
+                <ion-label class="pl-3 flex-1 min-w-0">
                   <div class="body-14M neutral-01 pb-1">{{ getChatName(room) }}</div>
-                  <div class="body-12M neutral-02 line-clamp-2">
+                  <div class="body-12M neutral-02 line-clamp-1">
                     @if (room.lastMessage) {
                       {{ room.lastMessage }}
                     }

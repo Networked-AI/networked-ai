@@ -17,16 +17,15 @@
 
     <!-- Action buttons -->
     <div class="flex flex-col gap-3 mt-6">
-      <ion-button expand="block" color="dark" (click)="addToGoogleCalendar()">
-        <ion-icon slot="start" name="logo-google" class="pr-2"></ion-icon>
-        Add to Google Calendar
-      </ion-button>
+      <app-button
+        label="Add to Google Calendar"
+        [color]="isNative ? 'secondary' : 'primary'"
+        (click)="addToGoogleCalendar()"
+        ionIconName="logo-google"
+      />
 
       @if (isNative) {
-        <ion-button expand="block" color="dark" (click)="iosCreateEvent()">
-          <ion-icon slot="start" name="calendar" class="pr-2"></ion-icon>
-          Add to Calendar
-        </ion-button>
+        <app-button label=" Add to Calendar" (click)="iosCreateEvent()" ionIconName="calendar" />
       }
     </div>
   </div>

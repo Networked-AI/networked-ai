@@ -1,18 +1,17 @@
 import { DatePipe } from '@angular/common';
-import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
+import { Button } from '@/components/form/button';
+import { ToasterService } from '@/services/toaster.service';
 import { environment } from 'src/environments/environment';
 import { Calendar } from '@awesome-cordova-plugins/calendar/ngx';
 import { Component, Input, inject, OnInit, DOCUMENT } from '@angular/core';
-import { IonHeader, IonToolbar, IonButton, IonIcon, ModalController, isPlatform } from '@ionic/angular/standalone';
-
-import { Capacitor } from '@capacitor/core';
-import { ToasterService } from '@/services/toaster.service';
+import { IonHeader, IonToolbar, ModalController, isPlatform } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'add-to-calendar-modal',
   standalone: true,
   providers: [Calendar],
-  imports: [IonIcon, IonButton, IonToolbar, IonHeader],
+  imports: [IonToolbar, IonHeader, Button],
   templateUrl: './add-to-calendar-modal.html',
   styleUrl: './add-to-calendar-modal.scss'
 })
@@ -26,10 +25,10 @@ export class AddToCalendarModal implements OnInit {
 
   @Input() eventData: any;
 
-  calendarLinks: any;
+  calendarLink: any;
 
   ngOnInit() {
-    this.calendarLinks = this.getCalendarLinks();
+    this.calendarLink = this.getCalendarLink();
   }
 
   close(): void {
@@ -42,7 +41,7 @@ export class AddToCalendarModal implements OnInit {
   }
 
   // 🔹 Build calendar links
-  private getCalendarLinks() {
+  private getCalendarLink() {
     if (!this.eventData?.start_date || !this.eventData?.end_date) return null;
 
     const start = this.formatGoogleDate(this.eventData.start_date);
@@ -54,14 +53,13 @@ export class AddToCalendarModal implements OnInit {
     );
     const location = encodeURIComponent(this.eventData.location || '');
 
-    return {
-      Google:
-        `https://www.google.com/calendar/render?action=TEMPLATE` +
-        `&text=${title}` +
-        `&dates=${start}/${end}` +
-        `&details=${description}` +
-        `&location=${location}`
-    };
+    return (
+      `https://www.google.com/calendar/render?action=TEMPLATE` +
+      `&text=${title}` +
+      `&dates=${start}/${end}` +
+      `&details=${description}` +
+      `&location=${location}`
+    );
   }
 
   async iosCreateEvent() {
@@ -107,17 +105,15 @@ export class AddToCalendarModal implements OnInit {
 
       this.toasterService.showSuccess('Event added in Apple Calendar');
     } catch (err: any) {
-      console.error('❌ Apple calendar event creation failed:', err);
+      console.error('Apple calendar event creation failed:', err);
       this.toasterService.showError(err?.message || 'Failed to add event');
     }
   }
 
   // 🔹 Button actions
   async addToGoogleCalendar() {
-    if (!this.calendarLinks?.Google) return;
+    if (!this.calendarLink) return;
 
-    await Browser.open({
-      url: this.calendarLinks.Google
-    });
+    window.open(this.calendarLink, '_blank');
   }
 }

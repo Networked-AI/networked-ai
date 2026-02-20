@@ -227,24 +227,36 @@ export class ManageEventService extends BaseApiService {
       }
     }
   }
-
   private async handleQRCodeScanned(decodedText: string): Promise<void> {
     try {
-      let payload = {
+      const payload = {
         event_id: this.currentEventData().id,
         attendee_id: decodedText,
         is_checked_in: true,
         is_scanned: true
       };
+
       if (decodedText) {
         await this.eventService.changeCheckInStatus(payload);
-        this.toasterService.showSuccess('Check in successfully');
+
+        const result = await this.modalService.openScanResult(true, 'Check-in successful');
+
+        if (result === 'scan-again') {
+          this.scanQRCode();
+        }
       } else {
-        this.toasterService.showError('Invalid QR code. Please scan a valid profile QR code.');
+        const result = await this.modalService.openScanResult(false, 'Invalid QR code');
+
+        if (result === 'scan-again') {
+          this.scanQRCode();
+        }
       }
     } catch (error) {
-      console.error('Error parsing QR code:', error);
-      this.toasterService.showError('Invalid QR code format.');
+      const result = await this.modalService.openScanResult(false, 'Scan failed. Please try again.');
+
+      if (result === 'scan-again') {
+        this.scanQRCode();
+      }
     }
   }
 }

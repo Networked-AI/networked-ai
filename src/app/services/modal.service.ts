@@ -58,6 +58,7 @@ import { ImagePreviewModal } from '@/components/modal/image-preview-modal/image-
 import { ChatRoom } from '@/interfaces/IChat';
 import { AddToCalendarModal } from '@/components/modal/add-to-calendar-modal';
 import { UserSubscriptionPlans } from '@/pages/subscription-plans/user-subscription-plans';
+import { ScanResultModal } from '@/components/modal/scan-result-modal';
 
 @Injectable({ providedIn: 'root' })
 export class ModalService {
@@ -479,9 +480,7 @@ export class ModalService {
     return data;
   }
 
-  async showProfileImageConfirmationModal(
-    file: File
-  ): Promise<{ action: 'confirm' | 'retake' | 'cancel'; file?: File }> {
+  async showProfileImageConfirmationModal(file: File): Promise<{ action: 'confirm' | 'retake' | 'cancel'; file?: File }> {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = async (e: any) => {
@@ -916,10 +915,7 @@ export class ModalService {
     return data || null;
   }
 
-  async openRsvpConfirmModal(
-    eventData: any,
-    options?: { showFinishProfileSetup?: boolean }
-  ): Promise<any> {
+  async openRsvpConfirmModal(eventData: any, options?: { showFinishProfileSetup?: boolean }): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -1164,6 +1160,22 @@ export class ModalService {
 
     await modal.present();
 
+    const { data } = await modal.onWillDismiss();
+    return data || null;
+  }
+
+  async openScanResult(isSuccess: boolean, message: string): Promise<any | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: ScanResultModal,
+      cssClass: 'auto-hight-modal',
+      componentProps: { isSuccess, message }
+    });
+
+    await modal.present();
     const { data } = await modal.onWillDismiss();
     return data || null;
   }
