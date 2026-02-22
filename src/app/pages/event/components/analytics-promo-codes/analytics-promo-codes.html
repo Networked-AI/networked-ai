@@ -17,7 +17,7 @@
       @for (promo of promoCodes(); track promo.promo_code) {
         <div class="bg-white rounded-lg p-2">
           <!-- HEADER ROW -->
-          <div class="flex justify-between items-center py-2">
+          <div class="flex justify-between items-center py-2 cursor-pointer" (click)="togglePromo(promo.promo_code)">
             <div class="flex items-center gap-2">
               <ion-icon src="assets/svg/ticket/promo-tag.svg" alt="Promo" class="w-6 h-6" />
               <span class="body-16SB leading-none">
@@ -32,8 +32,7 @@
               <span class="w-4 h-4 flex items-center justify-center">
                 @if (promo?.total_uses > 0) {
                   <i
-                    (click)="togglePromo(promo.promo_code)"
-                    class="pi text-surface-400 cursor-pointer transition-transform duration-200"
+                    class="pi text-surface-400 transition-transform duration-200"
                     [ngClass]="{
                       'pi-chevron-down': !visiblePromoCodes[promo.promo_code],
                       'pi-chevron-up': visiblePromoCodes[promo.promo_code]
@@ -47,18 +46,17 @@
           @if (promo?.users?.length && visiblePromoCodes[promo?.promo_code]) {
             <div class="flex flex-col gap-2 my-3">
               @for (user of promo?.users; track user.username) {
-                <div class="flex items-center gap-2" (click)="goToUser(user)">
+                <div class="flex items-center cursor-pointer gap-2" (click)="goToUser(user)">
                   <div class="relative w-[40px] h-[40px] shrink-0 rounded-full overflow-hidden">
                     <img
                       fill
                       placeholder
-                      [alt]="user.name || 'User image'"
                       (error)="onImageError($event)"
                       [ngSrc]="getImageUrl(!user.parent_user_id ? user.thumbnail_url : '')"
                       class="object-cover"
                     />
                   </div>
-                  <span class="body-14R">{{ user.name }}</span>
+                  <span class="body-14R">{{ user.name || user.username }}</span>
                 </div>
               }
             </div>

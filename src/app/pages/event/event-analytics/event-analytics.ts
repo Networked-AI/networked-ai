@@ -1,16 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { NgOptimizedImage } from '@angular/common';
-import { EventService } from '@/services/event.service';
 import { AuthService } from '@/services/auth.service';
+import { EventService } from '@/services/event.service';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
+import { BaseApiService } from '@/services/base-api.service';
 import { NavigationService } from '@/services/navigation.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { AnalyticsTickets } from '@/pages/event/components/analytics-tickets';
 import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit } from '@angular/core';
 import { AnalyticsPromoCodes } from '@/pages/event/components/analytics-promo-codes';
-import { IonContent, IonHeader, IonToolbar, IonIcon, IonRefresher, IonRefresherContent, RefresherCustomEvent } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonToolbar, IonIcon, IonRefresher, IonRefresherContent, IonSkeletonText, RefresherCustomEvent } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'event-analytics',
@@ -22,6 +23,7 @@ import { IonContent, IonHeader, IonToolbar, IonIcon, IonRefresher, IonRefresherC
     IonToolbar,
     IonContent,
     IonRefresher,
+    IonSkeletonText,
     IonRefresherContent,
     CommonModule,
     AnalyticsPromoCodes,
@@ -39,10 +41,11 @@ export class EventAnalytics implements OnInit {
   eventService = inject(EventService);
   route = inject(ActivatedRoute);
 
-  isDownloading = signal<boolean>(false);
+  isLoading = signal(true);
+  summary = signal<any>(null);
+  isDownloading = signal(false);
   eventData = signal<any>(null);
   promoCodes = signal<any>(null);
-  summary = signal<any>(null);
   isLoggedIn = computed(() => !!this.authService.currentUser());
 
   async ngOnInit(): Promise<void> {
@@ -71,19 +74,18 @@ export class EventAnalytics implements OnInit {
       this.summary.set(response?.summary);
     } catch (error) {
       console.error('Error loading analytics:', error);
-      this.toasterService.showError('Failed to load analytics');
+      const message = BaseApiService.getErrorMessage(error, 'Failed to load analytics');
+      this.toasterService.showError(message);
       this.navigationService.navigateForward(`/event/${eventId}`, true);
+    } finally {
+      this.isLoading.set(false);
     }
   }
 
   async onRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
       const eventId = this.route.snapshot.paramMap.get('id');
-      if (eventId) {
-        await this.loadAnalytics(eventId);
-      }
-    } catch (error) {
-      console.error('Error refreshing:', error);
+      if (eventId) await this.loadAnalytics(eventId);
     } finally {
       event.target.complete();
     }

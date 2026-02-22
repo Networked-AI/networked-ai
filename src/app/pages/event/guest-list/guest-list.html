@@ -82,7 +82,7 @@
                 <!-- Name + points -->
                 <div class="flex items-center gap-2 min-w-0">
                   <span class="font-medium truncate block max-w-full">
-                    {{ s?.parent_user_id ? s?.name || 'Guest' : s?.user?.name }}
+                    {{ s?.parent_user_id ? s?.name || 'Guest' : s?.user?.name ||  s?.user?.username}}
                   </span>
 
                   @if (!s?.parent_user_id) {

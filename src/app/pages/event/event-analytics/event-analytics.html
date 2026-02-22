@@ -9,82 +9,157 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" mode="md">
-  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" mode="md">
-    <ion-refresher-content mode="md"></ion-refresher-content>
-  </ion-refresher>
-
-  <div class="min-h-full">
-    <div class="w-full max-w-[672px] mx-auto">
-      <div class="flex flex-col -mt-[65px]">
-        <div class="h-[260px] relative">
-          @if (eventData()) {
-            <div class="w-full h-[361px] overflow-hidden">
-              <img
-                fill
-                placeholder
-                [alt]="eventData()?.title || 'Event image'"
-                class="object-cover"
-                (error)="onImageError($event)"
-                [ngSrc]="getImageUrl(eventData()?.image_url || '')"
-                [loaderParams]="{ thumbnail: eventData()?.thumbnail_url }"
-              />
-            </div>
-          }
-          <div class="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent">
-            <div class="p-4 flex flex-col justify-end h-full pb-20 gap-y-2">
-              <div class="heading-h2 text-white">
-                {{ eventData()?.title }}
-              </div>
-
-              <div class="flex gap-4 text-white">
-                <!-- DATE -->
-                <div class="flex items-center gap-2">
-                  <i class="pi pi-calendar"></i>
-                  <div class="truncate">
-                    {{ eventData()?.start_date | date: 'EEE M/d, h.mm a' }}
-                  </div>
-                </div>
-
-                <!-- LOCATION -->
-                <div class="flex items-center gap-2">
-                  <i class="pi pi-map-marker"></i>
-                  <div class="truncate w-[160px]">
-                    {{ eventData()?.address }}
-                  </div>
+@if (isLoading()) {
+  <ion-content [fullscreen]="true" mode="md">
+    <div class="min-h-full">
+      <div class="w-full max-w-[672px] mx-auto">
+        <div class="flex flex-col -mt-[65px]">
+          <div class="h-[260px] relative">
+            <ion-skeleton-text animated class="w-full h-[361px]" />
+            <div class="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent">
+              <div class="p-4 flex flex-col justify-end h-full pb-20 gap-y-2">
+                <ion-skeleton-text animated class="w-3/4 h-8 rounded" />
+                <div class="flex gap-4">
+                  <ion-skeleton-text animated class="w-32 h-4 rounded" />
+                  <ion-skeleton-text animated class="w-40 h-4 rounded" />
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="-mt-[50px] relative">
-          <div class="ion-padding-horizontal">
-            <div class="flex gap-2">
-              <div
-                class="flex flex-col gap-2 flex-1 bg-neutral-07 border border-[#DBDBDB] shadow-[2px_16px_19px_0px_rgba(0,0,0,0.09)] rounded-lg p-3"
-              >
-                <ion-icon src="assets/svg/ticket/ticket.svg" class="w-6 h-6" />
-                <div class="body-14M neutral-03">Tickets Sold</div>
-                <div class="body-16SB">{{ summary()?.total_sold }}</div>
-              </div>
-
-              <div
-                class="flex flex-col gap-2 flex-1 bg-neutral-07 border border-[#DBDBDB] shadow-[2px_16px_19px_0px_rgba(0,0,0,0.09)] rounded-lg p-3"
-              >
-                <ion-icon src="assets/svg/ticket/dollar.svg" class="w-6 h-6" />
-                <div class="body-14M neutral-03">Total Sales</div>
-                <div class="body-16SB">${{ summary()?.total_sales.toFixed(2) }}</div>
+          <div class="-mt-[50px] relative">
+            <div class="ion-padding-horizontal">
+              <div class="flex gap-2">
+                <div class="flex flex-col gap-2 flex-1 bg-neutral-07 border border-[#DBDBDB] rounded-lg p-3">
+                  <ion-skeleton-text animated class="w-6 h-6 rounded" />
+                  <ion-skeleton-text animated class="w-24 h-4 rounded" />
+                  <ion-skeleton-text animated class="w-16 h-6 rounded" />
+                </div>
+                <div class="flex flex-col gap-2 flex-1 bg-neutral-07 border border-[#DBDBDB] rounded-lg p-3">
+                  <ion-skeleton-text animated class="w-6 h-6 rounded" />
+                  <ion-skeleton-text animated class="w-20 h-4 rounded" />
+                  <ion-skeleton-text animated class="w-20 h-6 rounded" />
+                </div>
               </div>
             </div>
-          </div>
-          <div class="p-4">
-            <analytics-tickets [eventData]="eventData()?.tickets" [summary]="summary()" />
-          </div>
-          <div class="p-4">
-            <analytics-promo-codes [promoCodes]="promoCodes()" [eventId]="eventData()?.id" />
+            <div class="p-4">
+              <div class="space-y-4">
+                @for (i of [1, 2, 3]; track i) {
+                  <div class="bg-white rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-3">
+                      <ion-skeleton-text animated class="w-32 h-5 rounded" />
+                      <ion-skeleton-text animated class="w-24 h-5 rounded" />
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 mb-3">
+                      <ion-skeleton-text animated class="w-full h-4 rounded" />
+                      <ion-skeleton-text animated class="w-full h-4 rounded" />
+                      <ion-skeleton-text animated class="w-full h-4 rounded" />
+                    </div>
+                    <div class="flex items-center justify-between gap-2 bg-surface-200 p-3 rounded-lg">
+                      <ion-skeleton-text animated class="w-20 h-5 rounded" />
+                      <ion-skeleton-text animated class="w-4 h-4 rounded" />
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+            <div class="p-4">
+              <div class="space-y-3">
+                @for (i of [1, 2, 3, 4]; track i) {
+                  <div class="bg-white rounded-lg p-3">
+                    <div class="flex justify-between items-center py-2">
+                      <div class="flex items-center gap-2">
+                        <ion-skeleton-text animated class="w-6 h-6 rounded" />
+                        <ion-skeleton-text animated class="w-32 h-5 rounded" />
+                      </div>
+                      <ion-skeleton-text animated class="w-4 h-4 rounded" />
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</ion-content>
+  </ion-content>
+} @else {
+  <ion-content [fullscreen]="true" mode="md">
+    <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" mode="md">
+      <ion-refresher-content mode="md"></ion-refresher-content>
+    </ion-refresher>
+
+    <div class="min-h-full">
+      <div class="w-full max-w-[672px] mx-auto">
+        <div class="flex flex-col -mt-[65px]">
+          <div class="h-[260px] relative">
+            @if (eventData()) {
+              <div class="w-full h-[361px] overflow-hidden">
+                <img
+                  fill
+                  placeholder
+                  [alt]="eventData()?.title || 'Event image'"
+                  class="object-cover"
+                  (error)="onImageError($event)"
+                  [ngSrc]="getImageUrl(eventData()?.image_url || '')"
+                  [loaderParams]="{ thumbnail: eventData()?.thumbnail_url }"
+                />
+              </div>
+            }
+            <div class="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent">
+              <div class="p-4 flex flex-col justify-end h-full pb-20 gap-y-2">
+                <div class="heading-h2 text-white">
+                  {{ eventData()?.title }}
+                </div>
+
+                <div class="flex gap-4 text-white">
+                  <!-- DATE -->
+                  <div class="flex items-center gap-2">
+                    <i class="pi pi-calendar"></i>
+                    <div class="truncate">
+                      {{ eventData()?.start_date | date: 'EEE M/d, h.mm a' }}
+                    </div>
+                  </div>
+
+                  <!-- LOCATION -->
+                  <div class="flex items-center gap-2">
+                    <i class="pi pi-map-marker"></i>
+                    <div class="truncate w-[160px]">
+                      {{ eventData()?.address }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="-mt-[50px] relative">
+            <div class="ion-padding-horizontal">
+              <div class="flex gap-2">
+                <div
+                  class="flex flex-col gap-2 flex-1 bg-neutral-07 border border-[#DBDBDB] shadow-[2px_16px_19px_0px_rgba(0,0,0,0.09)] rounded-lg p-3"
+                >
+                  <ion-icon src="assets/svg/ticket/ticket.svg" class="w-6 h-6" />
+                  <div class="body-14M neutral-03">Tickets Sold</div>
+                  <div class="body-16SB">{{ summary()?.total_sold }}</div>
+                </div>
+
+                <div
+                  class="flex flex-col gap-2 flex-1 bg-neutral-07 border border-[#DBDBDB] shadow-[2px_16px_19px_0px_rgba(0,0,0,0.09)] rounded-lg p-3"
+                >
+                  <ion-icon src="assets/svg/ticket/dollar.svg" class="w-6 h-6" />
+                  <div class="body-14M neutral-03">Total Sales</div>
+                  <div class="body-16SB">${{ summary()?.total_sales.toFixed(2) }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="p-4">
+              <analytics-tickets [eventData]="eventData()?.tickets" [summary]="summary()" />
+            </div>
+            <div class="p-4">
+              <analytics-promo-codes [promoCodes]="promoCodes()" [eventId]="eventData()?.id" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ion-content>
+}

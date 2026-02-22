@@ -46,6 +46,7 @@ import { Subscription } from 'rxjs';
 import { OgService } from '@/services/og.service';
 import { IUser } from '@/interfaces/IUser';
 import { Browser } from '@capacitor/browser';
+import { environment } from 'src/environments/environment';
 import { BaseApiService } from '@/services/base-api.service';
 import { FormsModule } from '@angular/forms';
 import { ToggleSwitch } from 'primeng/toggleswitch';
@@ -452,7 +453,8 @@ export class Profile implements OnDestroy {
 
   async handleStripeAccountCreation(): Promise<void> {
     try {
-      const accountResponse: any = await this.stripeService.createStripeAccount();
+      const returnUrl = `${environment.frontendUrl}/profile`;
+      const accountResponse: any = await this.stripeService.createStripeAccount(returnUrl);
       if (accountResponse?.url) {
         await Browser.open({ url: accountResponse.url });
       } else {

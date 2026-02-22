@@ -1,68 +1,91 @@
 <ion-header mode="md">
   <ion-toolbar>
-    <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
-      <div class="pi pi-arrow-left" (click)="navigationService.back()"></div>
-      <div class="body-14M neutral-02 text-center w-full">Sales Details</div>
+    <div class="px-4 py-6">
+      <div class="flex items-center gap-2 cursor-pointer max-w-[672px] mx-auto">
+        <div class="pi pi-arrow-left" (click)="navigationService.back()"></div>
+        <div class="body-14M neutral-02 text-center w-full">Sales Details</div>
+      </div>
+
+      @if (!isLoading()) {
+        <div class="w-full max-w-[672px] mx-auto pt-4">
+          @if (ticket()) {
+            <div class="tier-overview-card" [ngClass]="getTicketTypeClass()">
+              <div class="flex justify-between items-center gap-2">
+                <div class="flex items-center gap-2">
+                  <ion-icon src="assets/svg/ticket/ticket.svg" class="w-6 h-6" />
+                  <span class="body-16SB neutral-01">{{ ticket()?.name }}</span>
+                </div>
+                <img [src]="getTicketTypeChip(ticket())" />
+              </div>
+
+              <div class="flex items-center gap-4 pt-2">
+                <img [src]="getStatusChip()" />
+                <span class="body-14M neutral-03"
+                  >{{ ticket()?.sales_start_date | date: 'dd-MMM' }} - {{ ticket()?.sales_end_date | date: 'dd-MMM' }}</span
+                >
+                @if (ticket()?.price) {
+                  <span class="body-14M neutral-03 border-l border-surface-300 pl-4"> {{ ticket()?.price }}</span>
+                }
+              </div>
+
+              <div class="flex justify-between items-center gap-2 pt-4">
+                <div class="flex flex-col flex-1">
+                  <div class="body-14M neutral-03">Tickets Sold</div>
+                  <div class="heading-h2">{{ ticket()?.total_sold }}</div>
+                </div>
+                <div class="flex flex-col flex-1">
+                  <div class="body-14M neutral-03">Sales Generated</div>
+                  <div class="heading-h2">${{ ticket()?.total_amount_paid.toFixed(2) }}</div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- User List -->
+          <div class="flex items-center justify-between pt-2 gap-2">
+            <searchbar
+              class="w-full"
+              [searchQuery]="searchQuery()"
+              (clear)="searchQuery.set('')"
+              [placeholder]="'Search by username'"
+              (searchChange)="searchQuery.set($event)"
+            />
+
+            <app-button
+              label="CSV"
+              color="secondary"
+              (click)="downloadCSV()"
+              [disabled]="isDownloading()"
+              [iconName]="'pi pi-download'"
+              [isLoading]="isDownloading()"
+            />
+          </div>
+        </div>
+      }
     </div>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" mode="md">
   <div class="min-h-full">
-    <div class="w-full max-w-[672px] mx-auto p-6">
-      <!-- Ticket Overview -->
-      @if (ticket()) {
-        <div class="tier-overview-card" [ngClass]="getTicketTypeClass()">
-          <div class="flex justify-between items-center gap-2">
-            <div class="flex items-center gap-2">
-              <ion-icon src="assets/svg/ticket/ticket.svg" class="w-6 h-6" />
-              <span class="body-16SB neutral-01">{{ ticket()?.name }}</span>
+    <div class="w-full max-w-[672px] mx-auto px-4 py-6 pt-0">
+      @if (isLoading()) {
+        <!-- skeleton for user list -->
+        <div class="space-y-3 pt-4">
+          @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]; track i) {
+            <div class="flex items-center gap-3 py-3 border-b border-gray-200">
+              <ion-skeleton-text animated class="w-[40px] h-[40px] rounded-full shrink-0" />
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <ion-skeleton-text animated class="w-32 h-5 rounded" />
+                  <ion-skeleton-text animated class="w-16 h-5 rounded-full" />
+                </div>
+                <ion-skeleton-text animated class="w-24 h-4 rounded mt-1" />
+              </div>
             </div>
-            <img [src]="getTicketTypeChip(ticket())" />
-          </div>
-
-          <div class="flex items-center gap-4 pt-2">
-            <img [src]="getStatusChip()" />
-            <span class="body-14M neutral-03"
-              >{{ ticket()?.sales_start_date | date: 'dd-MMM' }} - {{ ticket()?.sales_end_date | date: 'dd-MMM' }}</span
-            >
-            @if (ticket()?.price) {
-              <span class="body-14M neutral-03 border-l border-surface-300 pl-4"> {{ ticket()?.price }}</span>
-            }
-          </div>
-
-          <div class="flex justify-between items-center gap-2 pt-4">
-            <div class="flex flex-col flex-1">
-              <div class="body-14M neutral-03">Tickets Sold</div>
-              <div class="heading-h2">{{ ticket()?.total_sold }}</div>
-            </div>
-            <div class="flex flex-col flex-1">
-              <div class="body-14M neutral-03">Sales Generated</div>
-              <div class="heading-h2">${{ ticket()?.total_amount_paid.toFixed(2) }}</div>
-            </div>
-          </div>
+          }
         </div>
-      }
-      <!-- User List -->
-      <div class="flex items-center justify-between pt-2 gap-2">
-        <searchbar
-          [placeholder]="'Search by username'"
-          [searchQuery]="searchQuery()"
-          (searchChange)="searchQuery.set($event)"
-          (clear)="searchQuery.set('')"
-          class="w-full"
-        />
-        <app-button
-          label="CSV"
-          [iconName]="'pi pi-download'"
-          color="secondary"
-          [disabled]="isDownloading()"
-          (click)="downloadCSV()"
-          [isLoading]="isDownloading()"
-        />
-      </div>
-
-      <div>
+      } @else {
         @for (s of users(); track s.id) {
           <div class="flex items-center gap-3 py-3 border-b border-gray-200" (click)="goToUser(s)">
             <!-- Profile -->
@@ -79,7 +102,7 @@
             <!-- Details -->
             <div class="flex-1">
               <div class="flex items-center gap-2">
-                <span class="font-medium truncate">{{ s.name }}</span>
+                <span class="font-medium truncate">{{ s.name || s.username }}</span>
                 @if (s.total_gamification_points) {
                   <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">
                     <img [src]="getDiamondPath(s.total_gamification_points)" alt="diamond" class="h-4 w-auto ml-1.5" />
@@ -103,7 +126,7 @@
             <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more users..." />
           </ion-infinite-scroll>
         }
-      </div>
+      }
     </div>
   </div>
 </ion-content>

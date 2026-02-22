@@ -12,7 +12,7 @@
           @if (link.type === 'phone') {
             <a [href]="link.href" class="truncate text-[#1D5BFF]!">{{ link.value }}</a>
           } @else {
-            <a [href]="link.href" target="_blank" rel="noopener noreferrer" class="truncate text-[#1D5BFF]!">{{ link.value }}</a>
+            <a [href]="link.href" target="_blank" rel="noopener noreferrer" class="truncate text-[#1D5BFF]!">{{ link?.value?.toLowerCase() }}</a>
           }
         </div>
       }

@@ -394,14 +394,15 @@ export class ModalService {
     title: string;
     iconName?: string;
     description: string;
+    customColor?: string;
     iconBgColor?: string;
+    shareButtonLabel?: string;
+    backdropDismiss?: boolean;
     confirmButtonLabel: string;
     cancelButtonLabel?: string;
-    shareButtonLabel?: string;
     confirmButtonColor?: string;
-    iconPosition?: 'left' | 'center';
-    customColor?: string;
     onConfirm?: () => Promise<any>;
+    iconPosition?: 'left' | 'center';
     onShare?: () => void | Promise<void>;
     confirmButtonLabelSignal?: Signal<string>;
   }): Promise<{ data: any; role: string } | null> {
@@ -410,10 +411,10 @@ export class ModalService {
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
+      componentProps: config,
       component: ConfirmModal,
-      backdropDismiss: !config.onConfirm || true, // Prevent backdrop dismiss if async callback is provided
       cssClass: 'auto-hight-modal',
-      componentProps: config
+      backdropDismiss: config.backdropDismiss
     });
 
     await modal.present();
