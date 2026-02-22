@@ -16,8 +16,8 @@
       >
         @for (item of mediaItems(); track $index) {
           <swiper-slide>
-            <div class="slide-content">
-              <div class="slide-image relative bg-black">
+<div class="slide-content">
+            <div class="slide-image relative bg-black" [class.slide-image-single]="mediaItems().length === 1">
                 <!-- IMAGE -->
                 @if (item.type === 'image' || item.type === 'gif') {
                   @if (isBlobUrl(item.url)) {
