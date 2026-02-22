@@ -69,7 +69,7 @@
           </div>
 
           @if (ticket.total_sold > 0) {
-            <div class="flex items-center justify-between gap-2 bg-surface-200 p-3 rounded-lg mt-4" (click)="openUserList(ticket)">
+            <div class="flex items-center justify-between cursor-pointer gap-2 bg-surface-200 p-3 rounded-lg mt-4" (click)="openUserList(ticket)">
               <div class="body-16SB neutral-01">${{ ticket.total_sales.toFixed(2) }}</div>
               <i class="pi pi-chevron-right"></i>
             </div>

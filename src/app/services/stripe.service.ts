@@ -49,12 +49,22 @@ export class StripeService extends BaseApiService {
     }
   }
 
-  async createStripeAccount(): Promise<StripeAccountResponse> {
+  async createStripeAccount(return_url: string): Promise<StripeAccountResponse> {
     try {
-      const response: any = await this.post<StripeAccountResponse>('/stripe/account', {});
+      const response: any = await this.post<StripeAccountResponse>('/stripe/account', { return_url });
       return response?.data;
     } catch (error) {
       console.error('Error creating Stripe account:', error);
+      throw error;
+    }
+  }
+
+  async getStripeDashboard(): Promise<{ url: string }> {
+    try {
+      const response: any = await this.get<{ url: string }>('/stripe/dashboard');
+      return response?.data;
+    } catch (error) {
+      console.error('Error getting Stripe dashboard:', error);
       throw error;
     }
   }

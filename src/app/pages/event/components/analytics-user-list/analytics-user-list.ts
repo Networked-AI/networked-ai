@@ -1,6 +1,6 @@
-import { onImageError } from '@/utils/helper';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
+import { onImageError } from '@/utils/helper';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Button } from '@/components/form/button';
@@ -8,12 +8,13 @@ import { NgOptimizedImage } from '@angular/common';
 import { getImageUrlOrDefault } from '@/utils/helper';
 import { EventService } from '@/services/event.service';
 import { Searchbar } from '@/components/common/searchbar';
-import { EmptyState } from '@/components/common/empty-state';
-import { NavigationService } from '@/services/navigation.service';
-import { Filesystem, Directory } from '@capacitor/filesystem';
-import { IonContent, IonHeader, IonToolbar, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent } from '@ionic/angular/standalone';
-import { Component, inject, signal, effect, ChangeDetectionStrategy, computed, DOCUMENT } from '@angular/core';
 import { ToasterService } from '@/services/toaster.service';
+import { BaseApiService } from '@/services/base-api.service';
+import { EmptyState } from '@/components/common/empty-state';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { NavigationService } from '@/services/navigation.service';
+import { Component, inject, signal, effect, ChangeDetectionStrategy, computed, DOCUMENT } from '@angular/core';
+import { IonContent, IonHeader, IonToolbar, IonIcon, IonInfiniteScroll, IonInfiniteScrollContent, IonSkeletonText } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'analytics-user-list',
@@ -27,6 +28,7 @@ import { ToasterService } from '@/services/toaster.service';
     IonToolbar,
     IonHeader,
     IonContent,
+    IonSkeletonText,
     CommonModule,
     Searchbar,
     Button,
@@ -35,22 +37,25 @@ import { ToasterService } from '@/services/toaster.service';
   ]
 })
 export class AnalyticsUserList {
+  // services
   route = inject(ActivatedRoute);
   eventService = inject(EventService);
   toasterService = inject(ToasterService);
   private readonly document = inject(DOCUMENT);
   navigationService = inject(NavigationService);
 
-  isLoadingMore = signal<boolean>(false);
-
+  // signals
+  totalPages = signal(0);
+  currentPage = signal(1);
+  searchQuery = signal('');
+  isLoading = signal(true);
   users = signal<any[]>([]);
   ticket = signal<any>(null);
-  searchQuery = signal<string>('');
-  isDownloading = signal<boolean>(false);
-  currentPage = signal<number>(1);
-  totalPages = signal<number>(0);
-  hasMore = computed(() => this.currentPage() < this.totalPages());
+  isDownloading = signal(false);
+  isLoadingMore = signal(false);
 
+  // computed
+  hasMore = computed(() => this.currentPage() < this.totalPages());
   filteredSuggestions = computed(async () => {
     const search = this.searchQuery().toLowerCase().trim();
     if (!search) return this.users();
@@ -58,24 +63,34 @@ export class AnalyticsUserList {
     return response?.users;
   });
 
-  private navEffect = effect(() => {
-    const state = history.state as { ticket?: any };
-    const eventId = this.route.snapshot.paramMap.get('id');
-    const ticketId = state?.ticket?.id;
+  constructor() {
+    effect(async () => {
+      const state = history.state as { ticket?: any };
 
-    if (eventId && ticketId) {
-      this.eventService.getEventTicketAnalytics(ticketId, 1, 20, this.searchQuery() || '').then((response) => {
-        this.ticket.set(response?.ticket);
-        this.currentPage.set(response?.pagination?.currentPage || 1);
-        this.totalPages.set(response?.pagination?.totalPages || 0);
-        this.users.set(response?.users);
-      });
-    } else {
-      this.users.set([]);
-      this.currentPage.set(1);
-      this.totalPages.set(0);
-    }
-  });
+      const eventId = this.route.snapshot.paramMap.get('id');
+      const ticketId = state?.ticket?.id;
+
+      if (eventId && ticketId) {
+        try {
+          const response = await this.eventService.getEventTicketAnalytics(ticketId, 1, 20, this.searchQuery() || '');
+          this.ticket.set(response?.ticket);
+          this.currentPage.set(response?.pagination?.currentPage || 1);
+          this.totalPages.set(response?.pagination?.totalPages || 0);
+          this.users.set(response?.users);
+        } catch (error) {
+          const message = BaseApiService.getErrorMessage(error, 'Failed to fetch analytics data.');
+          this.toasterService.showError(message);
+        } finally {
+          this.isLoading.set(false);
+        }
+      } else {
+        this.users.set([]);
+        this.currentPage.set(1);
+        this.totalPages.set(0);
+        this.isLoading.set(false);
+      }
+    });
+  }
 
   penniesToDollars(value: number): string {
     return (value / 100).toFixed(2);
@@ -195,6 +210,8 @@ export class AnalyticsUserList {
       }
     } catch (err) {
       console.error('CSV download failed', err);
+      const message = BaseApiService.getErrorMessage(err, 'Failed to download CSV');
+      this.toasterService.showError(message);
     } finally {
       this.isDownloading.set(false);
     }
@@ -252,6 +269,8 @@ export class AnalyticsUserList {
       this.users.update((current) => [...current, ...response?.users]);
     } catch (error) {
       console.error('Error loading more users:', error);
+      const message = BaseApiService.getErrorMessage(error, 'Failed to load more users');
+      this.toasterService.showError(message);
     } finally {
       this.isLoadingMore.set(false);
       infiniteScroll.complete();

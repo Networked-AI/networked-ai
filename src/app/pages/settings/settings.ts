@@ -5,7 +5,9 @@ import { UserService } from '@/services/user.service';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { StripeService } from '@/services/stripe.service';
+import { environment } from 'src/environments/environment';
 import { ToasterService } from '@/services/toaster.service';
+import { BaseApiService } from '@/services/base-api.service';
 import { NavigationService } from '@/services/navigation.service';
 import { IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 import { signal, inject, Component, ChangeDetectionStrategy, OnInit, PLATFORM_ID } from '@angular/core';
@@ -57,6 +59,11 @@ export class Settings implements OnInit {
       label: 'Payment History',
       icon: 'pi pi-history',
       route: '/settings/payment-history'
+    },
+    {
+      icon: 'pi pi-wallet',
+      label: 'Manage Payments',
+      action: 'manage-payments'
     }
   ]);
 
@@ -163,12 +170,12 @@ export class Settings implements OnInit {
     }
   }
 
-  async openStripePayoutModal(): Promise<void> {
+  async openStripePayoutModal(description?: string): Promise<void> {
     await this.modalService.openConfirmModal({
       icon: 'assets/svg/payoutIcon.svg',
       iconBgColor: '#C73838',
       title: 'Add Payout Details',
-      description: 'To view subscription plans in app, you must setup your payout details with Stripe.',
+      description: description || 'To view subscription plans in app, you must setup your payout details with Stripe.',
       confirmButtonLabel: 'Connect Payment',
       cancelButtonLabel: 'Maybe Later',
       confirmButtonColor: 'primary',
@@ -179,7 +186,8 @@ export class Settings implements OnInit {
 
   async handleStripeAccountCreation(): Promise<void> {
     try {
-      const accountResponse: any = await this.stripeService.createStripeAccount();
+      const returnUrl = `${environment.frontendUrl}/settings`;
+      const accountResponse: any = await this.stripeService.createStripeAccount(returnUrl);
       if (accountResponse?.url) {
         await Browser.open({ url: accountResponse.url });
       } else {
@@ -200,7 +208,10 @@ export class Settings implements OnInit {
         await this.navigateToSubscriptionPlans();
         break;
       case 'send-mail':
-        if (this.isBrowser) window.open('mailto:admin&#64;net-worked.ai', '_self');
+        if (this.isBrowser) window.open('mailto:admin@net-worked.ai', '_self');
+        break;
+      case 'manage-payments':
+        await this.openStripeDashboard();
         break;
     }
   }
@@ -244,5 +255,22 @@ export class Settings implements OnInit {
       url,
       presentationStyle: 'popover'
     });
+  }
+
+  async openStripeDashboard(): Promise<void> {
+    try {
+      const user = await this.userService.getCurrentUser(true);
+      if (!user?.stripe_account_id || user?.stripe_account_status !== 'active') {
+        await this.openStripePayoutModal('To access your Stripe dashboard and manage payments, you must setup your payout details with Stripe.');
+        return;
+      }
+      
+      const dashboardResponse = await this.stripeService.getStripeDashboard();
+      await Browser.open({ url: dashboardResponse.url });
+    } catch (error) {
+      console.error('Error opening Stripe dashboard:', error);
+      const message = BaseApiService.getErrorMessage(error, 'Error opening Stripe dashboard. Please try again.');
+      this.toasterService.showError(message);
+    }
   }
 }

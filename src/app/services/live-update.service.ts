@@ -80,8 +80,8 @@ export class LiveUpdateService {
     await this.modalService.openConfirmModal({
       iconPosition: 'left',
       iconBgColor: '#C73838',
+      backdropDismiss: false,
       title: 'Update Available',
-      cancelButtonLabel: 'Cancel',
       confirmButtonColor: 'danger',
       confirmButtonLabel: 'Download',
       icon: 'assets/svg/alert-white.svg',

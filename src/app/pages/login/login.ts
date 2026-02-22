@@ -11,10 +11,10 @@ import { MobileInput } from '@/components/form/mobile-input';
 import { BaseApiService } from '@/services/base-api.service';
 import { PasswordInput } from '@/components/form/password-input';
 import { NavigationService } from '@/services/navigation.service';
-import { IonContent, IonIcon, ModalController } from '@ionic/angular/standalone';
 import { SocialLoginButtons } from '@/components/common/social-login-buttons';
+import { IonContent, IonIcon, ModalController } from '@ionic/angular/standalone';
 import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
-import { signal, inject, Component, viewChild, OnInit, OnDestroy, Input } from '@angular/core';
+import { signal, inject, Component, viewChild, OnDestroy, Input, AfterViewInit } from '@angular/core';
 
 interface LoginForm {
   email?: FormControl<string | null>;
@@ -30,7 +30,7 @@ type LoginMethod = 'email' | 'mobile';
   templateUrl: './login.html',
   imports: [Button, IonIcon, OtpInput, EmailInput, MobileInput, PasswordInput, SocialLoginButtons, ReactiveFormsModule, IonContent]
 })
-export class Login implements OnInit, OnDestroy {
+export class Login implements OnDestroy, AfterViewInit {
   @Input() onLoginSuccess: (isNewUser?: boolean) => void = () => {};
   @Input() isRsvpModal: boolean = false;
   // services
@@ -60,14 +60,24 @@ export class Login implements OnInit, OnDestroy {
   // subscriptions
   private queryParamsSubscription!: Subscription;
 
-  ngOnInit() {
+  ngAfterViewInit(){
     if (this.isRsvpModal) return;
+
     this.queryParamsSubscription = this.route.queryParamMap.subscribe((params) => {
+      const email = params.get('email');
       const method = params.get('method');
+      const password = params.get('password');
+
       if (method === 'mobile') {
         this.activeTab.set('mobile');
       } else {
         this.activeTab.set('email');
+      }
+
+      // auto fille credentials and login (for forgot password email)
+      if (email && password) {
+        this.loginForm().patchValue({ email, password });
+        this.loginWithEmail();
       }
     });
   }

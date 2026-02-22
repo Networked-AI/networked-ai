@@ -10,6 +10,7 @@ import { ModalService } from '@/services/modal.service';
 import { StripeService } from '@/services/stripe.service';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TicketCard } from '@/components/card/ticket-card';
+import { environment } from 'src/environments/environment';
 import { PromoCodeFormModalData } from '@/interfaces/event';
 import { ToasterService } from '@/services/toaster.service';
 import { NumberInput } from '@/components/form/number-input';
@@ -369,7 +370,8 @@ export class EventTickets implements OnInit {
 
   async handleStripeAccountCreation(): Promise<void> {
     try {
-      const accountResponse: any = await this.stripeService.createStripeAccount();
+      const returnUrl = `${environment.frontendUrl}/event`;
+      const accountResponse: any = await this.stripeService.createStripeAccount(returnUrl);
       if (accountResponse?.url) {
         await Browser.open({ url: accountResponse.url });
       } else {

@@ -3,9 +3,10 @@ import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ModalService } from '@/services/modal.service';
-import { RsvpDetailsData } from '../rsvp-details-modal';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { TextInput } from '@/components/form/text-input';
+import { validateFields } from '@/utils/form-validation';
+import { ToasterService } from '@/services/toaster.service';
 import { NumberInput } from '@/components/form/number-input';
 import { MobileInput } from '@/components/form/mobile-input';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
@@ -52,14 +53,20 @@ interface QuestionnaireQuestionWithPhase {
   ]
 })
 export class QuestionnairePreviewModal implements OnInit {
+  // inputs
+  @Input() isPreviewMode = false;
   @Input() questions: QuestionnaireQuestionWithPhase[] = [];
-  @Input() isPreviewMode: boolean = false;
-  private modalService = inject(ModalService);
+
+  // services
   private fb = inject(FormBuilder);
   modalCtrl = inject(ModalController);
+  toasterService = inject(ToasterService);
+  private modalService = inject(ModalService);
+
+  // form and signals
   form!: FormGroup;
-  selectedPhase = signal<'PreEvent' | 'PostEvent'>('PreEvent');
   @ViewChild(MobileInput) mobileInput?: MobileInput;
+  selectedPhase = signal<'PreEvent' | 'PostEvent'>('PreEvent');
 
   preEventQuestions = computed(() => {
     return this.questions.filter((q) => !q.event_phase || q.event_phase === 'PreEvent');
@@ -195,36 +202,35 @@ export class QuestionnairePreviewModal implements OnInit {
     if (this.isPreviewMode) {
       await this.modalService.close();
     } else {
-      if (this.form.valid) {
-        const questionsToDisplay = this.displayedQuestions();
-        const responses = questionsToDisplay.map((question, index) => {
-          const control = this.getQuestionControl(index);
-          let value = control?.value;
-          const questionType = question.question_type || question.type || '';
-
-          if (questionType === 'MultipleChoice') {
-            const formArray = this.getMultipleChoiceArray(index);
-            value = question.options?.filter((_, i) => formArray.at(i).value) || [];
-          }
-
-          if (questionType === 'PhoneNumber') {
-            value = this.mobileInput?.getPhoneNumber();
-          }
-
-          return {
-            question_id: (question as any).id || null,
-            question: question.question,
-            type: questionType,
-            answer: value,
-            options: question.options || []
-          };
-        });
-        await this.modalCtrl.dismiss({ responses });
-      } else {
-        Object.keys(this.form.controls).forEach((key) => {
-          this.form.get(key)?.markAsTouched();
-        });
+      // validate personal info fields
+      if (!(await validateFields(this.form, Object.keys(this.form.controls)))) {
+        this.toasterService.showError('Please answer all questions to continue.');
+        return;
       }
+      const questionsToDisplay = this.displayedQuestions();
+      const responses = questionsToDisplay.map((question, index) => {
+        const control = this.getQuestionControl(index);
+        let value = control?.value;
+        const questionType = question.question_type || question.type || '';
+
+        if (questionType === 'MultipleChoice') {
+          const formArray = this.getMultipleChoiceArray(index);
+          value = question.options?.filter((_, i) => formArray.at(i).value) || [];
+        }
+
+        if (questionType === 'PhoneNumber') {
+          value = this.mobileInput?.getPhoneNumber();
+        }
+
+        return {
+          question_id: (question as any).id || null,
+          question: question.question,
+          type: questionType,
+          answer: value,
+          options: question.options || []
+        };
+      });
+      await this.modalCtrl.dismiss({ responses });
     }
   }
 }
