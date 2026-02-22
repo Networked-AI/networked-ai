@@ -47,9 +47,7 @@
           <text-input [controlName]="'lastName'" [label]="'Last Name'" [showLabel]="true" [required]="true" class="flex-1" />
         </div>
 
-        <email-input [controlName]="'email'" [label]="'Email'" [required]="true" />
-
-        <mobile-input [controlName]="'mobile'" [label]="'Mobile'" [required]="true" />
+        <email-input #emailInputRef [controlName]="'email'" [showVerifiedIcon]="true" [label]="'Email'" [required]="true" [checkIfTaken]="true" />
       </div>
 
       <!-- Guest Information Section -->
@@ -178,8 +176,8 @@
         </div>
       </div>
 
-      <!-- Payment Section -->
-      @if (totalPrice() > 0 && clientSecret()) {
+      <!-- Payment Section (shown after guest verification when isGuestMode) -->
+      @if (showPaymentSection()) {
         <div class="border border-surface-300 rounded-2xl p-4 flex flex-col gap-4">
           <div class="body-16M neutral-01">Payment Details</div>
           <app-stripe-payment
@@ -201,7 +199,12 @@
 <ion-footer mode="md">
   <ion-toolbar mode="md">
     <div class="p-4">
-      <app-button [label]="confirmButtonLabel()" [isLoading]="isLoadingPayment()" [disabled]="isLoadingPayment()" (click)="dismiss()" />
+      <app-button
+        [label]="confirmButtonLabel()"
+        [isLoading]="isLoadingPayment() || isGuestVerifying() || isUpdatingUserDetails()"
+        [disabled]="isLoadingPayment() || isGuestVerifying() || isUpdatingUserDetails()"
+        (click)="dismiss()"
+      />
     </div>
   </ion-toolbar>
 </ion-footer>

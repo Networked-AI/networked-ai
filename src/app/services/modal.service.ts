@@ -880,7 +880,8 @@ export class ModalService {
     rsvpData: RsvpDetailsData,
     hostPaysFees?: boolean,
     additionalFees?: string | number | null,
-    hostName?: string
+    hostName?: string,
+    isGuestMode?: boolean
   ): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -889,7 +890,7 @@ export class ModalService {
       initialBreakpoint: 1,
       cssClass: 'modal-60-percent-height',
       component: RsvpDetailsModal,
-      componentProps: { eventTitle, date, location, eventId, rsvpData, hostPaysFees, additionalFees, hostName }
+      componentProps: { eventTitle, date, location, eventId, rsvpData, hostPaysFees, additionalFees, hostName, isGuestMode: isGuestMode ?? false }
     });
     await modal.present();
     const { data } = await modal.onDidDismiss();

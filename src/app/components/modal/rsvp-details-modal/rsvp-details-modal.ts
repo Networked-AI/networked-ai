@@ -1,6 +1,7 @@
 import { IUser } from '@/interfaces/IUser';
 import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
+import { AuthService } from '@/services/auth.service';
 import { UserService } from '@/services/user.service';
 import { ModalService } from '@/services/modal.service';
 import { TextInput } from '@/components/form/text-input';
@@ -8,11 +9,11 @@ import { EmailInput } from '@/components/form/email-input';
 import { ToasterService } from '@/services/toaster.service';
 import { ToggleInput } from '@/components/form/toggle-input';
 import { BaseApiService } from '@/services/base-api.service';
-import { MobileInput } from '@/components/form/mobile-input';
+import { validateFields } from '@/utils/form-validation';
 import { StripePaymentComponent } from '@/components/common/stripe-payment';
 import { StripePaymentSuccessEvent, StripePaymentErrorEvent, StripeService } from '@/services/stripe.service';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Input, signal, inject, Component, OnInit, ChangeDetectionStrategy, computed, effect, ViewChild } from '@angular/core';
+import { Input, signal, inject, Component, OnInit, ChangeDetectionStrategy, computed, effect, ViewChild, viewChild } from '@angular/core';
 import { IonHeader, IonFooter, IonToolbar, IonIcon, ModalController, IonContent } from '@ionic/angular/standalone';
 
 export interface RsvpDetailsData {
@@ -44,7 +45,6 @@ export interface RsvpDetailsData {
     IonContent,
     IonToolbar,
     EmailInput,
-    MobileInput,
     ToggleInput,
     CommonModule,
     ReactiveFormsModule,
@@ -61,15 +61,19 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   @Input() hostPaysFees: boolean = false;
   @Input() additionalFees: string | number | null = null;
   @Input() hostName: string = 'Networked AI';
+  @Input() isGuestMode: boolean = false;
 
   modalCtrl = inject(ModalController);
   rsvpDataSignal = signal<RsvpDetailsData | null>(null);
 
   private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
   private userService = inject(UserService);
   private modalService = inject(ModalService);
   private stripeService = inject(StripeService);
   private toasterService = inject(ToasterService);
+
+  emailInputRef = viewChild<EmailInput>('emailInputRef');
 
   form: FormGroup;
   guestForms: FormArray;
@@ -84,13 +88,20 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   clientSecret = signal<string>('');
   stripePaymentIntentId = signal<string>('');
 
+  // Guest (sign-up) flow: step 1 = details + Continue, step 2 = after OTP verification, show payment + Confirm
+  guestStep = signal<'details' | 'verified'>('details');
+  isGuestVerifying = signal<boolean>(false);
+
+  // Snapshot of "Your Details" when modal opened (logged-in only), to detect changes on confirm
+  initialYourDetails = signal<{ firstName: string; lastName: string; email: string } | null>(null);
+  isUpdatingUserDetails = signal<boolean>(false);
+
   constructor() {
     super();
     this.form = this.fb.group({
       firstName: ['', [Validators.required]],
       lastName: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
-      mobile: ['', [Validators.required]]
     });
 
     this.guestForms = this.fb.array([]);
@@ -197,14 +208,22 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
     return this.totalPrice()?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00';
   });
 
+  isGuestFreeFlow = computed(() => this.isGuestMode && this.totalPrice() === 0);
+
   confirmButtonLabel = computed(() => {
-    if (this.isLoadingPayment()) {
-      return 'Processing Payment...';
+    if (this.isGuestVerifying()) return 'Verifying...';
+    if (this.isUpdatingUserDetails()) return 'Updating details...';
+    if (this.isLoadingPayment()) return 'Processing Payment...';
+    if (this.isGuestMode && this.guestStep() === 'details') {
+      return this.isGuestFreeFlow() ? 'Confirm RSVP' : 'Create Account';
     }
-    if (this.totalPrice() > 0) {
-      return `Pay $${this.formattedTotal()} and Confirm`;
-    }
+    if (this.totalPrice() > 0) return `Pay $${this.formattedTotal()} and Confirm`;
     return 'Confirm RSVP';
+  });
+
+  showPaymentSection = computed(() => {
+    if (!this.isGuestMode) return this.totalPrice() > 0 && this.clientSecret().length > 0;
+    return this.guestStep() === 'verified' && this.totalPrice() > 0 && this.clientSecret().length > 0;
   });
 
   totalTicketCount = computed(() => {
@@ -247,17 +266,60 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   async ngOnInit(): Promise<void> {
     this.rsvpDataSignal.set(this.rsvpData);
 
-    try {
-      const user = await this.userService.getCurrentUser();
-      this.currentUser.set(user);
-      this.populateFormsWithUserData();
-    } catch (error) {
-      console.warn('No active user account found, forms will remain empty', error);
-    }
+    if (!this.isGuestMode) {
+      try {
+        const user = await this.userService.getCurrentUser();
+        this.currentUser.set(user);
+        this.populateFormsWithUserData();
+      } catch (error) {
+        console.warn('No active user account found, forms will remain empty', error);
+      }
 
-    // Fetch payment intent if total price > 0
-    if (this.totalPrice() > 0) {
-      await this.fetchPaymentIntent();
+      if (this.totalPrice() > 0) {
+        await this.fetchPaymentIntent();
+      }
+    }
+  }
+
+  /** Guest sign-up: validate → OTP → register → update name. If paid, move to payment step; if free, caller finalizes. */
+  private async continueAsGuest(): Promise<boolean> {
+    this.emailInputRef()?.shouldValidate.set(true);
+    if (!(await validateFields(this.form, ['firstName', 'lastName', 'email']))) {
+      this.emailInputRef()?.shouldValidate.set(false);
+      this.toasterService.showError('Please fill all details and use a valid email that is not already registered.');
+      return false;
+    }
+    this.emailInputRef()?.shouldValidate.set(false);
+    const email = this.form.get('email')?.value?.trim();
+    if (!email) return false;
+
+    this.isGuestVerifying.set(true);
+    try {
+      await this.authService.sendOtp({ email });
+      const verified = await this.modalService.openOtpModal(email, '');
+      if (!verified) {
+        this.toasterService.showError('Invalid or expired verification code.');
+        return false;
+      }
+      await this.modalService.openLoadingModal('Creating your account...');
+      await this.authService.register({ email });
+      const firstName = this.form.get('firstName')?.value?.trim() || '';
+      const lastName = this.form.get('lastName')?.value?.trim() || '';
+      await this.userService.updateCurrentUser(
+        this.userService.generateUserPayload({ first_name: firstName, last_name: lastName })
+      );
+      await this.modalService.close();
+      this.currentUser.set(this.authService.currentUser());
+      if (this.totalPrice() > 0) {
+        this.guestStep.set('verified');
+        await this.fetchPaymentIntent();
+      }
+      return true;
+    } catch (error) {
+      this.toasterService.showError(BaseApiService.getErrorMessage(error, 'Failed to verify or create account.'));
+      return false;
+    } finally {
+      this.isGuestVerifying.set(false);
     }
   }
 
@@ -297,13 +359,14 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
     const nameParts = user.name?.split(' ') || [];
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ') || '';
+    const email = user.email || '';
 
     this.form.patchValue({
       firstName,
       lastName,
-      email: user.email || '',
-      mobile: user.mobile || ''
+      email
     });
+    this.initialYourDetails.set({ firstName, lastName, email });
   }
 
   initializeGuestForms(): void {
@@ -349,18 +412,33 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   }
 
   async dismiss(): Promise<void> {
+    if (this.isGuestMode && this.guestStep() === 'details') {
+      const success = await this.continueAsGuest();
+      if (!success) return;
+      if (this.isGuestFreeFlow()) this.finalizeRsvpAndClose();
+      return;
+    }
+
     if (!this.validateAllForms()) {
       this.toasterService.showError('Please fill all details.');
       return;
     }
 
-    // If there's a payment amount, process payment first
+    const formValue = this.form.getRawValue();
+    const { firstName, lastName, email } = formValue;
+    const firstNameVal = (firstName as string)?.trim() ?? '';
+    const lastNameVal = (lastName as string)?.trim() ?? '';
+    const emailVal = (email as string)?.trim() ?? '';
+
+    if (!this.isGuestMode) {
+      const updated = await this.syncLoggedInUserDetailsIfChanged(firstNameVal, lastNameVal, emailVal);
+      if (!updated) return;
+    }
+
     if (this.totalPrice() > 0) {
-      const formValue = this.form.getRawValue();
-      const { firstName, lastName, email } = formValue;
       const paymentSuccess = await this.paymentComponent.processPayment({
-        name: `${firstName} ${lastName}`.trim(),
-        email: email as string
+        name: `${firstNameVal} ${lastNameVal}`.trim(),
+        email: emailVal
       });
       if (!paymentSuccess) {
         return;
@@ -368,6 +446,58 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
     }
 
     this.finalizeRsvpAndClose();
+  }
+
+  /**
+   * When logged in, sync changed first name, last name or email to DB. Email requires OTP verification.
+   * Single updateCurrentUser call with all changed fields. Returns false to abort (e.g. OTP failed).
+   */
+  private async syncLoggedInUserDetailsIfChanged(
+    firstName: string,
+    lastName: string,
+    newEmail: string
+  ): Promise<boolean> {
+    const initial = this.initialYourDetails();
+    if (!initial) return true;
+
+    const nameChanged = firstName !== initial.firstName || lastName !== initial.lastName;
+    const emailChanged = newEmail !== initial.email && newEmail.length > 0;
+    if (!nameChanged && !emailChanged) return true;
+
+    this.isUpdatingUserDetails.set(true);
+    try {
+      if (emailChanged) {
+        this.emailInputRef()?.shouldValidate.set(true);
+        if (!(await validateFields(this.form, ['email']))) {
+          this.emailInputRef()?.shouldValidate.set(false);
+          this.toasterService.showError('Please enter a valid email address.');
+          return false;
+        }
+        this.emailInputRef()?.shouldValidate.set(false);
+        await this.authService.sendOtp({ email: newEmail });
+        const verified = await this.modalService.openOtpModal(newEmail, '');
+        if (!verified) {
+          this.toasterService.showError('Email verification was not completed. Please try again.');
+          return false;
+        }
+      }
+
+      const payload = this.userService.generateUserPayload({
+        ...(nameChanged && { first_name: firstName, last_name: lastName }),
+        ...(emailChanged && { email: newEmail })
+      });
+      if (Object.keys(payload).length > 0) {
+        await this.userService.updateCurrentUser(payload);
+        this.currentUser.set(this.authService.currentUser());
+        this.initialYourDetails.set({ firstName, lastName, email: newEmail });
+      }
+      return true;
+    } catch (error) {
+      this.toasterService.showError(BaseApiService.getErrorMessage(error, 'Failed to update your details.'));
+      return false;
+    } finally {
+      this.isUpdatingUserDetails.set(false);
+    }
   }
 
   async finalizeRsvpAndClose(): Promise<void> {
@@ -385,12 +515,12 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
       yourDetails: {
         firstName: this.form.get('firstName')?.value,
         lastName: this.form.get('lastName')?.value,
-        email: this.form.get('email')?.value,
-        mobile: this.form.get('mobile')?.value
+        email: this.form.get('email')?.value
       },
       guestDetails: guestDetails.length > 0 ? guestDetails : null,
       rsvpData: this.rsvpDataSignal(),
-      stripePaymentIntentId: this.stripePaymentIntentId()
+      stripePaymentIntentId: this.stripePaymentIntentId(),
+      isNewUser: this.isGuestMode
     };
     await this.modalCtrl.dismiss(formData);
   }
