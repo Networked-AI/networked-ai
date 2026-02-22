@@ -304,6 +304,10 @@ export class RsvpModal implements OnInit, OnDestroy {
     return await this.modalService.openLoginModal();
   }
 
+  async onSignInClick(): Promise<void> {
+    await this.modalService.openLoginModal();
+  }
+
   private isCurrentUserHostOrCoHost(): boolean {
     const currentUser = this.authService.currentUser();
     if (!currentUser?.id || !this.participants?.length) return false;
@@ -1016,42 +1020,56 @@ export class RsvpModal implements OnInit, OnDestroy {
     const currentUser = this.authService.currentUser();
     const guestDetails = rsvpConfirmData?.guestDetails || [];
     const yourDetails = rsvpConfirmData?.yourDetails;
+    const currentAttendees = this.attendees();
 
-    let guestIndex = 0;
-    const attendees = this.attendees().map((attendee) => {
-      const isGuest = attendee.parent_user_id !== null;
+    const attendees = currentAttendees.map((attendee, index) => {
       let attendeeName = '';
       let isIncognito = false;
       let rsvpStatus: 'Yes' | 'Maybe' = 'Yes';
 
-      if (isGuest) {
-        if (guestIndex < guestDetails.length) {
-          const guest = guestDetails[guestIndex];
-          attendeeName = `${guest.firstName || ''} ${guest.lastName || ''}`.trim();
-          isIncognito = guest.isIncognito || false;
-          rsvpStatus = guest.attendance === 'maybe' ? 'Maybe' : 'Yes';
+      const hasFormDetails = yourDetails && Array.isArray(guestDetails);
+      const isPrimaryByPosition = hasFormDetails && index === 0;
+      const isGuestByPosition = hasFormDetails && index > 0 && index - 1 < guestDetails.length;
+
+      if (isPrimaryByPosition) {
+        attendeeName = `${yourDetails.firstName || ''} ${yourDetails.lastName || ''}`.trim() || currentUser?.name || '';
+        rsvpStatus = 'Yes';
+      } else if (isGuestByPosition) {
+        const guest = guestDetails[index - 1];
+        attendeeName = `${guest.firstName || ''} ${guest.lastName || ''}`.trim() || `Guest ${index}`;
+        isIncognito = guest.isIncognito ?? false;
+        rsvpStatus = guest.attendance === 'maybe' ? 'Maybe' : 'Yes';
+      } else {
+        const isGuestByParentId = attendee.parent_user_id !== null;
+        if (isGuestByParentId) {
+          const guestIndex = currentAttendees
+            .slice(0, index)
+            .filter((a) => a.parent_user_id !== null).length;
+          if (guestIndex < guestDetails.length) {
+            const guest = guestDetails[guestIndex];
+            attendeeName = `${guest.firstName || ''} ${guest.lastName || ''}`.trim();
+            isIncognito = guest.isIncognito ?? false;
+            rsvpStatus = guest.attendance === 'maybe' ? 'Maybe' : 'Yes';
+          } else {
+            attendeeName = `Guest ${guestIndex + 1}`;
+          }
         } else {
-          attendeeName = `Guest ${guestIndex + 1}`;
-          isIncognito = false;
+          attendeeName =
+            (yourDetails && `${yourDetails.firstName || ''} ${yourDetails.lastName || ''}`.trim()) || currentUser?.name || '';
           rsvpStatus = 'Yes';
         }
-        guestIndex++;
-      } else {
-        if (yourDetails) {
-          attendeeName = `${yourDetails.firstName || ''} ${yourDetails.lastName || ''}`.trim();
-        } else if (currentUser?.name) {
-          attendeeName = currentUser.name;
-        }
-        isIncognito = false;
-        rsvpStatus = 'Yes';
       }
 
-      return {
+      const updated = {
         ...attendee,
         name: attendeeName,
         is_incognito: isIncognito,
         rsvp_status: rsvpStatus
       };
+      if (hasFormDetails && index > 0 && currentUser?.id) {
+        (updated as Record<string, unknown>)['parent_user_id'] = currentUser.id;
+      }
+      return updated;
     });
 
     this.attendees.set(attendees);
@@ -1087,15 +1105,16 @@ export class RsvpModal implements OnInit, OnDestroy {
   }
 
   async dismiss(): Promise<void> {
-    const loginResult = await this.ensureLoggedIn();
-    if (!loginResult?.success) return;
+    const isLoggedIn = !!this.authService.getCurrentToken();
+    let loginResult: { success: boolean; isNewUser?: boolean } | null = isLoggedIn ? await this.ensureLoggedIn() : { success: true };
+    if (isLoggedIn && !loginResult?.success) return;
 
-    if (this.isCurrentUserHostOrCoHost()) {
+    if (isLoggedIn && this.isCurrentUserHostOrCoHost()) {
       this.toasterService.showError('You are the host or co-host of this event. You cannot RSVP as a guest.');
       return;
     }
 
-    if (this.hasSponsorPlan() && !this.hasSubscribed && this.isSelectedSponsorTicket() && !this.hasShownSponsorPrompt()) {
+    if (isLoggedIn && this.hasSponsorPlan() && !this.hasSubscribed && this.isSelectedSponsorTicket() && !this.hasShownSponsorPrompt()) {
       this.hasShownSponsorPrompt.set(true);
       await this.openStripePayoutModal(); // ⛔ blocks until closed
     }
@@ -1142,7 +1161,8 @@ export class RsvpModal implements OnInit, OnDestroy {
       rsvpData,
       this.hostPaysFees,
       this.additionalFees,
-      this.hostName
+      this.hostName,
+      !isLoggedIn
     );
 
     if (!rsvpConfirmData) {
@@ -1157,7 +1177,7 @@ export class RsvpModal implements OnInit, OnDestroy {
       event_id: this.eventId,
       attendees: this.attendees(),
       stripe_payment_intent_id: rsvpConfirmData?.stripePaymentIntentId || null,
-      isNewUser: loginResult.isNewUser ?? false
+      isNewUser: rsvpConfirmData?.isNewUser ?? loginResult?.isNewUser ?? false
     };
 
     await this.modalCtrl.dismiss(result);

@@ -54,7 +54,7 @@
           @for (media of sortedMedias(); track media.id) {
             <swiper-slide>
               <div class="slide-content">
-                <div class="slide-image bg-black">
+                <div class="slide-image bg-black" [class.slide-image-single]="sortedMedias().length === 1">
                   @if (media.media_type === 'Image') {
                     <img
                       fill

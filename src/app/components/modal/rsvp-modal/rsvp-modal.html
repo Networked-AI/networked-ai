@@ -194,12 +194,20 @@
 @if (!(isSubscriberExclusive && !hasSubscribed)) {
   <ion-footer mode="md">
     <ion-toolbar mode="md">
-      <div class="p-4">
+      <div class="p-4 flex flex-col gap-3">
         <app-button
           [label]="formattedTotal() ? 'Continue - $' + formattedTotal() : 'Continue'"
           (click)="dismiss()"
           [disabled]="!hasSelectedTickets()"
         />
+        @if (!isLoggedIn()) {
+          <p class="body-14R neutral-03 text-center">
+            Already have an account?
+            <button type="button" class="text-primary body-14M font-medium cursor-pointer bg-transparent border-none p-0" (click)="onSignInClick()">
+              Sign in here
+            </button>
+          </p>
+        }
       </div>
     </ion-toolbar>
   </ion-footer>

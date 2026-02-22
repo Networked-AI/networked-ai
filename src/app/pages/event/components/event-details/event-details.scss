@@ -91,6 +91,10 @@ swiper-slide {
   align-items: center;
   justify-content: center;
   position: relative;
+
+  &.slide-image-single {
+    margin-bottom: 0 !important;
+  }
 }
 
 .slide-image img,

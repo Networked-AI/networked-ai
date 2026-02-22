@@ -157,7 +157,7 @@
             @for (media of displayMediasForDisplay(); track media.id || $index) {
               <swiper-slide>
                 <div class="slide-content">
-                  <div class="slide-image bg-black">
+                  <div class="slide-image bg-black" [class.slide-image-single]="displayMediasForDisplay().length === 1">
                     @if (media.type === 'Image') {
                       <img
                         fill
