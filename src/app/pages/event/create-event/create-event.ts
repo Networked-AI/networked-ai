@@ -395,8 +395,10 @@ export class CreateEvent implements OnInit, OnDestroy {
 
     form.get('custom_repeat_count')?.valueChanges.subscribe((value) => {
       if (value) {
-        form.patchValue({ repeat_count: value });
-        this.generateRepeatingEventsIfReady();
+        if (value <= 10) {
+          form.patchValue({ repeat_count: value });
+          this.generateRepeatingEventsIfReady();
+        }
       }
     });
 
@@ -469,7 +471,7 @@ export class CreateEvent implements OnInit, OnDestroy {
 
       if (confirmed) {
         this.allowLeave.set(true);
-          this.navigationService.back();
+        this.navigationService.back();
       }
     } else {
       const previousStep = this.currentStep() - 1;
