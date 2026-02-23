@@ -10,49 +10,57 @@
       <ion-icon [src]="ticketIcon()" class="h-[20px] w-[20px] pl-5 pr-2"></ion-icon>
       <span>{{ ticket().ticket_type }} Ticket</span>
     </div>
-    <div class="absolute right-5 top-2">
-      <ion-reorder slot="end">
-        <i class="pi pi-align-justify text-neutral-07 text-xl"></i>
-      </ion-reorder>
-    </div>
+    @if (!compact()) {
+      <div class="absolute right-5 top-2">
+        <ion-reorder slot="end">
+          <i class="pi pi-align-justify text-neutral-07 text-xl"></i>
+        </ion-reorder>
+      </div>
+    }
   </div>
 
   <div class="p-4 flex flex-col gap-3">
     <div class="flex items-start justify-between gap-4">
       <div class="flex flex-col flex-1 gap-1 min-w-0">
         <div class="ticket-name body-16SB neutral-01 truncate">{{ ticket().name }}</div>
-        <div class="event-ticket-price body-16SB neutral-01">{{ formattedPrice() }}</div>
+        @if (!compact()) {
+          <div class="event-ticket-price body-16SB neutral-01">{{ formattedPrice() }}</div>
+        }
       </div>
-      <div class="flex items-center gap-4">
-        <button (click)="onEdit()" type="button">
-          <img src="assets/svg/editIcon.svg" alt="edit" class="w-6 h-6" />
-        </button>
-        <button (click)="onDelete()" type="button">
-          <img src="assets/svg/deleteIcon.svg" alt="delete" class="w-6 h-6" />
-        </button>
-      </div>
+      @if (compact()) {
+        <div class="shrink-0 body-16SB neutral-01">{{ formattedPrice() }}</div>
+      } @else {
+        <div class="flex items-center gap-4">
+          <button (click)="onEdit()" type="button">
+            <img src="assets/svg/editIcon.svg" alt="edit" class="w-6 h-6" />
+          </button>
+          <button (click)="onDelete()" type="button">
+            <img src="assets/svg/deleteIcon.svg" alt="delete" class="w-6 h-6" />
+          </button>
+        </div>
+      }
     </div>
 
-    <!-- Description -->
-    @if (description()) {
-      <div class="body-14R neutral-03 min-h-10 py-2 border-t border-(--surface-border) leading-relaxed">
-        {{ description() }}
-      </div>
+    @if (ticket().description) {
+      <show-more [content]="ticket().description || ''" [maxLength]="220" contentClass="body-14R neutral-03 pt-2 border-t border-(--surface-border) leading-relaxed"
+      />
     }
 
-    <div class="flex flex-col gap-3 pt-3 border-t border-(--surface-border)">
-      <div class="flex justify-between items-start gap-4">
-        <span class="detail-label body-14R neutral-03">Quantity</span>
-        <span class="detail-value body-14M neutral-01 text-right flex-1">{{ formattedQuantity() }}</span>
+    @if (!compact()) {
+      <div class="flex flex-col gap-3 pt-3 border-t border-(--surface-border)">
+        <div class="flex justify-between items-start gap-4">
+          <span class="detail-label body-14R neutral-03">Quantity</span>
+          <span class="detail-value body-14M neutral-01 text-right flex-1">{{ formattedQuantity() }}</span>
+        </div>
+        <div class="flex justify-between items-start gap-4">
+          <span class="detail-label body-14R neutral-03">Sale Start</span>
+          <span class="detail-value body-14M neutral-01 text-right flex-1">{{ saleStartDisplay() }}</span>
+        </div>
+        <div class="flex justify-between items-start gap-4">
+          <span class="detail-label body-14R neutral-03">Sale End</span>
+          <span class="detail-value body-14M neutral-01 text-right flex-1">{{ saleEndDisplay() }}</span>
+        </div>
       </div>
-      <div class="flex justify-between items-start gap-4">
-        <span class="detail-label body-14R neutral-03">Sale Start</span>
-        <span class="detail-value body-14M neutral-01 text-right flex-1">{{ saleStartDisplay() }}</span>
-      </div>
-      <div class="flex justify-between items-start gap-4">
-        <span class="detail-label body-14R neutral-03">Sale End</span>
-        <span class="detail-value body-14M neutral-01 text-right flex-1">{{ saleEndDisplay() }}</span>
-      </div>
-    </div>
+    }
   </div>
 </div>

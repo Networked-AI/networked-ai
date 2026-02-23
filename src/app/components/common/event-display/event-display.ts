@@ -27,7 +27,8 @@ import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { isPlatformBrowser, NgOptimizedImage } from '@angular/common';
 import { AvatarGroupComponent } from '@/components/common/avatar-group';
 import { HostEventPromoCard } from '@/components/card/host-event-promo-card';
-import { VideoJsPlayerComponent } from '../video-js-player';
+import { VideoJsPlayerComponent } from '@/components/common/video-js-player';
+
 @Component({
   selector: 'event-display',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -113,11 +114,6 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
 
     await Browser.open({ url });
   }
-
-  hasMultipleTickets = computed(() => {
-    const tickets = this.eventData().tickets || [];
-    return tickets.length > 1;
-  });
 
   canViewAttendees = computed(() => {
     const d = this.eventData();
@@ -234,10 +230,9 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   }
 
   async handleAdmissionClick(): Promise<void> {
-    if (this.hasMultipleTickets()) {
-      const tickets = this.eventData().tickets || [];
-      await this.modalService.openTicketsListModal(tickets);
-    }
+    const tickets = this.eventData().tickets || [];
+    const plans = this.eventData().plans || [];
+    await this.modalService.openTicketsListModal(tickets, plans);
   }
 
   async handleCalendarClick(): Promise<void> {

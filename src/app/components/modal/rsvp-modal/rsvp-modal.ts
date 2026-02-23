@@ -7,13 +7,14 @@ import { ToasterService } from '@/services/toaster.service';
 import { IonHeader, IonFooter, IonToolbar, IonIcon, ModalController, IonContent } from '@ionic/angular/standalone';
 import { Input, signal, inject, OnInit, effect, computed, Component, OnDestroy, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { NavigationService } from '@/services/navigation.service';
+import { ShowMoreComponent } from '@/components/common/show-more';
 
 @Component({
   selector: 'rsvp-modal',
   styleUrl: './rsvp-modal.scss',
   templateUrl: './rsvp-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonContent, IonFooter, IonToolbar, IonHeader, CommonModule, Button, IonIcon]
+  imports: [IonContent, IonFooter, IonToolbar, IonHeader, CommonModule, Button, IonIcon, ShowMoreComponent]
 })
 export class RsvpModal implements OnInit, OnDestroy {
   @Input() tickets: TicketDisplay[] = [];

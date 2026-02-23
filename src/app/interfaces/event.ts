@@ -1,6 +1,7 @@
 import { IUser } from './IUser';
 import { FormControl } from '@angular/forms';
 import { SegmentButtonItem } from '@/components/common/segment-button';
+import { PlanData } from './ISubscripton';
 
 export interface EventForm {
   medias?: FormControl<any>;
@@ -207,6 +208,7 @@ export interface EventDisplayData {
   has_plans?: boolean;
   is_subscriber_exclusive?: boolean;
   has_subscribed?: boolean;
+  plans?: PlanData[];
 }
 
 // Event Settings interface

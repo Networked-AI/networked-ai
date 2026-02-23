@@ -266,7 +266,8 @@ export class Event implements OnInit, OnDestroy {
         subscriptionPlanType: null,
         has_plans: false,
         is_subscriber_exclusive: false,
-        has_subscribed: false
+        has_subscribed: false,
+        plans: []
       };
     }
     const parentEvent = this.event();
@@ -339,7 +340,8 @@ export class Event implements OnInit, OnDestroy {
       has_plans: eventData?.has_plans || false,
       is_subscriber_exclusive: eventData?.settings?.is_subscriber_exclusive ?? false,
       has_subscribed: eventData?.has_subscribed || false,
-      participants: eventData?.participants || []
+      participants: eventData?.participants || [],
+      plans: eventData?.plans
     };
   });
 

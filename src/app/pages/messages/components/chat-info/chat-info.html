@@ -21,7 +21,7 @@
     @if (isEditingName()) {
       <input pInputText autofocus class="h-[44px]" [value]="tempGroupName()" (input)="onGroupNameInput($event)" placeholder="Enter group name" />
     } @else {
-      <div class="flex flex-col items-center gap-2">
+      <div class="flex flex-col items-center gap-2" [class]="{'cursor-pointer': isEventRoom()}" (click)="navigateToEvent()">
         <input type="file" #fileInput accept="image/jpeg,image/png" class="hidden" (change)="onGroupImageSelected($event)" />
 
         <div

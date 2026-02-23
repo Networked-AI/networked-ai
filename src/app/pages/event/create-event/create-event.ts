@@ -18,7 +18,7 @@ import { EventTickets } from '@/pages/event/components/event-tickets';
 import { SegmentButtonItem } from '@/components/common/segment-button';
 import { EventSettings } from '@/pages/event/components/event-settings';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { IonHeader, IonFooter, IonContent, IonToolbar, ModalController } from '@ionic/angular/standalone';
+import { IonHeader, IonFooter, IonContent, IonToolbar, ModalController, LoadingController } from '@ionic/angular/standalone';
 import { Ticket, PromoCode, EventForm, EventDisplayData, RepeatingFrequencyType, SubscriptionPlan, IEvent } from '@/interfaces/event';
 import { Input, signal, inject, computed, Component, ChangeDetectionStrategy, ViewChild, OnInit, OnDestroy, effect } from '@angular/core';
 
@@ -70,6 +70,7 @@ export class CreateEvent implements OnInit, OnDestroy {
   eventService = inject(EventService);
   toasterService = inject(ToasterService);
   navigationService = inject(NavigationService);
+  loadingCtrl = inject(LoadingController);
 
   // subscriptions
   queryParamsSubscription!: Subscription;
@@ -427,6 +428,11 @@ export class CreateEvent implements OnInit, OnDestroy {
     const eventId = this.editingEventId();
     if (!eventId) return;
 
+    const loading = await this.loadingCtrl.create({
+      mode: 'md'
+    });
+    await loading.present();
+
     try {
       this.isLoading.set(true);
       const eventData = await this.eventService.getEventById(eventId);
@@ -440,6 +446,7 @@ export class CreateEvent implements OnInit, OnDestroy {
       this.toasterService.showError(errorMessage);
     } finally {
       this.isLoading.set(false);
+      await loading.dismiss();
     }
   }
 

@@ -75,6 +75,11 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
     return !!(room?.event_id || room?.event);
   });
 
+  navigateToEvent() {
+    if (!this.isEventRoom()) return; 
+    this.navigationService.navigateForward(`/event/${this.chatRoom()?.event?.slug}`)
+  }
+
   private readonly fullMenuItems: MenuItem[] = [
     { label: 'Add Members', icon: 'assets/svg/addUserIcon.svg', iconType: 'svg', action: 'addMembers' },
     { label: 'Change Group Name', icon: 'assets/svg/editIconBlack.svg', iconType: 'svg', action: 'changeGroupName' },

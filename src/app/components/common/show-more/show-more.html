@@ -1,0 +1,14 @@
+<div class="w-full flex flex-col gap-1">
+  <div [class]="contentClass()">
+    @if (maxLength() > 0) {
+      <span>{{ visibleText() }}</span>
+      @if (showToggle()) {
+        <button type="button" class="self-start body-14SB accent-blue" (click)="toggle()">
+          &nbsp; {{ expanded() ? 'Show less' : ' Show more' }}
+        </button>
+      }
+    } @else {
+      {{ content() }}
+    }
+  </div>
+</div>

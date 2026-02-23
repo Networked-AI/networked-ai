@@ -1,1 +1,8 @@
-<video #videoEl class="video-js vjs-big-play-centered" [attr.class]="'video-js vjs-big-play-centered'" playsinline crossorigin="anonymous"></video>
+<video
+  #videoEl
+  class="video-js vjs-big-play-centered"
+  [attr.class]="'video-js vjs-big-play-centered'"
+  playsinline
+  crossorigin="anonymous"
+  (click)="$event.stopPropagation()"
+></video>

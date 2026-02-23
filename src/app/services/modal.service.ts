@@ -59,6 +59,7 @@ import { ChatRoom } from '@/interfaces/IChat';
 import { AddToCalendarModal } from '@/components/modal/add-to-calendar-modal';
 import { UserSubscriptionPlans } from '@/pages/subscription-plans/user-subscription-plans';
 import { ScanResultModal } from '@/components/modal/scan-result-modal';
+import { PlanData } from '@/interfaces/ISubscripton';
 
 @Injectable({ providedIn: 'root' })
 export class ModalService {
@@ -1081,7 +1082,7 @@ export class ModalService {
     return null;
   }
 
-  async openTicketsListModal(tickets: any[]): Promise<any | null> {
+  async openTicketsListModal(tickets: any[], plans: PlanData[]): Promise<any | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -1089,7 +1090,7 @@ export class ModalService {
       initialBreakpoint: 1,
       component: TicketsListModal,
       cssClass: 'modal-60-percent-height',
-      componentProps: { tickets }
+      componentProps: { tickets, plans }
     });
 
     await modal.present();

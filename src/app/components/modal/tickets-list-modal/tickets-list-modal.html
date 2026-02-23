@@ -8,33 +8,20 @@
 </ion-header>
 
 <ion-content mode="md">
-  <div class="p-6">
+  <div class="p-4">
     @for (ticket of tickets; track ticket.id || $index) {
-      <div class="flex items-center gap-3 py-4 border-b border-[#dbdbdb] last:border-b-0">
-        <!-- Left arrow -->
-        <div class="flex-shrink-0">
-          <div class="pi pi-angle-right text-neutral-04 !text-[20px]"></div>
-        </div>
+      <ticket-card [ticket]="ticket" [compact]="true" />
+    }
 
-        <!-- Content -->
-        <div class="flex-1 min-w-0">
-          <div class="body-16SB neutral-01 mb-1">
-            {{ ticket.name }}
+    <!-- Subscription Plans: use subscription-card -->
+    @if (plans && plans.length > 0) {
+      <div class="mt-6">
+        <div class="heading-h4 neutral-01 mb-3 font-semibold">Subscription Plans</div>
+        @for (plan of plans; track plan.id || $index) {
+          <div class="mb-3">
+            <app-subscription-card [data]="toSubscriptionData(plan)" mode="select" />
           </div>
-
-          @if (ticket.description) {
-            <div class="body-14R neutral-03 line-clamp-2">
-              {{ ticket.description }}
-            </div>
-          }
-        </div>
-
-        <!-- Price -->
-        <div class="flex items-center gap-2 flex-shrink-0">
-          <div class="body-16SB neutral-01">
-            {{ formatPrice(ticket.price, ticket.ticket_type) }}
-          </div>
-        </div>
+        }
       </div>
     }
   </div>
