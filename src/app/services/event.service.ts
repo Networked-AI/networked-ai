@@ -479,7 +479,7 @@ export class EventService extends BaseApiService {
 
     if (parentEvent?.child_events && parentEvent.child_events.length > 0) {
       parentEvent.child_events.forEach((childEvt: any) => {
-        if (childEvt.start_date) {
+        if (childEvt.start_date && childEvt.can_view) {
           const childDate = new Date(childEvt.start_date);
           // Skip if date is invalid
           if (!isNaN(childDate.getTime())) {
