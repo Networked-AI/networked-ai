@@ -178,14 +178,7 @@
               </div>
 
               <!-- description -->
-              <div class="w-full flex flex-col gap-1 body-14R neutral-01">
-                <div class="whitespace-pre-line">{{ visibleDescription() }}</div>
-                @if (showDescriptionToggle()) {
-                  <button type="button" class="self-start body-14SB accent-blue" (click)="toggleDescription()">
-                    {{ isDescriptionExpanded() ? 'Show less' : 'Show more' }}
-                  </button>
-                }
-              </div>
+              <show-more [content]="userDescription()" [maxLength]="220" contentClass="body-14R neutral-01 whitespace-pre-line" />
             </div>
             <!-- Links -->
             <profile-link [currentUser]="currentUser()" class="w-full" />

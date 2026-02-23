@@ -235,3 +235,10 @@ swiper-slide {
 iframe[title='Stripe developer tools frame'] {
   visibility: hidden !important;
 }
+
+ion-loading {
+  --background: transparent !important;
+}
+ion-loading .loading-wrapper {
+  box-shadow: none !important;
+}

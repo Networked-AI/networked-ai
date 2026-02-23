@@ -9,7 +9,7 @@
         }
       </div>
     </div>
-    <div class="flex gap-2 overflow-x-auto scrollbar-hide my-4 px-6" style="flex-wrap: nowrap">
+    <div class="flex gap-2 overflow-x-auto scrollbar-hide my-4 px-6 max-w-[672px] mx-auto" style="flex-wrap: nowrap">
       @for (tab of tabs; track tab.value) {
         <button type="button" class="filter-button" [class.active]="notificationFilter() === tab.value" (click)="notificationFilter.set(tab.value)">
           {{ tab.label }}

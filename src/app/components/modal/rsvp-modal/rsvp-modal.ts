@@ -7,13 +7,14 @@ import { ToasterService } from '@/services/toaster.service';
 import { IonHeader, IonFooter, IonToolbar, IonIcon, ModalController, IonContent } from '@ionic/angular/standalone';
 import { Input, signal, inject, OnInit, effect, computed, Component, OnDestroy, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { NavigationService } from '@/services/navigation.service';
+import { ShowMoreComponent } from '@/components/common/show-more';
 
 @Component({
   selector: 'rsvp-modal',
   styleUrl: './rsvp-modal.scss',
   templateUrl: './rsvp-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonContent, IonFooter, IonToolbar, IonHeader, CommonModule, Button, IonIcon]
+  imports: [IonContent, IonFooter, IonToolbar, IonHeader, CommonModule, Button, IonIcon, ShowMoreComponent]
 })
 export class RsvpModal implements OnInit, OnDestroy {
   @Input() tickets: TicketDisplay[] = [];
@@ -318,7 +319,6 @@ export class RsvpModal implements OnInit, OnDestroy {
       return userId === id && (role === 'host' || role === 'cohost');
     });
   }
-
 
   calculateAmountsForAllTiers(): void {
     const tickets = this.ticketsData();
@@ -1006,7 +1006,7 @@ export class RsvpModal implements OnInit, OnDestroy {
           event_promo_code_id: isEligibleForPromo ? promoCodeId : null,
           platform_fee_amount: platformFeeInDollars,
           amount_paid: Math.max(0, amountPaid), // ✅ Ensure non-negative
-          host_payout_amount: Math.max(0,hostPayoutAmount)
+          host_payout_amount: Math.max(0, hostPayoutAmount)
         };
       });
 
@@ -1042,9 +1042,7 @@ export class RsvpModal implements OnInit, OnDestroy {
       } else {
         const isGuestByParentId = attendee.parent_user_id !== null;
         if (isGuestByParentId) {
-          const guestIndex = currentAttendees
-            .slice(0, index)
-            .filter((a) => a.parent_user_id !== null).length;
+          const guestIndex = currentAttendees.slice(0, index).filter((a) => a.parent_user_id !== null).length;
           if (guestIndex < guestDetails.length) {
             const guest = guestDetails[guestIndex];
             attendeeName = `${guest.firstName || ''} ${guest.lastName || ''}`.trim();
@@ -1054,8 +1052,7 @@ export class RsvpModal implements OnInit, OnDestroy {
             attendeeName = `Guest ${guestIndex + 1}`;
           }
         } else {
-          attendeeName =
-            (yourDetails && `${yourDetails.firstName || ''} ${yourDetails.lastName || ''}`.trim()) || currentUser?.name || '';
+          attendeeName = (yourDetails && `${yourDetails.firstName || ''} ${yourDetails.lastName || ''}`.trim()) || currentUser?.name || '';
           rsvpStatus = 'Yes';
         }
       }
@@ -1076,12 +1073,41 @@ export class RsvpModal implements OnInit, OnDestroy {
   }
 
   async openStripePayoutModal(): Promise<void> {
+    const prices = this.sponsorPlans()[0]?.prices || [];
+
+    let title = 'Subscribe as a Sponsor!';
+    let description = 'Subscribe to the host’s events as a sponsor.';
+
+    if (prices.length > 1) {
+      const yearlyPrice = prices.find((p: any) => p.interval === 'year');
+      const monthlyPrice = prices.find((p: any) => p.interval === 'month');
+
+      if (yearlyPrice) {
+        const bannerType = yearlyPrice?.banner_display_type;
+
+        if (bannerType === 'percentage' && yearlyPrice?.discount_percentage) {
+          const discount = Number(yearlyPrice.discount_percentage);
+
+          title = `Save ${discount}% by Subscribing as a Sponsor!`;
+          description = `Subscribe to the host’s events as a sponsor and save up to ${discount}% annually.`;
+        } else if (bannerType === 'fixed' && monthlyPrice) {
+          const monthly = monthlyPrice.amount;
+          const yearly = yearlyPrice.amount;
+
+          const discount = Math.round(monthly * 12 - yearly);
+
+          title = `Save $${discount} by Subscribing as a Sponsor!`;
+          description = `Subscribe to the host’s events as a sponsor and save $${discount} annually.`;
+        }
+      }
+    }
+
     return new Promise(async (resolve) => {
       await this.modalService.openConfirmModal({
         icon: '/assets/svg/subscription/sponsorIcon.svg',
         iconBgColor: this.SPONSOR_GRADIENT,
-        title: 'Save 20% by Subscribing as a Sponsor!',
-        description: 'Subscribe to the host’s events as a sponsor and save up to 20% annually.',
+        title,
+        description,
         confirmButtonLabel: 'See Plans',
         cancelButtonLabel: 'Not Now',
         confirmButtonColor: 'primary',

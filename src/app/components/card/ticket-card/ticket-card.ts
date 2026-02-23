@@ -1,21 +1,22 @@
 import { Ticket } from '@/interfaces/event';
-import { CommonModule } from '@angular/common';
 import { EventService } from '@/services/event.service';
 import { IonIcon, IonReorder } from '@ionic/angular/standalone';
-import { input, output, computed, DOCUMENT, Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { input, output, computed, Component, ChangeDetectionStrategy, inject } from '@angular/core';
+import { ShowMoreComponent } from '@/components/common/show-more';
+import { NgClass } from '@angular/common';
 
 @Component({
   selector: 'ticket-card',
   templateUrl: './ticket-card.html',
   styleUrl: './ticket-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonReorder, CommonModule, IonIcon]
+  imports: [IonReorder, NgClass, IonIcon, ShowMoreComponent]
 })
 export class TicketCard {
   ticket = input.required<Ticket>();
+  compact = input<boolean>(false); // When true, show only header + name + price + description (no reorder/edit/delete, no Quantity/Sale dates)
   eventDate = input<string | null>();
   eventStartTime = input<string | null>();
-  private document = inject(DOCUMENT);
   private eventService = inject(EventService);
 
   edit = output<void>();
@@ -80,13 +81,6 @@ export class TicketCard {
       if (dt) return `${this.eventService.formatDisplayDate(dt)}, ${this.eventService.formatDisplayTime(dt)}`;
     }
     return 'Not set';
-  });
-
-  description = computed(() => {
-    const ticketDescription = this.ticket().description;
-    const tempDiv = this.document.createElement('div');
-    tempDiv.innerHTML = ticketDescription || '';
-    return tempDiv.textContent || tempDiv.innerText || '';
   });
 
   onEdit(): void {
