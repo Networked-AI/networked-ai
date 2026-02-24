@@ -196,7 +196,8 @@ export class Notification {
     } else if (
       notification.type === NotificationType.POST_COMMENTED ||
       notification.type === NotificationType.POST_LIKED ||
-      notification.type === NotificationType.MENTION
+      notification.type === NotificationType.MENTION ||
+      notification.type === NotificationType.POSTS
     ) {
       const postId = notification.post_id ?? (notification.post as { id?: string })?.id;
       if (postId) {

@@ -80,13 +80,12 @@
               @if (isLoggedIn() && currentUser()) {
                 <div class="flex items-center">
                   @if (currentUser().id != authService.currentUser()?.id) {
-                    <div class="relative">
-                      @if (notificationEnabled()) {
-                        <div class="pi pi-bell neutral-02 text-[16px]! cursor-pointer absolute z-10 top-[4px] left-[6px]"></div>
-                      } @else {
-                        <div class="pi pi-bell-slash neutral-02 text-[16px]! cursor-pointer absolute z-10 top-[4px] right-[6px]"></div>
-                      }
-                      <p-toggleswitch class="notification-toggle" [ngModel]="notificationEnabled()" (ngModelChange)="onNotificationToggle($event)" />
+                    <div class="flex items-center mr-2">
+                      <ion-icon 
+                        [src]="(notificationPreferences().posts || notificationPreferences().events) ? '/assets/svg/bell-on.svg' : '/assets/svg/bell-off.svg'"
+                        class="text-[19px] cursor-pointer" 
+                        (click)="openNotificationSubscriptionPopover($event)"
+                      ></ion-icon>
                     </div>
                   }
                   <ion-icon src="/assets/svg/menu-dot.svg" (click)="openProfileOptionsPopover($event)" class="text-[20px] cursor-pointer" />

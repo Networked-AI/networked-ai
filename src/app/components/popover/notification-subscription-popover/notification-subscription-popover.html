@@ -1,0 +1,54 @@
+<div class="notification-popover">
+  <!-- Header -->
+  <div class="mb-4">
+    <div class="text-[13px] neutral-01">Notifications from {{ username }}</div>
+  </div>
+
+  <!-- Main On/Off Selection -->
+  <div class="notification-main-toggle">
+    <div class="notification-option" [class.selected]="isNotificationOn()" (click)="onNotificationToggle(true)">
+      <div class="option-content">
+        <div class="flex items-center gap-1">
+          <ion-icon src="/assets/svg/bell-on.svg" class="neutral-02 text-[21px] cursor-pointer mr-1"></ion-icon>
+          <span class="body-16M neutral-01">On</span>
+        </div>
+        @if (isNotificationOn()) {
+          <ion-icon name="checkmark-outline" class="text-[20px]"></ion-icon>
+        }
+      </div>
+
+      <!-- Sub-options when notifications are ON -->
+      @if (isNotificationOn()) {
+        <div class="notification-sub-options" (click)="$event.stopPropagation()">
+          <!-- Posts Toggle -->
+          <div class="sub-option-item">
+            <div class="sub-option-content">
+              <span class="body-16M neutral-01">Posts</span>
+              <p-toggleswitch [ngModel]="currentPreferences().posts" (ngModelChange)="onPostsToggle($event)" class="sub-toggle" />
+            </div>
+          </div>
+
+          <!-- Events Toggle -->
+          <div class="sub-option-item">
+            <div class="sub-option-content">
+              <span class="body-16M neutral-01">Events</span>
+              <p-toggleswitch [ngModel]="currentPreferences().events" (ngModelChange)="onEventsToggle($event)" class="sub-toggle" />
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="notification-option" [class.selected]="!isNotificationOn()" (click)="onNotificationToggle(false)">
+      <div class="option-content">
+        <div class="flex items-center gap-1">
+          <ion-icon src="/assets/svg/bell-off.svg" class="neutral-02 text-[21px] cursor-pointer mr-1"></ion-icon>
+          <span class="body-16M neutral-01">Off</span>
+        </div>
+        @if (!isNotificationOn()) {
+          <ion-icon name="checkmark-outline" class="text-[20px]"></ion-icon>
+        }
+      </div>
+    </div>
+  </div>
+</div>
