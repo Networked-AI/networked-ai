@@ -680,7 +680,7 @@ export class ModalService {
     return data;
   }
 
-  async openShareModal(id: any, type: 'Event' | 'Post' | 'Plan'): Promise<any | null> {
+  async openShareModal(id: any, type: 'Event' | 'Post' | 'Plan',image_url ?: string): Promise<any | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -688,7 +688,7 @@ export class ModalService {
       initialBreakpoint: 1,
       component: ShareModal,
       cssClass: 'modal-60-percent-height',
-      componentProps: { id, type }
+      componentProps: { id, type ,image_url}
     });
     await modal.present();
     const { data } = await modal.onWillDismiss();

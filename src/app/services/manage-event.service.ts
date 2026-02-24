@@ -183,7 +183,7 @@ export class ManageEventService extends BaseApiService {
   async shareEvent() {
     const eventId = this.currentEventData()?.id;
     if (eventId) {
-      const result = await this.modalService.openShareModal(eventId, 'Event');
+      const result = await this.modalService.openShareModal(eventId, 'Event',this.currentEventData()?.image_url);
       if (result) {
         this.toasterService.showSuccess('Event shared');
       }

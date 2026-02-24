@@ -1,4 +1,4 @@
-import { Component, output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { IonIcon } from '@ionic/angular/standalone';
 
 @Component({
@@ -8,6 +8,8 @@ import { IonIcon } from '@ionic/angular/standalone';
   templateUrl: './common-share-footer.html'
 })
 export class CommonShareFooter {
+  image_url = input<string>();
+  
   onContact = output<void>();
   onCopyLink = output<void>();
   onShareTo = output<void>();
@@ -16,4 +18,5 @@ export class CommonShareFooter {
   onWhatsapp = output<void>();
   onX = output<void>();
   onThread = output<void>();
+  onDownloadImage = output<void>();
 }

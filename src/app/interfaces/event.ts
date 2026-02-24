@@ -538,3 +538,44 @@ export interface EventFeedbackItem {
 export interface EventFeedbackPayload {
   feedback: EventFeedbackItem[];
 }
+
+export interface PromoValidationState {
+  isValid: boolean;
+  message: string;
+  discountAmount: number;
+  cappedAmount?: number;
+  redemptionLimit?: number;
+  maxUsePerUser?: number;
+  currentRedemptions?: number;
+  userRedemptions?: number;
+  eligibleTicketCount?: number;
+}
+
+export type PromoCodeSectionChangeReason = 'input' | 'apply' | 'remove' | 'revalidate';
+
+export interface PromoCodeSectionState {
+  promoInput: string;
+  promoCode: string;
+  appliedPromoCode: unknown | null;
+  discountAmount: number;
+  promoValidation: PromoValidationState;
+}
+
+export interface PromoCodeSectionStateChange {
+  reason: PromoCodeSectionChangeReason;
+  state: PromoCodeSectionState;
+}
+
+export type TicketLike = { price?: number; selectedQuantity?: number };
+export type PromoLike = Record<string, unknown> & {
+  id?: string;
+  promo_code?: string;
+  promoCode?: string;
+  promotion_type?: string;
+  type?: string;
+  promoPresent?: number | string;
+  value?: number | string;
+  capped_amount?: number | string;
+  max_uses_per_user?: number;
+  available_quantity?: number | null;
+};

@@ -117,6 +117,8 @@ export class NewPost implements OnInit {
   form = signal<FormGroup>(
     this.fb.group({
       location: [''],
+      latitude: [''],
+      longitude: [''],
       events: this.fb.array([])
     })
   );

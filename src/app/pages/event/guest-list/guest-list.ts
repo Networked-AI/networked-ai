@@ -14,7 +14,7 @@ import { EmptyState } from '@/components/common/empty-state';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { NavigationService } from '@/services/navigation.service';
 import { IonContent, IonToolbar, IonHeader } from '@ionic/angular/standalone';
-import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, OnDestroy, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, signal, computed, OnInit, OnDestroy, effect, DOCUMENT } from '@angular/core';
 import {
   IonIcon,
   IonSpinner,
@@ -25,9 +25,20 @@ import {
   IonInfiniteScrollContent
 } from '@ionic/angular/standalone';
 import { IUser } from '@/interfaces/IUser';
-import { IEventAttendee, IEventAttendeesCounts, IGetEventAttendeesParams, IPagination } from '@/interfaces/IEventAttendee';
+import {
+  IEventAttendee,
+  IEventAttendeesCounts,
+  IGetEventAttendeesParams,
+  IPagination,
+  IRefundAttendeeResponse
+} from '@/interfaces/IEventAttendee';
 import { Button } from '@/components/form/button';
 import { HapticService } from '@/services/haptic.service';
+import { IEvent } from '@/interfaces/event';
+import { Capacitor } from '@capacitor/core';
+import { Directory, Filesystem } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { BaseApiService } from '@/services/base-api.service';
 
 type GuestFilter = {
   attending: boolean;
@@ -76,6 +87,7 @@ export class GuestList implements OnInit, OnDestroy {
   navigationService = inject(NavigationService);
   hapticService = inject(HapticService);
   private socketService = inject(SocketService);
+  private readonly document = inject(DOCUMENT);
   isLoggedIn = computed(() => !!this.authService.currentUser());
 
   selectedGuestId = signal<string>('');
@@ -85,7 +97,7 @@ export class GuestList implements OnInit, OnDestroy {
   isLoading = signal<boolean>(false);
   isChecking = signal<boolean>(false);
   eventId = signal<string | null>(null);
-  eventData = signal<{ id: string } | null>(null);
+  eventData = signal<IEvent | null>(null);
 
   private readonly DEFAULT_FILTER: GuestFilter = {
     attending: true,
@@ -120,6 +132,8 @@ export class GuestList implements OnInit, OnDestroy {
     const f = this.filter();
     return (Object.keys(this.DEFAULT_FILTER) as Array<keyof GuestFilter>).some((key) => f[key] !== this.DEFAULT_FILTER[key]);
   });
+
+  isRefunding = signal<boolean>(false);
 
   constructor() {
     effect(() => {
@@ -158,6 +172,15 @@ export class GuestList implements OnInit, OnDestroy {
 
   getMenuItems(guest: IEventAttendee): MenuItem[] {
     const items: MenuItem[] = [];
+
+    if (guest?.payment_status === 'succeeded') {
+      items.push({
+        label: 'Issue Refund',
+        command: () => this.issueRefund(),
+        iconPath: 'assets/svg/guest-list/refund-issue.svg'
+      });
+    }
+
     // Only show for guests without parent_user_id
     if (guest?.parent_user_id == null) {
       // Add as Network → only if not connected
@@ -198,8 +221,31 @@ export class GuestList implements OnInit, OnDestroy {
     return items;
   }
 
-  issueRefund() {
-    console.log('Refund');
+  async issueRefund() {
+    this.closePopover();
+    
+    const guestId = this.selectedGuestId();
+    if (!guestId) return;
+
+    try {
+      this.isRefunding.set(true);
+      const response: IRefundAttendeeResponse = await this.eventService.refundAttendee(guestId);
+      
+      // Update the attendee in the current listing with the updated attendee from API response
+      if (response?.data) {
+        this.attendees.update((list) => 
+          list.map((attendee) => 
+            attendee.id === guestId ? { ...attendee, ...response.data } : attendee
+          )
+        );
+      }
+      this.toasterService.showSuccess(response.message || 'Refund processed successfully');
+    } catch (error) {
+      console.error('Error processing refund:', error);
+      this.toasterService.showError('Failed to process refund');
+    } finally {
+      this.isRefunding.set(false);
+    }
   }
 
   checkInGuest() {
@@ -393,11 +439,55 @@ export class GuestList implements OnInit, OnDestroy {
     this.navigationService.back();
   }
 
-  downloadGuestList() {
+  async downloadGuestList() {
     this.isDownloading.set(true);
-    setTimeout(() => {
+    
+    try {
+      const csv = await this.eventService.downloadEventAttendeesCSV(this.eventId()!);
+
+      const BOM = '\uFEFF';
+      const content = BOM + csv;
+
+      const eventName = this.eventData()?.slug || 'guest-list';
+      const fileName = `${eventName}-${Date.now()}.csv`;
+
+      if (Capacitor.getPlatform() === 'web') {
+        const blob = new Blob([content], {
+          type: 'text/csv;charset=utf-8;'
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = this.document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      const base64Data = btoa(unescape(encodeURIComponent(content)));
+
+      const savedFile = await Filesystem.writeFile({
+        path: fileName,
+        data: base64Data,
+        directory: Directory.Documents
+      });
+
+      if (Capacitor.getPlatform() === 'ios') {
+        await Share.share({
+          title: 'Event Attendees',
+          url: savedFile.uri
+        });
+      } else {
+        this.toasterService.showSuccess('CSV saved successfully!');
+      }
+    } catch (error) {
+      console.error('CSV download failed', error);
+      const message = BaseApiService.getErrorMessage(error, 'Failed to download CSV');
+      this.toasterService.showError(message);
+    } finally {
       this.isDownloading.set(false);
-    }, 2000);
+    }
   }
 
   async openFilterModal() {

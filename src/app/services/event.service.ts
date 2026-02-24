@@ -30,7 +30,8 @@ import {
   IGetEventAttendeesResult,
   IGetEventParticipantsListResult,
   IGetEventParticipantsListParams,
-  IPagination
+  IPagination,
+  IRefundAttendeeResponse
 } from '@/interfaces/IEventAttendee';
 
 @Injectable({ providedIn: 'root' })
@@ -1292,6 +1293,16 @@ export class EventService extends BaseApiService {
     }
   }
 
+  async downloadEventAttendeesCSV(eventId: string): Promise<any> {
+    try {
+      const response = await this.get<any>(`/event-attendees/export-csv/${eventId}`, { responseType: 'text' });
+      return response;
+    } catch (error) {
+      console.error('Error downloading event attendees CSV:', error);
+      throw error;
+    }
+  }
+
   async getEventQuestionnaireResponses(
     eventId: string,
     eventPhase: 'PreEvent' | 'PostEvent',
@@ -1417,7 +1428,17 @@ export class EventService extends BaseApiService {
       const response = await this.delete<EventResponse>(`/event-attendees/${id}`);
       return response;
     } catch (error) {
-      console.error('Error deleting attendee:', error);
+      console.error('Error deleting attendees:', error);
+      throw error;
+    }
+  }
+
+  async refundAttendee(attendeeId: string): Promise<IRefundAttendeeResponse> {
+    try {
+      const response = await this.post<IRefundAttendeeResponse>('/event-attendees/refund', { attendee_id: attendeeId });
+      return response;
+    } catch (error) {
+      console.error('Error refunding attendee:', error);
       throw error;
     }
   }

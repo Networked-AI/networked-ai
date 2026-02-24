@@ -137,7 +137,7 @@ export class EventCard {
       const isLoggedIn = await this.eventService.checkIsLoggin();
       if (!isLoggedIn) return;
 
-      const result = await this.modalService.openShareModal(eventId, 'Event');
+      const result = await this.modalService.openShareModal(eventId, 'Event',this.event()?.image_url);
       if (result) {
         this.toasterService.showSuccess('Event shared');
       }

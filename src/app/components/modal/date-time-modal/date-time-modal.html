@@ -13,6 +13,7 @@
       [presentation]="type"
       [min]="min"
       [max]="getMaxValue()"
+      hourCycle="h12"
       [showDefaultButtons]="false"
       (ionChange)="value = $any($event).detail.value"
     />
