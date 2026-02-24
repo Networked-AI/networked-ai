@@ -11,6 +11,7 @@ export interface PaymentIntentRequest {
   event_promo_code_id?: string;
   subtotal?: number;
   total?: number;
+  stripe_payment_intent_id?:string,
 }
 
 export interface PaymentIntentResponse {
@@ -42,6 +43,16 @@ export class StripeService extends BaseApiService {
   async createPaymentIntent(payload: PaymentIntentRequest): Promise<PaymentIntentResponse> {
     try {
       const response: any = await this.post<PaymentIntentResponse>('/events/payment-intent', payload);
+      return response?.data;
+    } catch (error) {
+      console.error('Error creating payment intent:', error);
+      throw error;
+    }
+  }
+
+  async updatePaymentIntent(payload: PaymentIntentRequest): Promise<PaymentIntentResponse> {
+    try {
+      const response: any = await this.put<PaymentIntentResponse>('/events/payment-intent', payload);
       return response?.data;
     } catch (error) {
       console.error('Error creating payment intent:', error);

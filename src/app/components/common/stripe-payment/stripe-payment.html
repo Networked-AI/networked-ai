@@ -26,12 +26,6 @@
         </ngx-stripe-elements>
       </div>
 
-      @if (errorMessage()) {
-        <div class="error-message body-12M text-red-600">
-          {{ errorMessage() }}
-        </div>
-      }
-
       <!-- Payment Button - Only show when opened from subscription page -->
       @if (showButtons) {
         <div class="flex gap-2">
