@@ -43,6 +43,7 @@ export interface IEventAttendee {
 
   user?: IUser;
   event_ticket?: IEventAttendeeTicket;
+  payment_status?: string | null;
 }
 
 export interface IGetEventAttendeesParams extends IListParamsBase {
@@ -99,4 +100,9 @@ export interface IGetEventParticipantsListParams extends IListParamsBase {
 export interface IGetEventParticipantsListResult {
   data: IEventParticipant[];
   pagination: IPagination;
+}
+export interface IRefundAttendeeResponse {
+  success: boolean;
+  message: string;
+  data: IEventAttendee;
 }
