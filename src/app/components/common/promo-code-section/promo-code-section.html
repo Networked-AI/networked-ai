@@ -1,0 +1,50 @@
+<div class="flex flex-col gap-1">
+  <!-- Promo Code Input -->
+  <div
+    class="flex items-center gap-2 border rounded-lg p-3"
+    [class.border-surface-300]="!isPromoApplied() && !promoInput()"
+    [class.border-accent-red]="promoInput() && !promoValidation().isValid && promoCode()"
+    [class.border-brand-03]="isPromoApplied()"
+  >
+    <ion-icon src="assets/svg/ticket/ticket.svg" alt="ticket" class="w-[18px] h-[15px]" />
+    <input
+      type="text"
+      class="flex-1 border-none outline-none body-14R neutral-01 bg-transparent uppercase"
+      placeholder="Enter Promo Code"
+      [value]="isPromoApplied() ? promoCode() : promoInput()"
+      (input)="onPromoCodeChange($any($event.target).value)"
+      style="text-transform: uppercase"
+    />
+    <button
+      class="text-primary body-14M font-medium"
+      [class.opacity-50]="applyButtonDisabled()"
+      [class.cursor-not-allowed]="applyButtonDisabled()"
+      [class.cursor-pointer]="!applyButtonDisabled()"
+      [disabled]="applyButtonDisabled()"
+      (click)="onPromoButtonClick()"
+      type="button"
+    >
+      @if (isPromoApplied()) {
+        Remove
+      } @else {
+        Apply
+      }
+    </button>
+  </div>
+
+  <!-- Error Message -->
+  @if ((promoInput() || promoCode()) && !promoValidation().isValid && promoValidation().message) {
+    <div class="flex items-start gap-2 accent-red">
+      <ion-icon name="close-circle" class="text-xl flex-shrink-0 mt-0.5"></ion-icon>
+      <span class="body-14R flex-1">{{ promoValidation().message }}</span>
+    </div>
+  }
+
+  <!-- Success Message -->
+  @if (isPromoApplied() && promoValidation().discountAmount > 0) {
+    <div class="flex items-start gap-3 text-primary">
+      <ion-icon name="checkmark-circle" class="text-xl flex-shrink-0 mt-0.5"></ion-icon>
+      <span class="body-14M flex-1">{{ promoValidation().message }}</span>
+    </div>
+  }
+</div>
