@@ -40,6 +40,8 @@ import { Share } from '@capacitor/share';
 import { Clipboard } from '@capacitor/clipboard';
 import { environment } from 'src/environments/environment';
 import { MessagesService } from '@/services/messages.service';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
 
 @Component({
   selector: 'share-modal',
@@ -80,6 +82,7 @@ export class ShareModal implements OnInit {
 
   // inputs
   @Input() id?: string;
+  @Input() image_url?: string;
   @Input() type: 'Event' | 'Post' | 'Plan' = 'Event';
 
   // signals
@@ -387,6 +390,61 @@ export class ShareModal implements OnInit {
       return `${environment.frontendUrl}/subscription/${this.id}`;
     }
     return '';
+  }
+
+  private blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        resolve((reader.result as string).split(',')[1]);
+      };
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  async downloadImage(): Promise<void> {
+    if (!this.image_url) return;
+    try {
+      const response = await fetch(this.image_url, { mode: 'cors' });
+      if (!response.ok) throw new Error('Image fetch failed');
+  
+      const blob = await response.blob();
+  
+      const extension = blob.type.split('/')[1] || 'png';
+      const fileName = `image-${Date.now()}.${extension}`;
+  
+      const base64Data = await this.blobToBase64(blob);
+      const dataUrl = `data:${blob.type};base64,${base64Data}`;
+  
+      if (Capacitor.getPlatform() === 'web') {
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = fileName;
+        link.click();
+        return;
+      }
+  
+      const savedFile = await Filesystem.writeFile({
+        path: fileName,
+        data: base64Data,
+        directory: Directory.Documents
+      });
+  
+      if (Capacitor.getPlatform() === 'ios') {
+        await Share.share({
+          title: 'Download image',
+          url: savedFile.uri
+        });
+      }
+      else {
+        this.toasterService.showSuccess('Image saved successfully!');
+      }
+  
+    } catch (err) {
+      console.error('Download failed', err);
+      this.toasterService?.showError?.('Failed to download image');
+    }
   }
 
   async onContact(): Promise<void> {

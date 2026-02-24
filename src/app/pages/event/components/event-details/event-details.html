@@ -16,8 +16,8 @@
       >
         @for (item of mediaItems(); track $index) {
           <swiper-slide>
-<div class="slide-content">
-            <div class="slide-image relative bg-black" [class.slide-image-single]="mediaItems().length === 1">
+            <div class="slide-content">
+              <div class="slide-image relative bg-black" [class.slide-image-single]="mediaItems().length === 1">
                 <!-- IMAGE -->
                 @if (item.type === 'image' || item.type === 'gif') {
                   @if (isBlobUrl(item.url)) {
@@ -135,6 +135,7 @@
 
   <!-- Date -->
   <text-input
+    type="date"
     [formGroup]="eventForm()"
     label="Date"
     [readonly]="true"
@@ -151,6 +152,7 @@
     <div class="flex items-center gap-2 w-full">
       <!-- start time -->
       <text-input
+        type="time"
         [formGroup]="eventForm()"
         [readonly]="true"
         placeholder="Start"
@@ -163,8 +165,8 @@
         class="w-full"
       />
 
-      <!-- end time -->
       <text-input
+        type="time"
         [formGroup]="eventForm()"
         [readonly]="true"
         placeholder="End"

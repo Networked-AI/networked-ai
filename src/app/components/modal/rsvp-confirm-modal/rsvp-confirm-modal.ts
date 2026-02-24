@@ -20,7 +20,7 @@ export class RsvpConfirmModal {
 
   share(): void {
     this.modalctrl.dismiss();
-    this.modalService.openShareModal(this.eventData.id, 'Event');
+    this.modalService.openShareModal(this.eventData.id, 'Event',this.eventData?.image_url);
   }
 
   async addEvent(): Promise<void> {

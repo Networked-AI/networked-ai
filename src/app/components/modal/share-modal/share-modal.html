@@ -81,6 +81,8 @@
         </div>
       } @else {
         <common-share-footer
+          [image_url]="image_url"
+          (onDownloadImage)="downloadImage()"
           (onContact)="onContact()"
           (onCopyLink)="onCopyLink()"
           (onShareTo)="onShareTo()"

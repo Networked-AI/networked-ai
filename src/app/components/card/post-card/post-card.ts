@@ -363,7 +363,7 @@ export class PostCard {
     const postId = this.post().id;
     if (!postId) return;
 
-    await this.modalService.openShareModal(postId, 'Post');
+    await this.modalService.openShareModal(postId, 'Post',this.sortedMedias()[0]?.media_url);
   }
 
   openFullscreen(index: number) {

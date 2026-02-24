@@ -84,14 +84,27 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
     return this.displayMediasForDisplay().length > 1;
   });
 
-  async openMapFromLatLng(mapCenter: number[]): Promise<void> {
+  async openMapFromLatLng(): Promise<void> {
     if (!this.showHostPromo()) return;
-    if (!mapCenter || mapCenter.length !== 2) return;
+
+    const location = this.eventData()?.location ?? 'Unknown location';
+    const platform = Capacitor.getPlatform();
+
+    const mapAppName = platform === 'ios' ? 'Apple Maps' : platform === 'android' ? 'Google Maps' : 'Your Browser';
 
     const confirmed = await this.modalService.openConfirmModal({
       icon: 'assets/svg/alert-white.svg',
       title: 'Leave App?',
-      description: 'You will be redirected outside the app to open map. Continue?',
+      description: `
+      <span class="text-neutral-500">
+      Event Location:
+      <span class="font-semibold text-neutral-900 break-words">
+      ${location}
+      </span>
+      </span><br/><br/>
+      You're about to open event location in ${mapAppName}.Do you want to continue?
+
+      `,
       confirmButtonLabel: 'Open',
       cancelButtonLabel: 'Stay',
       confirmButtonColor: 'primary',
@@ -101,8 +114,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
 
     if (!confirmed?.data) return;
 
-    const [lng, lat] = mapCenter;
-    const platform = Capacitor.getPlatform();
+    const [lng, lat] = this.eventData().mapCenter || [];
 
     let url = '';
 
@@ -236,7 +248,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   }
 
   async handleCalendarClick(): Promise<void> {
-    if (this.eventData().isCurrentUserHost || this.eventData().isCurrentUserAttendee || this.eventData().isCurrentUserCoHost)
-      await this.modalService.openAddToCalendarModal(this.eventData());
+    if (!this.showHostPromo()) return;
+    await this.modalService.openAddToCalendarModal(this.eventData());
   }
 }

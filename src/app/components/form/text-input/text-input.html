@@ -25,9 +25,10 @@
     pInputText
     class="w-full h-[44px]"
     [readonly]="readonly()"
+    [value]="displayValue"
+    (input)="onInputChange($event)"
     [invalid]="isControlInvalid"
     [placeholder]="getPlaceholder"
-    [formControlName]="controlName()"
     [class.ng-invalid]="isControlInvalid"
   />
 
