@@ -4,6 +4,7 @@ export enum NotificationType {
   UNREAD = 'Unread',
 
   // database types
+  POSTS = 'Posts',
   EVENTS = 'Events',
   NETWORK = 'Network',
   MENTION = 'Mention',

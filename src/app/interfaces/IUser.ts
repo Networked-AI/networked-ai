@@ -60,6 +60,12 @@ export interface IUser {
   subscription_plan_count?: number;
   distance?: number;
   notification_enabled?: boolean;
+  profile_subscription?: ProfileSubscription;
+}
+
+export interface ProfileSubscription {
+  posts?: boolean;
+  events?: boolean;
 }
 
 export interface IUserResponse {

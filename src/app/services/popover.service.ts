@@ -3,6 +3,8 @@ import { PopoverController } from '@ionic/angular/standalone';
 import { ProfileOptionsPopover } from '@/components/popover/profile-options-popover';
 import { AccountSwitcherPopover } from '@/components/popover/account-switcher-popover';
 import { CommonPopover } from '@/components/popover/common-popover';
+import { NotificationSubscriptionPopover } from '@/components/popover/notification-subscription-popover';
+import { ProfileSubscription } from '@/interfaces/IUser';
 
 @Injectable({ providedIn: 'root' })
 export class PopoverService {
@@ -50,6 +52,28 @@ export class PopoverService {
 
     await popover.present();
     await popover.onDidDismiss();
+  }
+
+  async openNotificationSubscriptionPopover(event: Event, username: string, initialPreferences: { posts: boolean; events: boolean }): Promise<any> {
+    let preferences: ProfileSubscription = {};
+    const popover = await this.popoverCtrl.create({
+      mode: 'md',
+      event: event as MouseEvent,
+      cssClass: 'common-popover-css',
+      component: NotificationSubscriptionPopover,
+      componentProps: {
+        username,
+        initialPreferences,
+        preferencesChange: (prefs: ProfileSubscription) => {
+          preferences = prefs;
+        }
+      }
+    });
+
+    await popover.present();
+    await popover.onWillDismiss();
+
+    return preferences;
   }
 
   async close(): Promise<void> {

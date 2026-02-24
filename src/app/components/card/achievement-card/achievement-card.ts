@@ -1,11 +1,10 @@
-import { CommonModule, DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input, output, computed } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { GamificationBadge } from '@/interfaces/IGamification';
-import { IonIcon } from '@ionic/angular/standalone';
+import { ChangeDetectionStrategy, Component, input, output, computed } from '@angular/core';
 
 @Component({
+  imports: [DatePipe],
   selector: 'achievement-card',
-  imports: [CommonModule, DatePipe, IonIcon],
   styleUrl: './achievement-card.scss',
   templateUrl: './achievement-card.html',
   changeDetection: ChangeDetectionStrategy.OnPush

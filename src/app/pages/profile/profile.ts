@@ -50,7 +50,6 @@ import { Browser } from '@capacitor/browser';
 import { environment } from 'src/environments/environment';
 import { BaseApiService } from '@/services/base-api.service';
 import { FormsModule } from '@angular/forms';
-import { ToggleSwitch } from 'primeng/toggleswitch';
 
 type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement';
 
@@ -91,7 +90,6 @@ interface TabConfig {
     ScrollHandlerDirective,
     IonSkeletonText,
     FormsModule,
-    ToggleSwitch,
     ShowMoreComponent
   ]
 })
@@ -264,7 +262,14 @@ export class Profile implements OnDestroy {
     return (!hasEmail && !hasMobile) || allSocialsMissing;
   });
 
-  notificationEnabled = computed(() => !!this.currentUser()?.notification_enabled);
+  // Notification preferences
+  notificationPreferences = computed(() => {
+    const user = this.currentUser();
+    return {
+      posts: !!user?.profile_subscription?.posts,
+      events: !!user?.profile_subscription?.events
+    };
+  });
 
   constructor() {
     const routeParamSubscription = this.route.params.subscribe(() => {
@@ -643,19 +648,63 @@ export class Profile implements OnDestroy {
     this.navigationService.navigateForward('/new-post');
   }
 
-  async onNotificationToggle(checked: boolean): Promise<void> {
+  async openNotificationSubscriptionPopover(event: Event): Promise<void> {
     const userId = this.currentUser()?.id;
     if (!userId) return;
 
-    const previousValue = this.currentUser()?.notification_enabled;
-    this.currentUser.update((u) => (u ? { ...u, notification_enabled: checked } : u));
+    const username = this.currentUser()?.username || this.currentUser()?.name || 'User';
+    const initialPreferences = this.notificationPreferences();
+
     try {
-      const response: any = await this.userService.updateProfileSubscription(userId);
-      const value = response.data.notification_enabled;
-      this.currentUser.update((u) => (u ? { ...u, notification_enabled: value } : u));
-    } catch (e) {
-      this.currentUser.update((u) => (u ? { ...u, notification_enabled: previousValue } : u));
-      const message = BaseApiService.getErrorMessage(e, 'Failed to update notification toggle.')
+      const result = await this.popoverService.openNotificationSubscriptionPopover(
+        event,
+        username,
+        initialPreferences
+      );
+
+      if (result) {
+        // Update UI immediately
+        this.currentUser.update(user => ({
+          ...user,
+          profile_subscription: {
+            posts: result.posts,
+            events: result.events
+          }
+        }));
+
+        await this.updateNotificationPreferences(userId, result);
+      }
+    } catch (error) {
+      console.error('Error opening notification popover:', error);
+      this.toasterService.showError('Failed to open notification settings');
+    }
+  }
+
+  async updateNotificationPreferences(userId: string, preferences: any): Promise<void> {
+    const previousPreferences = this.notificationPreferences();
+    try {
+      const response = await this.userService.updateProfileSubscription(userId, preferences);
+      const updatedPreferences = response.data;
+
+      // Update with server response
+      this.currentUser.update(user => ({
+        ...user,
+        profile_subscription: {
+          posts: updatedPreferences.posts,
+          events: updatedPreferences.events
+        }
+      }));
+    } catch (error) {
+      // Revert on error
+      this.currentUser.update(user => ({
+        ...user,
+        profile_subscription: {
+          posts: previousPreferences.posts,
+          events: previousPreferences.events
+        }
+      }));
+
+      const message = BaseApiService.getErrorMessage(error, 'Failed to update notification preferences');
       this.toasterService.showError(message);
     }
   }

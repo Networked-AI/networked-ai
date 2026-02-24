@@ -6,6 +6,7 @@ import { HttpParams } from '@angular/common/http';
 import { BaseApiService } from '@/services/base-api.service';
 import { IUser, VibeItem, IUserResponse, UserSearchResponse, UserSearchApiResponse } from '@/interfaces/IUser';
 import { UserGamificationResponse, LeaderboardResponse } from '@/interfaces/IGamification';
+import { ProfileSubscription } from '../interfaces/IUser';
 
 @Injectable({ providedIn: 'root' })
 export class UserService extends BaseApiService {
@@ -290,7 +291,7 @@ export class UserService extends BaseApiService {
     }
   }
 
-  async updateProfileSubscription(userId: string): Promise<{ success: boolean; message: string; data: { notification_enabled: boolean } }> {
-    return await this.put<{ success: boolean; message: string; data: { notification_enabled: boolean } }>(`/users/${userId}/profile-subscription`);
+  async updateProfileSubscription(userId: string, preferences: ProfileSubscription): Promise<{ success: boolean; message: string; data: ProfileSubscription }> {
+    return await this.put<{ success: boolean; message: string; data: ProfileSubscription }>(`/users/${userId}/profile-subscription`, preferences);
   }
 }
