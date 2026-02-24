@@ -38,7 +38,6 @@ export class StripePaymentComponent {
   applePaySuccess = output<void>();
 
   isLoading = signal<boolean>(false);
-  errorMessage = signal<string>('');
   clientSecret = signal<string>('');
   stripePaymentIntentId = signal<string>('');
   isProcessingPayment = signal<boolean>(false);
@@ -154,7 +153,7 @@ export class StripePaymentComponent {
 
   async processPayment(billingDetails?: { name: string; email: string }): Promise<boolean> {
     if (!this.paymentElement || !this.paymentElement.elements) {
-      this.errorMessage.set('Payment element is not ready');
+      this.toasterService.showError('Payment element is not ready');
       return false;
     }
 
@@ -164,7 +163,6 @@ export class StripePaymentComponent {
 
     this.isProcessingPayment.set(true);
     this.isLoading.set(true);
-    this.errorMessage.set('');
     this.paymentProcessing.emit(true);
 
     try {
@@ -189,7 +187,7 @@ export class StripePaymentComponent {
               this.paymentProcessing.emit(false);
 
               if (result.error) {
-                this.errorMessage.set(result.error.message || 'Payment failed');
+                this.toasterService.showError(result.error.message || 'Payment failed');
                 this.paymentError.emit({
                   success: false,
                   error: result.error.message || 'Payment failed'
@@ -211,7 +209,7 @@ export class StripePaymentComponent {
                   }
                   resolve(true);
                 } else {
-                  this.errorMessage.set('Payment was not completed');
+                  this.toasterService.showError('Payment was not completed');
                   this.paymentError.emit({
                     success: false,
                     error: 'Payment was not completed'
@@ -222,7 +220,7 @@ export class StripePaymentComponent {
             },
             error: (error) => {
               console.error('Stripe error:', error);
-              this.errorMessage.set(error?.message || 'Payment processing failed');
+              this.toasterService.showError(error?.message || 'Payment processing failed');
               this.isLoading.set(false);
               this.isProcessingPayment.set(false);
               this.paymentProcessing.emit(false);
@@ -236,7 +234,7 @@ export class StripePaymentComponent {
       });
     } catch (error: any) {
       console.error('Payment error:', error);
-      this.errorMessage.set(error?.message || 'An unexpected error occurred');
+      this.toasterService.showError(error?.message || 'An unexpected error occurred');
       this.isLoading.set(false);
       this.isProcessingPayment.set(false);
       this.paymentProcessing.emit(false);
@@ -272,7 +270,6 @@ export class StripePaymentComponent {
 
     this.isProcessingPayment.set(true);
     this.isLoading.set(true);
-    this.errorMessage.set('');
     this.paymentProcessing.emit(true);
 
     try {
@@ -322,7 +319,7 @@ export class StripePaymentComponent {
   }
 
   failApplePay(message: string) {
-    this.errorMessage.set(message);
+    this.toasterService.showError(message);
     this.paymentError.emit({ success: false, error: message });
   }
 }

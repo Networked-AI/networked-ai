@@ -35,8 +35,8 @@ export interface RsvpDetailsData {
   hostFees?: number;
   subtotalAfterHostFees?: number;
   freeTicketDiscount?: number;
-  hasSubscribed?: boolean; 
-  freeTicketId?: string | null; 
+  hasSubscribed?: boolean;
+  freeTicketId?: string | null;
 }
 
 @Component({
@@ -195,7 +195,6 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
     return result;
   });
 
-
   async ngOnInit(): Promise<void> {
     this.rsvp.setFeeConfig({ hostPaysFees: this.hostPaysFees, additionalFees: this.additionalFees });
     this.rsvp.setCurrentUserId(this.authService.currentUser()?.id ?? null);
@@ -246,10 +245,12 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
     }
   }
 
-
   onPromoStateChange(change: PromoCodeSectionStateChange): void {
     const { reason, state } = change;
-
+  
+    // Store previous applied promo id BEFORE mutating state
+    const previousPromoId = this.rsvp.promoState().appliedPromoCode?.id ?? null;
+  
     if (!state.promoCode && !state.promoValidation.isValid) {
       this.rsvp.clearPromo();
     } else {
@@ -264,31 +265,49 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
         message: state.promoValidation.message
       });
     }
-
-    // Sync Stripe intent if needed
-    if (!this.stripePaymentIntentId()) return;
-    if (reason === 'input') return;
-    if (reason === 'apply' && !state.promoValidation.isValid) return;
-    void this.updatePaymentIntent();
+  
+    // Compare AFTER mutation
+    const currentPromoId = this.rsvp.promoState().appliedPromoCode?.id ?? null;
+  
+    const promoWasRemoved = previousPromoId && !currentPromoId;
+    const promoWasApplied = !previousPromoId && currentPromoId;
+    const promoWasChanged = previousPromoId && currentPromoId && previousPromoId !== currentPromoId;
+  
+    if (promoWasRemoved || promoWasApplied || promoWasChanged) {
+      void this.syncPaymentIntent();
+    }
   }
 
-  async updatePaymentIntent(): Promise<void> {
+  private async syncPaymentIntent(): Promise<void> {
     try {
-      if (!this.stripePaymentIntentId()) return;
       const total = this.totalPrice();
       const subtotal = this.rsvp.summary().subtotalDollars;
       if (total <= 0) {
         this.clientSecret.set('');
         return;
       }
-      await this.stripeService.updatePaymentIntent({
-        stripe_payment_intent_id: this.stripePaymentIntentId(),
+      const hasIntent = !!this.stripePaymentIntentId();
+
+      const payload = {
         event_id: this.eventId,
         subtotal,
-        total
-      });
+        total,
+        ...(hasIntent && {
+          stripe_payment_intent_id: this.stripePaymentIntentId()
+        })
+      };
+
+      const response = hasIntent ? await this.stripeService.updatePaymentIntent(payload) : await this.stripeService.createPaymentIntent(payload);
+      if (response?.client_secret) {
+        this.clientSecret.set(response.client_secret);
+        if (response.stripe_payment_intent_id) {
+          this.stripePaymentIntentId.set(response.stripe_payment_intent_id);
+        }
+      } else {
+        this.paymentErrorMessage.set('Failed to initialize payment');
+      }
     } catch (e) {
-      console.error('Failed to update payment intent', e);
+      console.error('Failed to sync payment intent', e);
     }
   }
 
@@ -305,7 +324,6 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
     }
     return true;
   }
-
 
   getTicketPrice(ticket: any): string {
     if (ticket.ticket_type === 'Free') return '0.00';
