@@ -3,7 +3,11 @@
     <div class="flex items-center justify-between px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
       <i class="pi pi-arrow-left" (click)="back()"></i>
       <div class="body-14M">Guest List</div>
-      <div></div>
+      <div
+        [class]="isDownloading() ? 'pi pi-spinner pi-spin' : 'pi pi-download'"
+        [class.disabled]="isDownloading()"
+        (click)="downloadGuestList()"
+      ></div>
     </div>
   </ion-toolbar>
 </ion-header>
@@ -82,7 +86,7 @@
                 <!-- Name + points -->
                 <div class="flex items-center gap-2 min-w-0">
                   <span class="font-medium truncate block max-w-full">
-                    {{ s?.parent_user_id ? s?.name || 'Guest' : s?.user?.name ||  s?.user?.username}}
+                    {{ s?.parent_user_id ? s?.name || 'Guest' : s?.user?.name || s?.user?.username }}
                   </span>
 
                   @if (!s?.parent_user_id) {
@@ -101,10 +105,15 @@
                     {{ s?.event_ticket?.ticket_type }}
                   </span>
 
-                  @if ((s?.amount_paid ?? 0) > 0) {
-                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-[#1D6D46]"> Paid </span>
-                  } @else if (s?.event_ticket?.ticket_type != 'Free') {
-                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-[#9E660A]"> Unpaid </span>
+                  @if (s?.payment_status !== 'refunded') {
+                    @if ((s?.amount_paid ?? 0) > 0) {
+                      <span class="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-[#1D6D46]"> Paid </span>
+                    } @else if (s?.event_ticket?.ticket_type != 'Free') {
+                      <span class="text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-[#9E660A]"> Unpaid </span>
+                    }
+                  }
+                  @if (s?.payment_status === 'refunded') {
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-[#DC2626]"> Refunded </span>
                   }
                   @if (s?.parent_user_id) {
                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-[#092a85]"> guest </span>
@@ -125,13 +134,19 @@
                   <ion-spinner name="crescent" class="w-5 h-5"></ion-spinner>
                 }
 
-                <p-button
-                  icon="pi pi-ellipsis-v"
-                  type="text"
-                  [style]="{ height: '44px' }"
-                  severity="secondary"
-                  (click)="$event.stopPropagation(); hapticService.onClick(); openPopover($event, s)"
-                ></p-button>
+                <div class="relative">
+                  <p-button
+                    icon="pi pi-ellipsis-v"
+                    type="text"
+                    [style]="{ height: '44px' }"
+                    severity="secondary"
+                    (click)="$event.stopPropagation(); hapticService.onClick(); openPopover($event, s)"
+                    [disabled]="isRefunding() && selectedGuestId() === s.id"
+                  ></p-button>
+                  @if (isRefunding() && selectedGuestId() === s.id) {
+                    <ion-spinner name="crescent" class="w-5 h-5 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></ion-spinner>
+                  }
+                </div>
               </div>
             </div>
           } @empty {
