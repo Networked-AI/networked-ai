@@ -64,7 +64,14 @@
         />
       </div>
       <div [hidden]="segmentValue() === 'list' || isViewingOtherUser()">
-        <network-map-view [radius]="radius()" [latitude]="latitude()" [longitude]="longitude()" [isActive]="segmentValue() === 'map'" />
+        <network-map-view 
+          [radius]="radius()" 
+          [latitude]="latitude()" 
+          [longitude]="longitude()" 
+          [searchQuery]="searchQuery()"
+          [isActive]="segmentValue() === 'map'" 
+          (clearSearchRequest)="searchQuery.set('')"
+        />
       </div>
     </div>
   } @else {

@@ -469,7 +469,7 @@ export class PostCard {
     });
   };
 
-  async openMapFromLatLng(mapCenter: any[]): Promise<void> {
+  async openMapFromLatLng(mapCenter: string[] | number[]): Promise<void> {
     const location = this.post().address ?? 'Unknown location';
     const platform = Capacitor.getPlatform();
 

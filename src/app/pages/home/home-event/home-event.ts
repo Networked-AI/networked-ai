@@ -175,7 +175,8 @@ export class HomeEvent implements OnInit, OnDestroy {
         roles: 'Host,CoHost,Sponsor',
         is_my_events: true,
         user_id: this.currentUser()?.id,
-        start_date: new Date().toString()
+        start_date: new Date().toString(),
+        from_home: true
       });
     } catch (error) {
       console.error('Error loading my events:', error);
@@ -204,7 +205,8 @@ export class HomeEvent implements OnInit, OnDestroy {
         limit: 3,
         append: !reset,
         is_recommended: true,
-        start_date: new Date().toString()
+        start_date: new Date().toString(),
+        from_home: true
       });
     } catch (error) {
       console.error('Error loading recommended events:', error);
@@ -220,7 +222,8 @@ export class HomeEvent implements OnInit, OnDestroy {
         is_public: true,
         limit: 3,
         append: !reset,
-        start_date: new Date().toString()
+        start_date: new Date().toString(),
+        from_home: true
       });
     } catch (error) {
       console.error('Error loading public events:', error);
@@ -244,13 +247,15 @@ export class HomeEvent implements OnInit, OnDestroy {
             limit: 3,
             append: !reset,
             is_recommended: true,
-            start_date: new Date().toString()
+            start_date: new Date().toString(),
+            from_home: true
           }),
           this.eventService.getEvents({
             limit: 3,
             is_public: true,
             append: !reset,
-            start_date: new Date().toString()
+            start_date: new Date().toString(),
+            from_home: true
           }),
           this.eventService.getEvents({
             limit: 3,
@@ -258,7 +263,8 @@ export class HomeEvent implements OnInit, OnDestroy {
             roles: 'Host,CoHost,Sponsor',
             is_my_events: true,
             user_id: this.currentUser()?.id,
-            start_date: new Date().toString()
+            start_date: new Date().toString(),
+            from_home: true
           })
         ]);
       }
@@ -328,7 +334,8 @@ export class HomeEvent implements OnInit, OnDestroy {
         roles: 'Host,CoHost,Sponsor,Speaker,Staff,Attendees',
         user_id: currentUser.id,
         is_upcoming_event: true,
-        append: !reset
+        append: !reset,
+        from_home: true
       });
     } catch (error) {
       console.error('Error loading upcoming events:', error);

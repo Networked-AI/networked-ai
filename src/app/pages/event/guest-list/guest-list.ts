@@ -133,8 +133,6 @@ export class GuestList implements OnInit, OnDestroy {
     return (Object.keys(this.DEFAULT_FILTER) as Array<keyof GuestFilter>).some((key) => f[key] !== this.DEFAULT_FILTER[key]);
   });
 
-  isRefunding = signal<boolean>(false);
-
   constructor() {
     effect(() => {
       const evId = this.eventId();
@@ -223,29 +221,45 @@ export class GuestList implements OnInit, OnDestroy {
 
   async issueRefund() {
     this.closePopover();
-    
+
     const guestId = this.selectedGuestId();
     if (!guestId) return;
 
-    try {
-      this.isRefunding.set(true);
-      const response: IRefundAttendeeResponse = await this.eventService.refundAttendee(guestId);
-      
-      // Update the attendee in the current listing with the updated attendee from API response
-      if (response?.data) {
-        this.attendees.update((list) => 
-          list.map((attendee) => 
-            attendee.id === guestId ? { ...attendee, ...response.data } : attendee
-          )
-        );
+    const guest = this.attendees().find(a => a.id === guestId);
+    const guestName = guest?.user?.name || guest?.user?.username || 'Guest';
+
+    // Show confirmation modal
+    const result = await this.modalService.openConfirmModal({
+      icon: 'assets/svg/guest-list/refund-issue.svg',
+      iconBgColor: '#ABABAB',
+      title: 'Issue Refund',
+      description: `Are you sure you want to issue a refund to ${guestName}? This action cannot be undone.`,
+      confirmButtonLabel: 'Issue Refund',
+      cancelButtonLabel: 'Cancel',
+      confirmButtonColor: 'danger',
+      iconPosition: 'left',
+      onConfirm: async () => {
+        try {
+          const response: IRefundAttendeeResponse = await this.eventService.refundAttendee(guestId);
+
+          // Update the attendee in the current listing with the updated attendee from API response
+          if (response?.data) {
+            this.attendees.update((list) =>
+              list.map((attendee) =>
+                attendee.id === guestId ? { ...attendee, ...response.data } : attendee
+              )
+            );
+          }
+          this.toasterService.showSuccess(response.message || 'Refund processed successfully');
+        } catch (error) {
+          console.error('Error processing refund:', error);
+          this.toasterService.showError('Failed to process refund');
+        }
       }
-      this.toasterService.showSuccess(response.message || 'Refund processed successfully');
-    } catch (error) {
-      console.error('Error processing refund:', error);
-      this.toasterService.showError('Failed to process refund');
-    } finally {
-      this.isRefunding.set(false);
-    }
+    });
+
+    // If user cancelled, do nothing
+    if (!result || result.role !== 'confirm') return;
   }
 
   checkInGuest() {
@@ -576,12 +590,12 @@ export class GuestList implements OnInit, OnDestroy {
       users.map((attendee) =>
         attendee.user?.id === userId
           ? {
-              ...attendee,
-              user: {
-                ...attendee.user,
-                connection_status: newStatus
-              }
+            ...attendee,
+            user: {
+              ...attendee.user,
+              connection_status: newStatus
             }
+          }
           : attendee
       )
     );

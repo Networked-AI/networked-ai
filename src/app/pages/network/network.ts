@@ -108,6 +108,7 @@ export class Network {
       this.locationAddress.set('');
     } else if (result && typeof result === 'object') {
       // Apply was clicked with location data
+      this.searchQuery.set('');
       this.radius.set(result.radius || 20);
       this.latitude.set(result.latitude || '');
       this.longitude.set(result.longitude || '');
