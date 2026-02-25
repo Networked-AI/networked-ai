@@ -15,6 +15,7 @@ import { MenuModule } from 'primeng/menu';
 import { IUser } from '@/interfaces/IUser';
 import { Device } from '@capacitor/device';
 import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 import { ActivatedRoute } from '@angular/router';
 import { Button } from '@/components/form/button';
 import { NgOptimizedImage } from '@angular/common';
@@ -24,6 +25,7 @@ import { EventService } from '@/services/event.service';
 import { ModalService } from '@/services/modal.service';
 import { MenuItem as PrimeMenuItem } from 'primeng/api';
 import { ToasterService } from '@/services/toaster.service';
+import { environment } from 'src/environments/environment';
 import { EmptyState } from '@/components/common/empty-state';
 import { EventDisplay } from '@/components/common/event-display';
 import { NavigationService } from '@/services/navigation.service';
@@ -156,13 +158,25 @@ export class Event implements OnInit, OnDestroy {
     };
   });
 
-  eventMenuItems: PrimeMenuItem[] = [
-    {
-      label: 'Report',
-      icon: 'pi pi-flag',
-      command: () => this.reportEvent()
+  eventMenuItems = computed<PrimeMenuItem[]>(() => {
+    const items: PrimeMenuItem[] = [
+      {
+        label: 'Report',
+        icon: 'pi pi-flag',
+        command: () => this.reportEvent()
+      }
+    ];
+
+    if (this.eventDisplayData()?.isCurrentUserHost || this.eventDisplayData()?.isCurrentUserCoHost) {
+      items.push({
+        label: 'Dashboard View',
+        icon: 'pi pi-th-large',
+        command: () => this.goToDashboard()
+      });
     }
-  ];
+
+    return items;
+  });
 
   isShowTimer = computed(() => {
     const eventData = this.currentEventData();
@@ -309,7 +323,7 @@ export class Event implements OnInit, OnDestroy {
       .filter((u): u is IUser => u !== null);
 
     // Add Going and Maybe sections to userSections
-    const userSections = [...transformedData.userSections || []];
+    const userSections = [...(transformedData.userSections || [])];
 
     if (attendeesYesUsers.length > 0 || (summary && summary.total_yes_guest > 0)) {
       userSections.push({
@@ -566,9 +580,9 @@ export class Event implements OnInit, OnDestroy {
 
     const summaryData = summary
       ? {
-        total_yes_guest: summary.total_yes_guest || 0,
-        total_maybe_guest: summary.total_maybe_guest || 0
-      }
+          total_yes_guest: summary.total_yes_guest || 0,
+          total_maybe_guest: summary.total_maybe_guest || 0
+        }
       : null;
 
     this.attendeesSummary.set(summaryData);
@@ -690,7 +704,7 @@ export class Event implements OnInit, OnDestroy {
           } catch (attendeeError) {
             await loadingModal.dismiss();
             console.error('Error saving RSVP attendees:', attendeeError);
-            const message = BaseApiService.getErrorMessage(attendeeError, 'Failed to save RSVP. Please try again.')
+            const message = BaseApiService.getErrorMessage(attendeeError, 'Failed to save RSVP. Please try again.');
             this.toasterService.showError(message);
             return;
           } finally {
@@ -821,7 +835,7 @@ export class Event implements OnInit, OnDestroy {
       return true;
     } catch (error) {
       console.error('Error saving event feedback:', error);
-      const message = BaseApiService.getErrorMessage(error, 'Failed to save questionnaire responses. Please try again.')
+      const message = BaseApiService.getErrorMessage(error, 'Failed to save questionnaire responses. Please try again.');
       this.toasterService.showError(message);
       return false;
     }
@@ -890,7 +904,7 @@ export class Event implements OnInit, OnDestroy {
     const isLoggedIn = await this.eventService.checkIsLoggin();
     if (!isLoggedIn) return;
 
-    const result = await this.modalService.openShareModal(eventId, 'Event',this.currentEventData()?.image_url);
+    const result = await this.modalService.openShareModal(eventId, 'Event', this.currentEventData()?.image_url);
     if (result) {
       this.toasterService.showSuccess('Event shared');
     }
@@ -939,6 +953,14 @@ export class Event implements OnInit, OnDestroy {
       console.error('Error toggling event like:', error);
       this.toasterService.showError('Failed to like event. Please try again.');
     }
+  }
+
+  async goToDashboard() {
+    const displayData = this.eventDisplayData();
+    const token = this.authService.getCurrentToken();
+    const eventId = displayData?.id;
+    const url = `${environment.dashboardUrl}?token=${token}&goto=event&eventId=${eventId}`;
+    await Browser.open({ url });
   }
 
   async reportEvent() {
