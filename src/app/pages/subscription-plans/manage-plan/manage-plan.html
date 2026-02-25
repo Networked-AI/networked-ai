@@ -30,7 +30,9 @@
       } @else {
         <!-- Analytics Tab -->
         <app-plan-analytics
-          [planId]="planId()"
+          [plan]="planData()"
+          [analyticsData]="analyticsData()"
+          [isLoading]="isLoading()"
           [isSponsor]="isSponsor()"
           [events]="planData()?.events || []"
           [totalSubscribers]="planData()?.total_subscribers || 0"

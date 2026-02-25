@@ -1,6 +1,6 @@
 import { HttpParams } from '@angular/common/http';
 import { AuthService } from '@/services/auth.service';
-import { PlanData } from '@/interfaces/ISubscripton';
+import { PlanAnalyticsResponse, PlanData } from '@/interfaces/ISubscripton';
 import { SubscriptionPlan } from '@/interfaces/event';
 import { Injectable, signal, inject } from '@angular/core';
 import { BaseApiService } from '@/services/base-api.service';
@@ -195,6 +195,26 @@ export class SubscriptionService extends BaseApiService {
       return response?.data?.data || [];
     } catch (error) {
       console.error('Error fetching user subscriptions:', error);
+      throw error;
+    }
+  }
+
+  async downloadPlanAnalytics(planId: string): Promise<any> {
+    try {
+      const response = await this.get<any>(`/subscription/plan/${planId}/analytics/export-csv`, { responseType: 'text' });
+      return response;
+    } catch (error) {
+      console.error('Error downloading plan analytics:', error);
+      throw error;
+    }
+  }
+
+  async getPlanAnalytics(planId: string): Promise<PlanAnalyticsResponse> {
+    try {
+      const response = await this.get<PlanAnalyticsResponse>(`/subscription/plan/${planId}/analytics`);
+      return response;
+    } catch (error) {
+      console.error('Error fetching plan analytics:', error);
       throw error;
     }
   }

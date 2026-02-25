@@ -51,7 +51,7 @@
 
       <div>
         <div class="flex flex-col gap-3 px-4">
-          @for (event of upcomingEvents(); track event.id || event.title) {
+          @for (event of upcomingEvents().slice(0, 3); track event.id || event.title) {
             <upcoming-event-card [event]="event" />
           }
         </div>

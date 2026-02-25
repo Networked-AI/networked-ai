@@ -18,6 +18,8 @@ import { SocketService } from '@/services/socket.service';
 import { IUser } from '@/interfaces/IUser';
 import { HapticService } from '@/services/haptic.service';
 import { VideoJsPlayerComponent } from '@/components/common/video-js-player';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 
 @Component({
   selector: 'post-card',
@@ -466,4 +468,44 @@ export class PostCard {
       }
     });
   };
+
+  async openMapFromLatLng(mapCenter: any[]): Promise<void> {
+    const location = this.post().address ?? 'Unknown location';
+    const platform = Capacitor.getPlatform();
+
+    const mapAppName = platform === 'ios' ? 'Apple Maps' : platform === 'android' ? 'Google Maps' : 'Your Browser';
+ 
+    const confirmed = await this.modalService.openConfirmModal({
+      icon: 'assets/svg/alert-white.svg',
+      title: 'Leave App?',
+      description: `
+      <span class="text-neutral-500">
+      Location:
+      <span class="font-semibold text-neutral-900 wrap-break-word">
+      ${location}
+      </span>
+      </span><br/><br/>
+      You're about to open location in ${mapAppName}.Do you want to continue?
+      `,
+      confirmButtonLabel: 'Open',
+      cancelButtonLabel: 'Stay',
+      confirmButtonColor: 'primary',
+      iconBgColor: '#F5BC61',
+      iconPosition: 'left'
+    });
+ 
+    if (!confirmed?.data) return;
+
+    const [lat, lng] = mapCenter;
+ 
+    let url = '';
+ 
+    if (platform === 'ios') {
+      url = `https://maps.apple.com/?daddr=${lat},${lng}`;
+    } else {
+      url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    }
+ 
+    await Browser.open({ url });
+  }
 }
