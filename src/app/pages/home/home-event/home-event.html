@@ -43,7 +43,7 @@
       <div class="px-4">
         <div class="flex items-center justify-between">
           <div class="body-16SB neutral-01">My Upcoming Events</div>
-          <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/all?eventFilter=upcoming', true)">
+          <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/all?eventFilter=upcoming')">
             See all
           </button>
         </div>
@@ -151,7 +151,7 @@
       <div class="px-4">
         <div class="flex items-center justify-between">
           <div class="body-16SB neutral-01">Events For You</div>
-          <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/all?eventFilter=recommended', true)">
+          <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/all?eventFilter=recommended')">
             See all
           </button>
         </div>
@@ -354,7 +354,7 @@
       <div class="px-4">
         <div class="flex items-center justify-between">
           <div class="body-16SB neutral-01">Public Events</div>
-          <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/all?eventFilter=public', true)">
+          <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/all?eventFilter=public')">
             See all
           </button>
         </div>
