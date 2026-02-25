@@ -5,6 +5,9 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // register the icon switcher plugin
+        registerPlugin(IconSwitcherPlugin.class);
+
         super.onCreate(savedInstanceState);
 
         getWindow().getDecorView().setOnApplyWindowInsetsListener((view, insets) -> {
