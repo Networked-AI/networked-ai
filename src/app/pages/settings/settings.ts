@@ -163,39 +163,10 @@ export class Settings implements OnInit {
       this.toasterService.showError('Please add your email to your profile to view subscription plans.');
       return;
     }
-      if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
-        this.navigationService.navigateForward('/subscription/plans');
-      } else {
-        await this.openStripePayoutModal();
-    }
-  }
-
-  async openStripePayoutModal(description?: string): Promise<void> {
-    await this.modalService.openConfirmModal({
-      icon: 'assets/svg/payoutIcon.svg',
-      iconBgColor: '#C73838',
-      title: 'Add Payout Details',
-      description: description || 'To view subscription plans in app, you must setup your payout details with Stripe.',
-      confirmButtonLabel: 'Connect Payment',
-      cancelButtonLabel: 'Maybe Later',
-      confirmButtonColor: 'primary',
-      iconPosition: 'center',
-      onConfirm: () => this.handleStripeAccountCreation()
-    });
-  }
-
-  async handleStripeAccountCreation(): Promise<void> {
-    try {
-      const returnUrl = `${environment.frontendUrl}/settings`;
-      const accountResponse: any = await this.stripeService.createStripeAccount(returnUrl);
-      if (accountResponse?.url) {
-        await Browser.open({ url: accountResponse.url });
-      } else {
-        this.toasterService.showError(accountResponse?.message || 'Failed to get Stripe account URL. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error creating Stripe account:', error);
-      this.toasterService.showError('Error creating Stripe account. Please try again.');
+    if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
+      this.navigationService.navigateForward('/subscription/plans');
+    } else {
+      this.stripeService.openStripePayoutModal('view subscription plans in app', user?.stripe_account_status);
     }
   }
 
@@ -261,7 +232,7 @@ export class Settings implements OnInit {
     try {
       const user = await this.userService.getCurrentUser(true);
       if (!user?.stripe_account_id || user?.stripe_account_status !== 'active') {
-        await this.openStripePayoutModal('To access your Stripe dashboard and manage payments, you must setup your payout details with Stripe.');
+        await this.stripeService.openStripePayoutModal('access your Stripe dashboard and manage payments', user?.stripe_account_status);
         return;
       }
       

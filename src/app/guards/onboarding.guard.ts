@@ -16,19 +16,26 @@ export const onboardingGuard: CanActivateFn = async (route, state) => {
   const modalService = inject(ModalService);
   const toasterService = inject(ToasterService);
 
-  // on the server, localStorage is not available, so allow access
-  // the guard will run again on the client where localStorage is available
   if (!isPlatformBrowser(platformId)) return true;
 
   const tokenFromQuery = route.queryParams?.['token'];
+  const eventIdFromQuery = route.queryParams?.['eventId'];
+
   if (tokenFromQuery) {
     try {
       await modalService.openLoadingModal('Signing you in...');
       const response = await authService.login({ bearer_token: tokenFromQuery });
       if (response?.data?.token) {
         localStorageService.setItem(KEYS.ONBOARDED, 'true');
-        navCtrl.navigateRoot('/');
-        return true;
+
+        // ✅ redirect based on eventId
+        if (eventIdFromQuery) {
+          navCtrl.navigateRoot(`/event/${eventIdFromQuery}`);
+        } else {
+          navCtrl.navigateRoot('/');
+        }
+
+        return false; // navigation already handled
       }
     } catch (error) {
       console.error('Token login failed:', error);
