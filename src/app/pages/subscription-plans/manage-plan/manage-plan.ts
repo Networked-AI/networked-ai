@@ -10,7 +10,9 @@ import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-bu
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PlanDetailsForm } from '@/pages/subscription-plans/components/plan-details-form';
 import { Component, inject, signal, computed, ChangeDetectionStrategy, OnInit } from '@angular/core';
-import { IonHeader, IonToolbar, IonContent, IonFooter, ItemReorderEventDetail } from '@ionic/angular/standalone';
+import { IonHeader, IonToolbar, IonContent, IonFooter, ItemReorderEventDetail, LoadingController } from '@ionic/angular/standalone';
+import { BaseApiService } from '@/services/base-api.service';
+import { PlanAnalyticsData } from '@/interfaces/ISubscripton';
 
 @Component({
   selector: 'app-manage-plan',
@@ -29,6 +31,7 @@ export class ManagePlan implements OnInit {
   subscriptionService = inject(SubscriptionService);
   toasterService = inject(ToasterService);
   modalService = inject(ModalService);
+  loadingCtrl = inject(LoadingController);
 
   planId = signal<string | null>(null);
   planData = signal<any>(null);
@@ -38,6 +41,8 @@ export class ManagePlan implements OnInit {
   isGeneratingDescription = signal<boolean>(false);
   isCustomize = signal<boolean>(false);
   isSponsor = signal<boolean>(true);
+  isLoading = signal<boolean>(true);
+  analyticsData = signal<PlanAnalyticsData | null>(null);
 
   benefits = signal<Array<{ id: string; text: string }>>([]);
 
@@ -74,11 +79,17 @@ export class ManagePlan implements OnInit {
   }
 
   async loadPlanData(planId: string): Promise<void> {
+    const loading = await this.loadingCtrl.create({
+      mode: 'md'
+    });
+    await loading.present();
     try {
       const planData = await this.subscriptionService.getPlanById(planId);
       if (!planData) {
         return;
       }
+
+      this.loadAnalyticsData(planData.id!);
 
       this.planData.set(planData);
       this.planName.set(planData.name || '');
@@ -140,6 +151,21 @@ export class ManagePlan implements OnInit {
       console.error('Error loading plan data:', error);
       this.navigationService.back();
       this.toasterService.showError('Failed to load plan data');
+    } finally {
+      await loading.dismiss();
+    }
+  }
+
+  async loadAnalyticsData(planId: string): Promise<void> {
+    try {
+      this.isLoading.set(true);
+      const response = await this.subscriptionService.getPlanAnalytics(planId);
+      this.analyticsData.set(response.data);
+    } catch (error) {
+      console.error('Error loading analytics data:', error);
+      this.toasterService.showError(BaseApiService.getErrorMessage(error, 'Failed to load analytics data'));
+    } finally {
+      this.isLoading.set(false);
     }
   }
 

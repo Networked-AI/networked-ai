@@ -79,3 +79,44 @@ export interface EventData {
   thumbnail_url: string;
   image_url: string;
 }
+
+// Plan Analytics Interfaces
+export interface PlanAnalyticsResponse {
+  success: boolean;
+  message: string;
+  data: PlanAnalyticsData;
+}
+
+export interface PlanAnalyticsData {
+  revenue: RevenueData;
+  graph: GraphData;
+  subscribers: SubscriberData;
+  events: EventAnalyticsData;
+}
+
+export interface RevenueData {
+  total: number;
+  current_month: number;
+}
+
+export interface GraphData {
+  mrr: GraphPoint[];
+  all: GraphPoint[];
+}
+
+export interface GraphPoint {
+  date?: string;
+  month?: string;
+  amount: number;
+}
+
+export interface SubscriberData {
+  total: number;
+  current_month: number;
+}
+
+export interface EventAnalyticsData {
+  total: number;
+  completed: number;
+  upcoming: number;
+}

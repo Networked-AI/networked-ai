@@ -1014,7 +1014,10 @@ export class EventService extends BaseApiService {
       append?: boolean; // If true, append to existing events instead of replacing
       is_upcoming_event?: boolean;
       is_recommended?: boolean;
-    } = {}
+      from_home?: boolean;
+    } = {
+        from_home: false
+      }
   ): Promise<EventsResponse> {
     try {
       let httpParams = new HttpParams();
@@ -1084,36 +1087,21 @@ export class EventService extends BaseApiService {
       const events = response?.data?.data || [];
 
       // Store public events if is_public is true
-      if (params.is_public === true) {
-        if (params.append) {
-          this.publicEvents.update((current) => [...current, ...events]);
-        } else {
-          this.publicEvents.set(events);
-        }
+      if (params.from_home) {
+        this.publicEvents.set(events);
+
       }
 
-      if (params.is_upcoming_event === true) {
-        if (params.append) {
-          this.upcomingEvents.update((current) => [...current, ...events]);
-        } else {
-          this.upcomingEvents.set(events);
-        }
+      if (params.from_home) {
+        this.upcomingEvents.set(events);
       }
 
-      if (params.is_recommended === true) {
-        if (params.append) {
-          this.recommendedEvents.update((current) => [...current, ...events]);
-        } else {
-          this.recommendedEvents.set(events);
-        }
+      if (params.from_home) {
+        this.recommendedEvents.set(events);
       }
 
-      if (params.is_my_events === true) {
-        if (params.append) {
-          this.myEvents.update((current) => [...current, ...events]);
-        } else {
-          this.myEvents.set(events);
-        }
+      if (params.from_home) {
+        this.myEvents.set(events);
       }
 
       return response;

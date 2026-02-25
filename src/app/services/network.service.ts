@@ -155,7 +155,7 @@ export class NetworkService extends BaseApiService {
   }
 
   // Get networks within radius
-  async getNetworksWithinRadius(params: { radius: number; latitude?: string; longitude?: string }): Promise<{ data: IUser[]; message: string }> {
+  async getNetworksWithinRadius(params: { radius: number; latitude?: string; longitude?: string; search?: string }): Promise<{ data: IUser[]; message: string }> {
     try {
       let httpParams = new HttpParams();
 
@@ -166,6 +166,9 @@ export class NetworkService extends BaseApiService {
       }
       if (params.longitude && params.longitude.trim()) {
         httpParams = httpParams.set('longitude', params.longitude.trim());
+      }
+      if (params.search && params.search.trim()) {
+        httpParams = httpParams.set('search', params.search.trim());
       }
 
       const response = await this.get<{ success: boolean; message: string; data: IUser[] }>('/network-connections/networks-within-radius', {
