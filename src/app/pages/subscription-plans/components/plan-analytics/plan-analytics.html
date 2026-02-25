@@ -2,100 +2,128 @@
   <!-- Header with Download Icon -->
   <div class="flex items-center justify-between">
     <div class="heading-h3 neutral-01">Plan Analytics</div>
-    <img src="assets/svg/downloadBlackIcon.svg" alt="Download" class="w-6 h-6 cursor-pointer" />
+    <div
+      [class]="isDownloading() ? 'pi pi-spinner pi-spin' : 'pi pi-download'"
+      [class.disabled]="isDownloading()"
+      (click)="downloadPlanAnalytics()"
+    ></div>
   </div>
 
-  <!-- Revenue Section -->
-  <div class="flex flex-col gap-4">
-    <div class="body-16M neutral-01">Revenue</div>
+  @if (isLoading()) {
+    <div class="flex items-center justify-center py-8">
+      <div class="pi pi-spinner pi-spin text-2xl neutral-03"></div>
+    </div>
+  } @else {
+    <!-- Revenue Section -->
+    <div class="flex flex-col gap-4">
+      <div class="body-16M neutral-01">Revenue</div>
 
-    <!-- Revenue Cards -->
-    <div class="flex gap-3">
-      <div class="flex-1 p-4 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
-        <div class="flex items-center justify-between mb-2">
-          <div class="body-12R neutral-03">All-Time Revenue</div>
-          <img src="assets/svg/ticket/dollar.svg" alt="Dollar" class="w-4 h-4" />
+      <!-- Revenue Cards -->
+      <div class="flex gap-3">
+        <div
+          class="flex-1 p-4 bg-white rounded-lg cursor-pointer transition-all hover:shadow-md"
+          [ngClass]="{
+            'sponsor-graph-border': isSponsor() && selectedRevenueView() === 'all',
+            'event-graph-border': !isSponsor() && selectedRevenueView() === 'all',
+            'border-blue-500': selectedRevenueView() === 'all' && !isSponsor(),
+            'border border-gray-200!': selectedRevenueView() === 'mrr'
+          }"
+          (click)="selectAllTimeRevenue()"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <div class="body-12R neutral-03">All-Time Revenue</div>
+            <img src="assets/svg/ticket/dollar.svg" alt="Dollar" class="w-4 h-4" />
+          </div>
+          <div class="heading-h2 neutral-01">${{ analyticsData()?.revenue?.total || 0 }}</div>
         </div>
-        <div class="heading-h2 neutral-01">$17,882.01</div>
+
+        <div
+          class="flex-1 p-4 bg-white rounded-lg cursor-pointer transition-all hover:shadow-md"
+          [ngClass]="{
+            'sponsor-graph-border': isSponsor() && selectedRevenueView() === 'mrr',
+            'event-graph-border': !isSponsor() && selectedRevenueView() === 'mrr',
+            'border-blue-500': selectedRevenueView() === 'mrr' && !isSponsor(),
+            'border border-gray-200!': selectedRevenueView() === 'all'
+          }"
+          (click)="selectMrr()"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <div class="body-12R neutral-03">MRR</div>
+            <img src="assets/svg/subscription/calendar-check-black.svg" alt="Calendar" class="w-4 h-4" />
+          </div>
+          <div class="heading-h2 neutral-01">${{ analyticsData()?.revenue?.current_month || 0 }}</div>
+        </div>
       </div>
 
-      <div class="flex-1 p-4 border-2 border-gray-200 rounded-lg">
-        <div class="flex items-center justify-between mb-2">
-          <div class="body-12R neutral-03">MRR</div>
-          <img src="assets/svg/subscription/calendar-check-black.svg" alt="Calendar" class="w-4 h-4" />
-        </div>
-        <div class="heading-h2 neutral-01">$1,282.01</div>
+      <!-- Revenue Graph -->
+      <div class="p-4 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
+        <div class="body-14M neutral-01 mb-4">{{ chartTitle() }}</div>
+        <p-chart type="line" [data]="chartData()" [options]="chartOptions()" class="h-[15rem]" />
       </div>
     </div>
 
-    <!-- Revenue Graph -->
-    <div class="p-4 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
-      <div class="body-14M neutral-01 mb-4">All Time Revenue</div>
-      <p-chart type="line" [data]="chartData()" [options]="chartOptions()" class="h-[15rem]" />
-    </div>
-  </div>
-
-  <!-- Subscribers Section -->
-  <div class="flex flex-col gap-4">
-    <div class="flex items-center justify-between">
-      <div class="body-16M neutral-01">Subscribers</div>
-      <button type="button" class="body-14M cursor-pointer" [style.color]="buttonColor() || '#F5BC61'" (click)="navigateToSubscribers()">
-        See all
-      </button>
-    </div>
-
-    <div class="flex gap-3">
-      <div class="flex-1 p-4 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
-        <div class="flex justify-between items-center gap-2 mb-2">
-          <div class="body-12R neutral-03">Total</div>
-          <img src="assets/svg/subscription/user-check-black.svg" alt="User" class="w-5 h-5" />
-        </div>
-        <div class="heading-h2 neutral-01">{{ totalSubscribers() }}</div>
+    <!-- Subscribers Section -->
+    <div class="flex flex-col gap-4">
+      <div class="flex items-center justify-between">
+        <div class="body-16M neutral-01">Subscribers</div>
+        <button type="button" class="body-14M cursor-pointer" [style.color]="buttonColor() || '#F5BC61'" (click)="navigateToSubscribers()">
+          See all
+        </button>
       </div>
 
-      <div class="flex-1 p-4 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
-        <div class="flex justify-between items-center gap-2 mb-2">
-          <div class="body-12R neutral-03">This Month</div>
-          <img src="assets/svg/subscription/user-check-black.svg" alt="User" class="w-5 h-5" />
+      <div class="flex gap-3">
+        <div class="flex-1 p-4 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
+          <div class="flex justify-between items-center gap-2 mb-2">
+            <div class="body-12R neutral-03">Total</div>
+            <img src="assets/svg/subscription/user-check-black.svg" alt="User" class="w-5 h-5" />
+          </div>
+          <div class="heading-h2 neutral-01">{{ analyticsData()?.subscribers?.total || 0 }}</div>
         </div>
-        <div class="heading-h2">+16</div>
+
+        <div class="flex-1 p-4 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
+          <div class="flex justify-between items-center gap-2 mb-2">
+            <div class="body-12R neutral-03">This Month</div>
+            <img src="assets/svg/subscription/user-check-black.svg" alt="User" class="w-5 h-5" />
+          </div>
+          <div class="heading-h2">+{{ analyticsData()?.subscribers?.current_month || 0 }}</div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Events Section -->
-  <div class="flex flex-col gap-4">
-    <div class="flex items-center justify-between">
-      <div class="body-16M neutral-01">Events</div>
-      <button type="button" class="body-14M cursor-pointer" [style.color]="buttonColor() || '#F5BC61'" (click)="navigateToEvents()">
-        See included events
-      </button>
+    <!-- Events Section -->
+    <div class="flex flex-col gap-4">
+      <div class="flex items-center justify-between">
+        <div class="body-16M neutral-01">Events</div>
+        <button type="button" class="body-14M cursor-pointer" [style.color]="buttonColor() || '#F5BC61'" (click)="navigateToEvents()">
+          See included events
+        </button>
+      </div>
+
+      <div class="flex gap-3">
+        <div class="flex-1 p-2 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
+          <div class="flex justify-between items-center gap-2 mb-2">
+            <div class="body-12R neutral-03">Total</div>
+            <img src="assets/svg/subscription/grid.svg" alt="Check" class="w-4 h-4" />
+          </div>
+          <div class="heading-h2 neutral-01">{{ analyticsData()?.events?.total || 0 }}</div>
+        </div>
+
+        <div class="flex-1 p-2 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
+          <div class="flex justify-between items-center gap-2 mb-2">
+            <div class="body-12R neutral-03">Completed</div>
+            <img src="assets/svg/subscription/calendar-checked.svg" alt="Check" class="w-5 h-5" />
+          </div>
+          <div class="heading-h2 neutral-01">{{ analyticsData()?.events?.completed || 0 }}</div>
+        </div>
+
+        <div class="flex-1 p-2 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
+          <div class="flex justify-between items-center gap-2 mb-2">
+            <div class="body-12R neutral-03">Upcoming</div>
+            <div class="pi pi-clock text-neutral-03 !text-[15px]"></div>
+          </div>
+          <div class="heading-h2 neutral-01">{{ analyticsData()?.events?.upcoming || 0 }}</div>
+        </div>
+      </div>
     </div>
-
-    <div class="flex gap-3">
-      <div class="flex-1 p-2 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
-        <div class="flex justify-between items-center gap-2 mb-2">
-          <div class="body-12R neutral-03">Total</div>
-          <img src="assets/svg/subscription/grid.svg" alt="Check" class="w-4 h-4" />
-        </div>
-        <div class="heading-h2 neutral-01">{{ totalEvents() }}</div>
-      </div>
-
-      <div class="flex-1 p-2 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
-        <div class="flex justify-between items-center gap-2 mb-2">
-          <div class="body-12R neutral-03">Completed</div>
-          <img src="assets/svg/subscription/calendar-checked.svg" alt="Check" class="w-5 h-5" />
-        </div>
-        <div class="heading-h2 neutral-01">{{ completedEvents() }}</div>
-      </div>
-
-      <div class="flex-1 p-2 bg-white rounded-lg" [class.sponsor-graph-border]="isSponsor()" [class.event-graph-border]="!isSponsor()">
-        <div class="flex justify-between items-center gap-2 mb-2">
-          <div class="body-12R neutral-03">Upcoming</div>
-          <div class="pi pi-clock text-neutral-03 !text-[15px]"></div>
-        </div>
-        <div class="heading-h2 neutral-01">{{ upcomingEvents() }}</div>
-      </div>
-    </div>
-  </div>
+  }
 </div>

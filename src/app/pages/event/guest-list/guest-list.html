@@ -141,11 +141,7 @@
                     [style]="{ height: '44px' }"
                     severity="secondary"
                     (click)="$event.stopPropagation(); hapticService.onClick(); openPopover($event, s)"
-                    [disabled]="isRefunding() && selectedGuestId() === s.id"
                   ></p-button>
-                  @if (isRefunding() && selectedGuestId() === s.id) {
-                    <ion-spinner name="crescent" class="w-5 h-5 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></ion-spinner>
-                  }
                 </div>
               </div>
             </div>

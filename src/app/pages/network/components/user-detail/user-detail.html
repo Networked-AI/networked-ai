@@ -1,8 +1,8 @@
 @if (user) {
   <div class="p-4">
     <div class="flex items-center gap-4 mb-2">
-      <div class="w-25 h-25 rounded-full border-2 border-gray-200 overflow-hidden relative">
-        <img [ngSrc]="getUserImage()" [alt]="user.name || user.username || 'User'" fill class="object-cover" (error)="onImageError($event)" />
+      <div class="w-25 h-25 rounded-full border-2 border-gray-200 overflow-hidden relative cursor-pointer">
+        <img [ngSrc]="getUserImage()" [alt]="user.name || user.username || 'User'" fill class="object-cover" (error)="onImageError($event)" (click)="onUserClick()"/>
       </div>
       <div class="flex gap-4 text-center flex-1">
         <div class="flex-1">

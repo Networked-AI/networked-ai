@@ -106,4 +106,9 @@ export class UserDetail {
   isSending(message: string): boolean {
     return this.sendingMessage() === message;
   }
+
+  onUserClick() {
+    this.modalService.close();
+    this.navigationService.navigateForward(`/${this.user?.username}`);
+  }
 }

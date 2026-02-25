@@ -55,7 +55,7 @@ export class PopoverService {
   }
 
   async openNotificationSubscriptionPopover(event: Event, username: string, initialPreferences: { posts: boolean; events: boolean }): Promise<any> {
-    let preferences: ProfileSubscription = {};
+    let preferences: ProfileSubscription | null = null;
     const popover = await this.popoverCtrl.create({
       mode: 'md',
       event: event as MouseEvent,

@@ -29,4 +29,18 @@
       border: 1px solid var(--p-inputtext-border-color) !important;
     }
   }
+
+  .p-editor-container {
+    height: auto !important;
+  }
+  
+  .p-editor-content {
+    height: auto !important;
+    max-height: 600px;
+    overflow-y: auto;
+  }
+
+  .p-editor-content .ql-editor {
+    min-height: 200px;
+  }
 }

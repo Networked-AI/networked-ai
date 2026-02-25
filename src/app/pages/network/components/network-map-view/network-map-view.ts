@@ -1,5 +1,6 @@
 import {
   input,
+  output,
   inject,
   effect,
   Inject,
@@ -11,15 +12,20 @@ import {
   ElementRef,
   PLATFORM_ID,
   AfterViewInit,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  DestroyRef
 } from '@angular/core';
 import { Feature, Polygon } from 'geojson';
-import { isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser, NgOptimizedImage } from '@angular/common';
+import { Subject, debounceTime, distinctUntilChanged, switchMap, from } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ModalService } from '@/services/modal.service';
 import { NetworkService } from '@/services/network.service';
 import { ToasterService } from '@/services/toaster.service';
 import { environment } from 'src/environments/environment';
 import { IUser } from '@/interfaces/IUser';
+import { IonIcon, IonSpinner } from '@ionic/angular/standalone';
+import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 
 type MapCenter = [number, number];
 
@@ -27,6 +33,7 @@ type MapCenter = [number, number];
   selector: 'network-map-view',
   styleUrl: './network-map-view.scss',
   templateUrl: './network-map-view.html',
+  imports: [IonIcon, IonSpinner, NgOptimizedImage],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NetworkMapView implements AfterViewInit, OnDestroy {
@@ -35,6 +42,10 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
   latitude = input<string>('');
   longitude = input<string>('');
   isActive = input(false);
+  searchQuery = input<string>('');
+
+  // outputs
+  clearSearchRequest = output<void>();
 
   // view child
   mapContainer = viewChild.required<ElementRef<HTMLDivElement>>('mapContainer');
@@ -47,11 +58,14 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
   private modalService = inject(ModalService);
   private networkService = inject(NetworkService);
   private toasterService = inject(ToasterService);
+  private destroyRef = inject(DestroyRef);
+  private searchSubject = new Subject<string>();
   @Inject(DOCUMENT) private document = inject(DOCUMENT);
 
   // signals
   users = signal<IUser[]>([]);
   isLoading = signal<boolean>(false);
+  showList = signal<boolean>(false);
 
   // MapTiler (lazy-loaded)
   private Maptiler!: typeof import('@maptiler/sdk');
@@ -67,12 +81,38 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
   private readonly DEFAULT_CENTER: MapCenter = [-84.390648, 33.748533];
 
   constructor() {
-    // Load users when radius, latitude, or longitude changes (only after map is initialized)
+    // Debounced search handler
+    this.searchSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((query) => {
+          const trimmedQuery = query.trim();
+          // Reset users for new search
+          this.users.set([]);
+          this.loadUsers(this.radius(), this.latitude(), this.longitude(), trimmedQuery || undefined);
+          return from(Promise.resolve([]));
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
+
+    // Watch searchQuery changes and emit to subject (this triggers debounced search)
+    effect(() => {
+      const query = this.searchQuery();
+      this.searchSubject.next(query);
+    });
+
+    // Load users when radius, latitude, longitude changes (only after map is initialized)
     effect(() => {
       const radiusValue = this.radius();
       const lat = this.latitude();
       const lng = this.longitude();
-      this.loadUsers(radiusValue, lat, lng);
+      // Don't trigger loadUsers here as it's handled by debounced search
+      if (!this.searchQuery()) {
+        this.showList.set(false);
+        this.loadUsers(radiusValue, lat, lng);
+      }
     });
 
     effect(() => {
@@ -116,54 +156,65 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
       if (this.users().length > 0) {
         this.addOrUpdateMarkers(this.users());
       }
-      // Load initial users if we don't have any yet
-      if (this.users().length === 0) {
+      // Load initial users if we don't have any yet and no search query
+      if (this.users().length === 0 && !this.searchQuery()) {
         this.loadUsers(this.radius(), this.latitude(), this.longitude());
       }
     });
   }
 
-  private async loadUsers(radius: number, latitude?: string, longitude?: string): Promise<void> {
+  private async loadUsers(radius: number, latitude?: string, longitude?: string, search?: string): Promise<void> {
     if (!this.isBrowser) return;
 
     try {
       this.isLoading.set(true);
 
-      const params: { radius: number; latitude?: string; longitude?: string } = { radius, latitude, longitude };
+      const params: { radius: number; latitude?: string; longitude?: string; search?: string } = {
+        radius,
+        latitude,
+        longitude,
+        search
+      };
+
+      if (params.search) {
+        this.showList.set(true);
+      }
 
       const { data: users, message } = await this.networkService.getNetworksWithinRadius(params);
       this.users.set(users);
 
-      if (this.isActive() && users.length === 0 && message) {
+      if (this.isActive() && users.length === 0 && message && !params.search) {
         this.toasterService.showError(message);
       }
 
-      // Update markers immediately if map is ready
-      if (this.map) {
-        this.addOrUpdateMarkers(users);
-      }
-
-      if (latitude && longitude && this.map) {
-        const latNum = parseFloat(latitude);
-        const lngNum = parseFloat(longitude);
-        if (!isNaN(latNum) && !isNaN(lngNum)) {
-          this.map.setCenter([lngNum, latNum]);
-          this.addOrUpdateRadius(radius);
+      if (!params.search) {
+        // Update markers immediately if map is ready
+        if (this.map) {
+          this.addOrUpdateMarkers(users);
         }
-      } else if (users.length > 0 && this.map) {
-        // Center map on first user if no location filter
-        const firstUser = users[0];
-        if (firstUser?.longitude && firstUser?.latitude) {
-          const lngNum = typeof firstUser.longitude === 'string' ? parseFloat(firstUser.longitude) : firstUser.longitude;
-          const latNum = typeof firstUser.latitude === 'string' ? parseFloat(firstUser.latitude) : firstUser.latitude;
-          if (!isNaN(lngNum) && !isNaN(latNum)) {
+  
+        if (latitude && longitude && this.map) {
+          const latNum = parseFloat(latitude);
+          const lngNum = parseFloat(longitude);
+          if (!isNaN(latNum) && !isNaN(lngNum)) {
             this.map.setCenter([lngNum, latNum]);
-            // Update radius circle with new center
             this.addOrUpdateRadius(radius);
           }
+        } else if (users.length > 0 && this.map) {
+          // Center map on first user if no location filter
+          const firstUser = users[0];
+          if (firstUser?.longitude && firstUser?.latitude) {
+            const lngNum = typeof firstUser.longitude === 'string' ? parseFloat(firstUser.longitude) : firstUser.longitude;
+            const latNum = typeof firstUser.latitude === 'string' ? parseFloat(firstUser.latitude) : firstUser.latitude;
+            if (!isNaN(lngNum) && !isNaN(latNum)) {
+              this.map.setCenter([lngNum, latNum]);
+              // Update radius circle with new center
+              this.addOrUpdateRadius(radius);
+            }
+          }
+        } else if (this.map) {
+          this.addOrUpdateRadius(radius);
         }
-      } else if (this.map) {
-        this.addOrUpdateRadius(radius);
       }
     } catch (error) {
       console.error('Error loading users for map:', error);
@@ -313,6 +364,28 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
     return [lng + deltaLng, lat + deltaLat];
   }
 
+  navigateToUser(user: IUser): void {
+    if (!user.latitude || !user.longitude) {
+      this.toasterService.showError('User location not available');
+      return;
+    }
+
+    // Hide the list and show only this user on map
+    this.showList.set(false);
+    this.users.set([user]);
+
+    // Navigate to user location on map
+    if (this.map) {
+      const lngNum = +user.longitude;
+      const latNum = +user.latitude;
+
+      if (lngNum !== undefined && latNum !== undefined && !isNaN(lngNum) && !isNaN(latNum)) {
+        this.map.setCenter([lngNum, latNum]);
+        this.addOrUpdateRadius(this.radius());
+      }
+    }
+  }
+
   private cleanup(): void {
     this.markers.forEach((marker) => marker.remove());
     this.markers = [];
@@ -321,5 +394,13 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
       this.map.remove();
       this.map = null;
     }
+  }
+
+  getUserImage(imageUrl: any): string {
+    return getImageUrlOrDefault(imageUrl || '');
+  }
+
+  onImageError(event: Event): void {
+    onImageError(event);
   }
 }
