@@ -368,36 +368,6 @@ export class EventTickets implements OnInit {
     return this.promoCodes().findIndex((p) => p === promo);
   }
 
-  async handleStripeAccountCreation(): Promise<void> {
-    try {
-      const returnUrl = `${environment.frontendUrl}/event`;
-      const accountResponse: any = await this.stripeService.createStripeAccount(returnUrl);
-      if (accountResponse?.url) {
-        await Browser.open({ url: accountResponse.url });
-      } else {
-        this.toasterService.showError(accountResponse?.message || 'Failed to get Stripe account URL. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error creating Stripe account:', error);
-      this.toasterService.showError('Error creating Stripe account. Please try again.');
-      throw error;
-    }
-  }
-
-  async openStripePayoutModal(): Promise<void> {
-    await this.modalService.openConfirmModal({
-      icon: 'assets/svg/payoutIcon.svg',
-      iconBgColor: '#C73838',
-      title: 'Add Payout Details',
-      description: 'To accept ticket sales in app, you must setup your payout details with Stripe.',
-      confirmButtonLabel: 'Connect Payment',
-      cancelButtonLabel: 'Maybe Later',
-      confirmButtonColor: 'primary',
-      iconPosition: 'center',
-      onConfirm: () => this.handleStripeAccountCreation()
-    });
-  }
-
   async createTicket(): Promise<void> {
     const ticketType = await this.modalService.openTicketTypeModal(false, this.hasFreeTicket());
     if (ticketType && ticketType === 'Free') {
@@ -409,10 +379,10 @@ export class EventTickets implements OnInit {
         this.toasterService.showError('Please add your email to your profile to create a paid ticket.');
         return;
       }
-        if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
-          this.createPaidTicket();
-        } else {
-          await this.openStripePayoutModal();
+      if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
+        this.createPaidTicket();
+      } else {
+        this.stripeService.openStripePayoutModal('accept ticket sales in app', user?.stripe_account_status);
       }
     }
   }

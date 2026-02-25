@@ -404,6 +404,7 @@ export class RsvpModal implements OnInit, OnDestroy {
 
     // Sync promo state back from details modal
     this._syncPromoFromConfirm(rsvpConfirmData);
+    this.rsvp.setCurrentUserId(this.authService.currentUser()?.id ?? null);
 
     // Apply names from confirmation form to attendees
     const namedAttendees = this.rsvp.applyAttendeeDetails(

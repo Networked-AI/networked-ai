@@ -20,7 +20,7 @@
     [invalid]="isControlInvalid"
     [placeholder]="getPlaceholder"
     [class.ng-invalid]="isControlInvalid"
-    [value]="control?.value  ? (dateValue | date:'dd MMM yyyy':'UTC') : ''"
+    [value]="dateValue  ? (dateValue | date:'dd MMM yyyy':'UTC') : ''"
   />
 
   <p-inputIcon class="pi pi-chevron-right" />
