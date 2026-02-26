@@ -1087,20 +1087,19 @@ export class EventService extends BaseApiService {
       const events = response?.data?.data || [];
 
       // Store public events if is_public is true
-      if (params.from_home) {
+      if (params.from_home && params.is_public) {
         this.publicEvents.set(events);
-
       }
 
-      if (params.from_home) {
+      if (params.from_home && params.is_upcoming_event) {
         this.upcomingEvents.set(events);
       }
 
-      if (params.from_home) {
+      if (params.from_home && params.is_recommended) {
         this.recommendedEvents.set(events);
       }
 
-      if (params.from_home) {
+      if (params.from_home && params.is_my_events) {
         this.myEvents.set(events);
       }
 
