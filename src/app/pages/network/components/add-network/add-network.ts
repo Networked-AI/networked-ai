@@ -170,7 +170,7 @@ export class AddNetwork implements OnDestroy {
         this.toasterService.showError('No QR code detected');
       }
     } catch (error: any) {
-      this.toasterService.showError('Failed to scan QR code');
+      this.toasterService.showError(error?.toString()|| 'Unable to scan QR code');
     }
   }
 

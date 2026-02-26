@@ -16,14 +16,12 @@
       />
     </div>
 
-    <div class="flex-1 flex flex-col gap-1">
-      <!-- title -->
-      <div class="body-16SB neutral-01 line-clamp-2">{{ event().title }}</div>
+    <div class="flex-1 flex flex-col gap-1 min-w-0">
+      <div class="body-16SB neutral-01 truncate">{{ event().title }}</div>
 
-      <!-- location -->
       <div class="flex items-center gap-1">
         <div class="pi pi-map-marker neutral-03 !text-[13px]"></div>
-        <span class="body-12 neutral-03">{{ formattedLocation() }}</span>
+        <span class="body-12 neutral-03 truncate">{{ formattedLocation() }}</span>
       </div>
 
       <!-- time -->
