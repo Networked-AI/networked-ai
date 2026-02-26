@@ -32,8 +32,17 @@
   <!-- username input -->
   <username-input [isSubmitted]="isSubmitted()" [checkIfTaken]="true" />
 
-  <!-- birthdate input -->
-  <date-input controlName="dob" label="Birth Date" placeholder="Select Date" [isSubmitted]="isSubmitted()" [max]="getMaxDate()" />
+  <!-- Date -->
+  <text-input
+    type="date"
+    label="Birth Date"
+    [readonly]="true"
+    controlName="dob"
+    (click)="openDateModal()"
+    placeholder="Select Date"
+    [isSubmitted]="isSubmitted()"
+    endIconName = "pi pi-chevron-right"
+  />
 
   <!-- account type input -->
   <text-input

@@ -2,7 +2,6 @@ import { IUser } from '@/interfaces/IUser';
 import { IUserForm } from '@/interfaces/IUserForm';
 import { ModalService } from '@/services/modal.service';
 import { validateFields } from '@/utils/form-validation';
-import { DateInput } from '@/components/form/date-input';
 import { TextInput } from '@/components/form/text-input';
 import { EmailInput } from '@/components/form/email-input';
 import { MobileInput } from '@/components/form/mobile-input';
@@ -16,7 +15,7 @@ import { DatePipe } from '@angular/common';
   selector: 'user-personal-info',
   styleUrl: './user-personal-info.scss',
   templateUrl: './user-personal-info.html',
-  imports: [TextInput, DateInput, EmailInput, MobileInput, UsernameInput, UserSettingToggle, ReactiveFormsModule]
+  imports: [TextInput, EmailInput, MobileInput, UsernameInput, UserSettingToggle, ReactiveFormsModule]
 })
 export class UserPersonalInfo {
   // inputs
@@ -91,5 +90,15 @@ export class UserPersonalInfo {
 
   getMaxDate() {
     return this.datePipe.transform(new Date(), 'yyyy-MM-dd');
+  }
+
+  async openDateModal(): Promise<void> {
+    const currentDate = this.formGroup().get('dob')?.value || '';
+    const date = this.datePipe.transform(currentDate, 'yyyy-MM-dd') ?? undefined;
+    const maxDate = this.datePipe.transform(new Date(), 'yyyy-MM-dd') ?? undefined;
+    const dob = await this.modalService.openDateTimeModal('date', date, undefined , maxDate);
+    if (dob) {
+      this.formGroup().patchValue({ dob });
+    }
   }
 }
