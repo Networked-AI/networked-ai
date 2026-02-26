@@ -107,7 +107,7 @@ export class SubscriptionService extends BaseApiService {
   }
 
   // Get a single subscription plan by ID
-  async getPlanSubscribers(planId: string, page: number = 1, limit: number = 10): Promise<any> {
+  async getPlanSubscribers(planId: string, page: number = 1, limit: number = 20): Promise<any> {
     try {
       const params = new HttpParams().set('page', page.toString()).set('limit', limit.toString());
 
@@ -189,7 +189,7 @@ export class SubscriptionService extends BaseApiService {
   }
 
   // Get logged-in user's subscriptions
-  async getUserSubscriptions(page: number = 1, limit: number = 10): Promise<any[]> {
+  async getUserSubscriptions(page: number = 1, limit: number = 20): Promise<any[]> {
     try {
       const response: any = await this.get<any>(`/subscription?page=${page}&limit=${limit}`);
       return response?.data?.data || [];

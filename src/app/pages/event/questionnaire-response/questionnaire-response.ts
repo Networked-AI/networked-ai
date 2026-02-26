@@ -12,9 +12,10 @@ import { EmptyState } from '@/components/common/empty-state';
 import { NavigationService } from '@/services/navigation.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { SegmentButton } from '@/components/common/segment-button';
-import { IonContent, IonToolbar, IonHeader } from '@ionic/angular/standalone';
 import { QuestionnaireAnalytics } from '../components/questionnaire-analytics';
-import { Component, computed, inject, signal, ChangeDetectionStrategy, effect, OnInit } from '@angular/core';
+import { IonContent, IonToolbar, IonHeader, IonSpinner } from '@ionic/angular/standalone';
+import { Subject, debounceTime, distinctUntilChanged, from, switchMap, takeUntil } from 'rxjs';
+import { Component, computed, inject, signal, ChangeDetectionStrategy, effect, OnInit, untracked, OnDestroy } from '@angular/core';
 import { IonInfiniteScrollContent, IonInfiniteScroll, IonRefresher, IonRefresherContent, RefresherCustomEvent } from '@ionic/angular/standalone';
 @Component({
   selector: 'questionnaire-response',
@@ -22,6 +23,7 @@ import { IonInfiniteScrollContent, IonInfiniteScroll, IonRefresher, IonRefresher
   templateUrl: './questionnaire-response.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    IonSpinner,
     IonInfiniteScroll,
     IonInfiniteScrollContent,
     IonToolbar,
@@ -39,7 +41,10 @@ import { IonInfiniteScrollContent, IonInfiniteScroll, IonRefresher, IonRefresher
     SegmentButton
   ]
 })
-export class QuestionnaireResponse implements OnInit {
+export class QuestionnaireResponse implements OnInit, OnDestroy {
+  searchSubject = new Subject<string>();
+  destroy$ = new Subject<void>();
+
   navigationService = inject(NavigationService);
   route = inject(ActivatedRoute);
   eventService = inject(EventService);
@@ -52,7 +57,8 @@ export class QuestionnaireResponse implements OnInit {
   user = signal<any>(null);
   questions = signal<any>(null);
   isHost = signal<boolean>(true);
-  isLoading = signal<boolean>(false);
+  isInitialLoading = signal(true);
+  isDataLoading = signal(false);
   searchQuery = signal<string>('');
   isDownloading = signal<boolean>(false);
   isViewResponse = signal<boolean>(false);
@@ -73,68 +79,92 @@ export class QuestionnaireResponse implements OnInit {
     { value: 'post-event', label: 'Post-Event' }
   ]);
 
-  constructor() {
-    effect(() => {
-      const segment = this.segmentValue();
-      const filter = this.filter();
-      const eventId = this.eventId();
-
-      // prevent firing before required data exists
-      if (!segment || !filter || !eventId) return;
-
-      this.loadData();
-    });
-  }
-
   async ngOnInit(): Promise<void> {
-    if (!this.isLoggedIn()) {
-      const result = await this.modalService.openLoginModal();
-      if (!result?.success) {
-        return;
-      }
-    }
+    this.searchSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((searchValue) => {
+          this.searchQuery.set(searchValue);
+          this.currentPage.set(1);
+          this.analytics.set([]);
+          return from(this.loadData());
+        }),
+        takeUntil(this.destroy$)
+      )
+      .subscribe();
 
-    const eventId = this.route.snapshot.paramMap.get('id');
-    if (eventId) {
-      this.eventId.set(eventId);
-      // Check host/cohost access before loading data
+    try {
+      this.isInitialLoading.set(true);
+
+      if (!this.isLoggedIn()) {
+        const result = await this.modalService.openLoginModal();
+        if (!result?.success) return;
+      }
+
+      const id = this.route.snapshot.paramMap.get('id');
+      if (!id) return;
+
+      this.eventId.set(id);
       await this.checkAccessAndLoadData();
+    } finally {
+      this.isInitialLoading.set(false);
     }
   }
 
-  private async checkAccessAndLoadData(): Promise<void> {
+  async reloadData(): Promise<void> {
+    this.searchQuery.set('');
+    this.searchSubject.next('');
+    this.currentPage.set(1);
+    this.analytics.set([]);
+    await this.loadData();
+  }
+
+  async onSegmentChange(value: string) {
+    if (this.segmentValue() === value) return; 
+    this.segmentValue.set(value);
+    await this.reloadData();
+  }
+
+  async onFilterChange(value: 'responses' | 'analytics') {
+    if (this.filter() === value) return; 
+
+    this.filter.set(value);
+    await this.reloadData();
+  }
+
+  async checkAccessAndLoadData(): Promise<void> {
     try {
-      this.isLoading.set(true); // ✅ start loading
       const eventId = this.eventId();
       if (!eventId) return;
 
       const eventData = await this.eventService.getEventById(eventId);
+
       this.eventData.set(eventData);
 
       if (!this.eventService.checkHostOrCoHostAccess(eventData)) {
         this.isHost.set(false);
-      }
-
-      if (!this.isHost()) {
-        this.filter.set('analytics');
+        this.onFilterChange('analytics');
+      }else{
+        this.loadData();
       }
     } catch (error) {
       console.error('Error checking access:', error);
       this.navigationService.navigateForward(`/event/${this.eventId()}`, true);
-    } finally {
-      this.isLoading.set(false);
     }
   }
 
-  loadData = async () => {
-    const eventId = this.eventId() || '';
-    const phase = this.segmentValue() === 'pre-event' ? 'PreEvent' : 'PostEvent';
-    const search = this.searchQuery() || '';
+  loadData = async (): Promise<void> => {
+    if (this.isDataLoading()) return;
 
     try {
-      this.isLoading.set(true); // ✅ start loading
+      this.isDataLoading.set(true);
 
-      let response: any;
+      const eventId = this.eventId() || '';
+      const phase = this.segmentValue() === 'pre-event' ? 'PreEvent' : 'PostEvent';
+      const search = this.searchQuery() || '';
+
+      let response;
 
       if (this.filter() === 'responses') {
         response = await this.eventService.getEventQuestionnaireResponses(eventId, phase, search);
@@ -150,10 +180,9 @@ export class QuestionnaireResponse implements OnInit {
         this.totalPages.set(response?.pagination?.totalPages || 0);
       }
     } catch (error) {
-      console.error('Error loading data:', error);
       this.toasterService.showError('Failed to load data');
     } finally {
-      this.isLoading.set(false);
+      this.isDataLoading.set(false);
     }
   };
 
@@ -182,7 +211,7 @@ export class QuestionnaireResponse implements OnInit {
 
         this.totalPages.set(response?.pagination?.totalPages || 0);
       } else {
-        response = await this.eventService.getEventQuestionAnalysis(eventId, this.isHost() ? phase : '', nextPage, 20);
+        response = await this.eventService.getEventQuestionAnalysis(eventId, this.isHost() ? phase : '');
 
         this.analytics.update((current) => [...current, ...(response?.questions || [])]);
 
@@ -252,14 +281,16 @@ export class QuestionnaireResponse implements OnInit {
     }
   });
 
-  async onRefresh(event: RefresherCustomEvent): Promise<void> {
+  async onRefresh(event: RefresherCustomEvent) {
     try {
-      this.currentPage.set(1);
-      await this.loadData();
-    } catch (error) {
-      console.error('Error refreshing:', error);
+      await this.reloadData();
     } finally {
       event.target.complete();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

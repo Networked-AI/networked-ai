@@ -20,7 +20,7 @@ export class UserRecommendationsService {
     });
   }
 
-  async loadRecommendations(limit: number = 10): Promise<void> {
+  async loadRecommendations(limit: number = 20): Promise<void> {
     const currentUser = this.authService.currentUser();
     if (!currentUser) return;
 

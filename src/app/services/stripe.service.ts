@@ -87,13 +87,21 @@ export class StripeService extends BaseApiService {
     }
   }
 
-  private getStripeModalConfig(status?: string, context?: string) {
+  private getStripeModalConfig(status?: string, context?: string, stripeAccountId?: string) {
     const baseMessage = context
       ? `To ${context}, you must setup your payout details with Stripe.`
       : `You must setup your payout details with Stripe.`;
 
+    if (!stripeAccountId) {
+      return {
+        title: 'Stripe Account Required',
+        confirmLabel: 'Create Stripe Account',
+        description: 'You have not created a Stripe account yet. Please create one to continue.'
+      };
+    }
+
     switch (status) {
-      case 'action_needed':
+      case 'action_required':
         return {
           title: 'Complete Payout Setup',
           confirmLabel: 'Continue Setup',
@@ -117,8 +125,8 @@ export class StripeService extends BaseApiService {
     }
   }
 
-  async openStripePayoutModal(context?: string, status?: string): Promise<void> {
-    const config = this.getStripeModalConfig(status, context);
+  async openStripePayoutModal(context?: string, stripeAccountId?: string, status?: string): Promise<void> {
+    const config = this.getStripeModalConfig(status, context, stripeAccountId);
 
     await this.modalService.openConfirmModal({
       icon: 'assets/svg/payoutIcon.svg',

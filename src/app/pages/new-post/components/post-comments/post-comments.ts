@@ -200,7 +200,7 @@ export class PostComments implements OnInit, OnDestroy {
     this.feedService.setCurrentViewedPost(null);
   }
 
-  private async loadComments(feedId: string, page: number = 1, limit: number = 10): Promise<void> {
+  private async loadComments(feedId: string, page: number = 1, limit: number = 20): Promise<void> {
     try {
       this.isLoadingComments.set(true);
       const result = await this.feedService.getFeedComments(feedId, { page, limit });

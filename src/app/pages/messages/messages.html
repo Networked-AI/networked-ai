@@ -72,7 +72,7 @@
                 </ion-avatar>
 
                 <ion-label class="pl-3 flex-1 min-w-0">
-                  <div class="body-14M neutral-01 pb-1">{{ getChatName(room) }}</div>
+                  <div class="body-14M neutral-01 pb-1 truncate">{{ getChatName(room) }}</div>
                   <div class="body-12M neutral-02 line-clamp-1">
                     @if (room.lastMessage) {
                       {{ room.lastMessage }}

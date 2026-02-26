@@ -40,7 +40,7 @@ export class FeedService extends BaseApiService {
   myFeedsTotal = signal(0);
   myFeedsHasMore = signal(true);
 
-  async ensureMyFeedsLoaded(limit = 10): Promise<void> {
+  async ensureMyFeedsLoaded(limit = 20): Promise<void> {
     if (this.myPosts().length > 0) return;
     await this.getMyFeeds({ page: 1, limit });
   }
@@ -90,7 +90,7 @@ export class FeedService extends BaseApiService {
       const currentPage = pagination?.currentPage || params?.page || 1;
       this.myFeedsPage.set(currentPage);
       this.myFeedsTotal.set(pagination?.totalCount || 0);
-      const totalPages = pagination?.totalPages || Math.ceil((pagination?.totalCount || 0) / (params?.limit || 10));
+      const totalPages = pagination?.totalPages || Math.ceil((pagination?.totalCount || 0) / (params?.limit || 20));
       const hasMore = posts.length > 0 && currentPage < totalPages;
       this.myFeedsHasMore.set(hasMore);
 
@@ -98,7 +98,7 @@ export class FeedService extends BaseApiService {
         posts,
         total: pagination?.totalCount || 0,
         page: pagination?.currentPage || params?.page || 1,
-        limit: params?.limit || 10
+        limit: params?.limit || 20
       };
     } catch (error) {
       console.error('Error fetching feeds:', error);
@@ -135,7 +135,7 @@ export class FeedService extends BaseApiService {
         posts,
         total: pagination?.totalCount || 0,
         page: currentPage,
-        limit: params?.limit || 10,
+        limit: params?.limit || 20,
         hasMore
       };
     } catch (error) {
@@ -203,7 +203,7 @@ export class FeedService extends BaseApiService {
         posts,
         total: pagination?.totalCount || 0,
         page: pagination?.currentPage || params?.page || 1,
-        limit: params?.limit || 10
+        limit: params?.limit || 20
       };
     } catch (error) {
       console.error('Error fetching feeds:', error);
@@ -432,7 +432,7 @@ export class FeedService extends BaseApiService {
         comments,
         total: pagination?.totalCount || 0,
         page: pagination?.currentPage || params?.page || 1,
-        limit: params?.limit || 10,
+        limit: params?.limit || 20,
         totalPages: pagination?.totalPages || 0
       };
     } catch (error) {

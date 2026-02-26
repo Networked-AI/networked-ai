@@ -321,7 +321,10 @@ export class RsvpModal implements OnInit, OnDestroy {
         confirmButtonColor: 'primary',
         iconPosition: 'center',
         onConfirm: async () => {
-          await this.navigateToSubscriptionPlans();
+          const loginResult = await this.ensureLoggedIn();
+          if (loginResult?.success) {
+            await this.navigateToSubscriptionPlans();
+          }
           resolve();
         }
       });
@@ -364,7 +367,7 @@ export class RsvpModal implements OnInit, OnDestroy {
       return;
     }
 
-    if (isLoggedIn && this.hasSponsorPlan() && !this.hasSubscribed && this.isSelectedSponsorTicket() && !this.hasShownSponsorPrompt()) {
+    if (this.hasSponsorPlan() && !this.hasSubscribed && this.isSelectedSponsorTicket() && !this.hasShownSponsorPrompt()) {
       this.hasShownSponsorPrompt.set(true);
       await this.openStripePayoutModal();
     }

@@ -382,7 +382,7 @@ export class EventTickets implements OnInit {
       if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
         this.createPaidTicket();
       } else {
-        this.stripeService.openStripePayoutModal('accept ticket sales in app', user?.stripe_account_status);
+        this.stripeService.openStripePayoutModal('accept ticket sales in app',user?.stripe_account_id, user?.stripe_account_status);
       }
     }
   }

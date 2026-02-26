@@ -49,7 +49,7 @@ export class PlanSubscribers implements OnInit, OnDestroy {
   async loadSubscribers(planId: string): Promise<void> {
     this.isLoading.set(true);
     try {
-      const response = await this.subscriptionService.getPlanSubscribers(planId, 1, 100);
+      const response = await this.subscriptionService.getPlanSubscribers(planId, 1, 20);
       const subscriptions = response?.data?.data || [];
 
       // Extract user data from subscription objects

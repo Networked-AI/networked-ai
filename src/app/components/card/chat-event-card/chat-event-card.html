@@ -11,23 +11,21 @@
       />
     </div>
 
-    <div class="flex flex-col gap-2">
-      <div class="body-14SB neutral-01">
+    <div class="flex flex-col gap-2 min-w-0">
+      <div class="body-14SB neutral-01 truncate">
         {{ event()?.title }}
       </div>
 
-      <div class="flex flex-col gap-1">
-        @if (event()?.address) {
-          <div class="flex items-start gap-2 body-12 neutral-02">
-            <i class="pi pi-map-marker !text-[14px]"></i>
-            <span class="line-clamp-1">{{ event()?.address }}</span>
-          </div>
-        }
-
+      @if (event()?.address) {
         <div class="flex items-start gap-2 body-12 neutral-02">
-          <i class="pi pi-calendar !text-[14px]"></i>
-          <span>{{ event()?.start_date | date: 'EEE MMM d' }}</span>
+          <i class="pi pi-map-marker !text-[14px]"></i>
+          <span class="truncate">{{ event()?.address }}</span>
         </div>
+      }
+
+      <div class="flex items-start gap-2 body-12 neutral-02">
+        <i class="pi pi-calendar !text-[14px]"></i>
+        <span>{{ event()?.start_date | date: 'EEE MMM d' }}</span>
       </div>
     </div>
   </div>
