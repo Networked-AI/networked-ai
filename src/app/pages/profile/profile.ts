@@ -424,7 +424,7 @@ export class Profile implements OnDestroy {
     if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
       this.navigationService.navigateForward('/subscription/plans');
     } else {
-      this.stripeService.openStripePayoutModal('add subscription plans in app', user?.stripe_account_status);
+      this.stripeService.openStripePayoutModal('add subscription plans in app',user?.stripe_account_id, user?.stripe_account_status);
     }
   }
 
