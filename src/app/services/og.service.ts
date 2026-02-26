@@ -36,7 +36,7 @@ export class OgService {
     this.setOgTags({
       title: eventData.title || '',
       description: this.eventService.sanitizeOgDescription(eventData.description || ''),
-      image: this.getImageUrl(eventData.image_url),
+      image: this.getImageUrl(eventData.thumbnail_url),
       url: `${environment.frontendUrl}/event/${eventData.slug}`,
       type: 'event'
     });
@@ -76,7 +76,7 @@ export class OgService {
     this.setOgTags({
       title: user.name,
       description: description,
-      image: user.image_url,
+      image: this.getImageUrl(user.thumbnail_url),
       url: `${environment.frontendUrl}/${user.username}`,
       type: 'profile'
     });
