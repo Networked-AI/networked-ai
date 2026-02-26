@@ -76,7 +76,7 @@ export class OgService {
     this.setOgTags({
       title: user.name,
       description: description,
-      image: user.image_url,
+      image: this.getImageUrl(user.thumbnail_url),
       url: `${environment.frontendUrl}/${user.username}`,
       type: 'profile'
     });
