@@ -1343,7 +1343,7 @@ export class EventService extends BaseApiService {
     }
   }
 
-  async getEventQuestionAnalysis(eventId: string, eventPhase: 'PreEvent' | 'PostEvent' | '', page: number = 1, limit: number = 20): Promise<any> {
+  async getEventQuestionAnalysis(eventId: string, eventPhase: 'PreEvent' | 'PostEvent' | ''): Promise<any> {
     try {
       let httpParams = new HttpParams();
       if (eventId) {
@@ -1351,13 +1351,6 @@ export class EventService extends BaseApiService {
       }
       if (eventPhase) {
         httpParams = httpParams.set('event_phase', eventPhase);
-      }
-      if (page && page > 0) {
-        httpParams = httpParams.set('page', page.toString());
-      }
-
-      if (limit && limit > 0) {
-        httpParams = httpParams.set('limit', limit.toString());
       }
       const response = await this.get<any>(`/events/question-analysis`, { params: httpParams });
       return response?.data;

@@ -18,43 +18,68 @@
     <ion-refresher-content mode="md"></ion-refresher-content>
   </ion-refresher>
 
-  <div class="min-h-full">
-    <div class="w-full max-w-[672px] mx-auto p-4">
-      @if (!isViewResponse()) {
-        <segment-button
-          [value]="segmentValue() || (segmentItems()[0]?.value ?? '')"
-          [items]="segmentItems()"
-          (valueChange)="segmentValue.set($event)"
-        />
-        @if (isHost()) {
-          <div class="flex gap-2 py-4">
-            <chip [type]="'responses'" [color]="filter() === 'responses' ? 'lgold' : ''" (selectedType)="filter.set('responses')" class="w-full">
-              <span class="flex justify-center">Responses</span>
-            </chip>
-            <chip [type]="'analytics'" [color]="filter() === 'analytics' ? 'lgold' : ''" (selectedType)="filter.set('analytics')" class="w-full">
-              <span class="flex justify-center">Analytics</span>
-            </chip>
-          </div>
-          <div class="heading-h3">
-            All Responses<span class="body-14R neutral-03 pl-2">{{ totalResponses() }}</span>
-          </div>
+  @if (isInitialLoading()) {
+    <div class="flex flex-col items-center justify-center h-full">
+      <ion-spinner name="crescent"></ion-spinner>
+      <div class="text-sm text-gray-500 mt-2">Loading Responses...</div>
+    </div>
+  } @else {
+    <div class="min-h-full">
+      <div class="w-full max-w-[672px] mx-auto p-4">
+        <!-- HEADER CONTROLS -->
+        @if (!isViewResponse()) {
+          <segment-button
+            [value]="segmentValue() || (segmentItems()[0]?.value ?? '')"
+            [items]="segmentItems()"
+            (valueChange)="onSegmentChange($event)"
+          />
+
+          @if (isHost()) {
+            <div class="flex gap-2 py-4">
+              <chip
+                [type]="'responses'"
+                [color]="filter() === 'responses' ? 'lgold' : ''"
+                (selectedType)="onFilterChange('responses')"
+                class="w-full"
+              >
+                <span class="flex justify-center">Responses</span>
+              </chip>
+
+              <chip
+                [type]="'analytics'"
+                [color]="filter() === 'analytics' ? 'lgold' : ''"
+                (selectedType)="onFilterChange('analytics')"
+                class="w-full"
+              >
+                <span class="flex justify-center">Analytics</span>
+              </chip>
+            </div>
+
+            <div class="heading-h3">
+              All Responses
+              <span class="body-14R neutral-03 pl-2">
+                {{ totalResponses() }}
+              </span>
+            </div>
+          }
         }
-      }
-      @if (isLoading()) {
-        <div class="flex flex-col items-center justify-center py-10">
-          <i class="pi pi-spinner pi-spin text-2xl!"></i>
-          <div class="text-sm text-gray-500">Loading data...</div>
-        </div>
-      } @else {
+
         @if (isResponsesMode() && isHost()) {
           @if (isViewResponse()) {
             <view-response [user]="user()" [questions]="questions()" />
           } @else {
             <div class="pt-2">
-              <searchbar [searchQuery]="searchQuery()" (searchChange)="searchQuery.set($event)" placeholder="Search" (clear)="searchQuery.set('')" />
+              <searchbar [searchQuery]="searchQuery()" (searchChange)="searchSubject.next($event)" placeholder="Search" (clear)="searchSubject.next('')" />
+
+              @if (isDataLoading() && analytics().length === 0) {
+                <div class="flex flex-col items-center justify-center h-full pt-10">
+                  <ion-spinner name="crescent"></ion-spinner>
+                  <div class="text-sm text-gray-500 mt-2">Loading Responses...</div>
+                </div>
+              }
+
               @for (s of analytics(); track s.id) {
                 <div class="flex items-center gap-3 py-3 border-b border-gray-200">
-                  <!-- Profile -->
                   <div class="relative w-[40px] h-[40px] shrink-0 rounded-full overflow-hidden">
                     <img
                       fill
@@ -65,37 +90,52 @@
                       class="object-cover"
                     />
                   </div>
-                  <!-- Details -->
+
                   <div class="flex-1">
                     <div class="flex items-center gap-2">
-                      <span class="font-medium truncate">{{ s.name || s.username }}</span>
+                      <span class="font-medium truncate">
+                        {{ s.name || s.username }}
+                      </span>
 
                       <div class="flex items-center gap-1 border border-gray-300 rounded-full px-2 h-[20px]">
                         <img [src]="diamondPath()" alt="diamond" class="h-4 w-auto ml-1.5" />
-                        <span class="text-xs font-semibold">{{ s.total_gamification_points }}</span>
+                        <span class="text-xs font-semibold">
+                          {{ s.total_gamification_points }}
+                        </span>
                       </div>
                     </div>
 
-                    <div class="text-xs text-gray-500">{{ s.company_name }}</div>
+                    <div class="text-xs text-gray-500">
+                      {{ s.company_name }}
+                    </div>
                   </div>
 
                   <app-button [label]="'View'" [iconName]="'pi pi-chevron-right'" iconPos="right" variant="text" (click)="viewResponse(s)" />
                 </div>
               } @empty {
-                <app-empty-state title="No users found" message="" />
+                @if (!isDataLoading()) {
+                  <app-empty-state title="No users found" message="" />
+                }
               }
 
               @if (hasMore()) {
                 <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMoreUsers($event)">
-                  <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more users..." />
+                  <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading Responses..." />
                 </ion-infinite-scroll>
               }
             </div>
           }
         } @else {
-          <questionnaire-analytics [analytics]="analytics()" />
+          @if (isDataLoading() && analytics().length === 0) {
+            <div class="flex flex-col items-center justify-center h-full pt-10">
+              <ion-spinner name="crescent"></ion-spinner>
+              <div class="text-sm text-gray-500 mt-2">Loading Analytics...</div>
+            </div>
+          } @else {
+            <questionnaire-analytics [analytics]="analytics()" />
+          }
         }
-      }
+      </div>
     </div>
-  </div>
+  }
 </ion-content>
