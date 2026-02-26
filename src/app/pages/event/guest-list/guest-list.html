@@ -9,17 +9,8 @@
         (click)="downloadGuestList()"
       ></div>
     </div>
-  </ion-toolbar>
-</ion-header>
-
-<ion-content fullscreen mode="md">
-  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" mode="md">
-    <ion-refresher-content mode="md"></ion-refresher-content>
-  </ion-refresher>
-
-  <div class="h-full flex justify-center">
-    <div class="w-full max-w-[672px] p-4 flex flex-col">
-      <div class="grid grid-cols-4 gap-2 my-4">
+    <div class="max-w-[672px] mx-auto">
+      <div class="grid grid-cols-4 gap-2 my-4 p-4 pb-0">
         @for (item of stats(); track item.key) {
           <div class="stat-border {{ item.class }}">
             <div class="stat-card">
@@ -29,10 +20,7 @@
           </div>
         }
       </div>
-
-      <!-- <app-button [label]="'Add Guest'" [icon]="'assets/svg/addUserIcon.svg'" /> -->
-
-      <div class="flex gap-2 mt-4">
+      <div class="flex gap-2 mt-4 p-4">
         <searchbar
           class="w-full"
           [searchQuery]="searchQuery()"
@@ -48,6 +36,17 @@
           }
         </div>
       </div>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content fullscreen mode="md">
+  <ion-refresher slot="fixed" (ionRefresh)="onRefresh($event)" mode="md">
+    <ion-refresher-content mode="md"></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="h-full flex justify-center">
+    <div class="w-full max-w-[672px] p-4 flex flex-col">
 
       <div class="flex items-center gap-2 mt-3 text-sm">
         <ion-icon src="assets/svg/checkmark-circle.svg" class="w-6 h-6" />
