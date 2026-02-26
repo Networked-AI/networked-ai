@@ -97,7 +97,7 @@ export class EventService extends BaseApiService {
 
   async getEventAttendeesList(eventIdOrSlug: string, params: IGetEventAttendeesListParams = {}): Promise<IGetEventAttendeesListResult> {
     try {
-      let httpParams = new HttpParams().set('page', String(params.page ?? 1)).set('limit', String(params.limit ?? 10));
+      let httpParams = new HttpParams().set('page', String(params.page ?? 1)).set('limit', String(params.limit ?? 20));
 
       if (params.rsvp_status) {
         httpParams = httpParams.set('rsvp_status', params.rsvp_status);
@@ -136,7 +136,7 @@ export class EventService extends BaseApiService {
 
   async getEventParticipantsList(eventIdOrSlug: string, params: IGetEventParticipantsListParams = {}): Promise<IGetEventParticipantsListResult> {
     try {
-      let httpParams = new HttpParams().set('page', String(params.page ?? 1)).set('limit', String(params.limit ?? 10));
+      let httpParams = new HttpParams().set('page', String(params.page ?? 1)).set('limit', String(params.limit ?? 20));
 
       if (params.search?.trim()) {
         httpParams = httpParams.set('search', params.search.trim());

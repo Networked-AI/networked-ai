@@ -36,7 +36,7 @@ export class ProfilePosts {
   });
 
   // Constants
-  private readonly pageLimit = 10;
+  private readonly pageLimit = 20;
 
   constructor() {
     effect(() => {

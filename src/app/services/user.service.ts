@@ -190,7 +190,7 @@ export class UserService extends BaseApiService {
   }
 
   // search users
-  async searchUsers(value: string, page: number = 1, limit: number = 10): Promise<UserSearchResponse> {
+  async searchUsers(value: string, page: number = 1, limit: number = 20): Promise<UserSearchResponse> {
     try {
       let params = new HttpParams();
 
