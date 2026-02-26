@@ -166,7 +166,7 @@ export class Settings implements OnInit {
     if (user?.stripe_account_id && user?.stripe_account_status === 'active') {
       this.navigationService.navigateForward('/subscription/plans');
     } else {
-      this.stripeService.openStripePayoutModal('view subscription plans in app', user?.stripe_account_status);
+      this.stripeService.openStripePayoutModal('view subscription plans in app',user?.stripe_account_id, user?.stripe_account_status);
     }
   }
 
@@ -232,7 +232,7 @@ export class Settings implements OnInit {
     try {
       const user = await this.userService.getCurrentUser(true);
       if (!user?.stripe_account_id || user?.stripe_account_status !== 'active') {
-        await this.stripeService.openStripePayoutModal('access your Stripe dashboard and manage payments', user?.stripe_account_status);
+        await this.stripeService.openStripePayoutModal('access your Stripe dashboard and manage payments', user?.stripe_account_id,user?.stripe_account_status);
         return;
       }
       

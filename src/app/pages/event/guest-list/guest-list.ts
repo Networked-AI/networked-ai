@@ -115,7 +115,7 @@ export class GuestList implements OnInit, OnDestroy {
 
   filter = signal<GuestFilter>({ ...this.DEFAULT_FILTER });
 
-  private readonly PAGE_SIZE = 15;
+  private readonly PAGE_SIZE = 20;
   attendees = signal<IEventAttendee[]>([]);
   pagination = signal<IPagination | null>(null);
   counts = signal<IEventAttendeesCounts | null>(null);

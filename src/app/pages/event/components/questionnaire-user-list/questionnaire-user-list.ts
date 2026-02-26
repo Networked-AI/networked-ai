@@ -7,6 +7,8 @@ import { NavigationService } from '@/services/navigation.service';
 import { Component, effect, inject, signal, ChangeDetectionStrategy, computed } from '@angular/core';
 import { IonContent, IonToolbar, IonHeader, IonInfiniteScrollContent, IonInfiniteScroll } from '@ionic/angular/standalone';
 import { IUser } from '@/interfaces/IUser';
+import { Router } from '@angular/router';
+import { AnalyticsQuestion, AnalyticsQuestionOption } from '@/interfaces/event';
 
 @Component({
   selector: 'questionnaire-user-list',
@@ -20,6 +22,7 @@ export class QuestionnaireUserList {
   eventService = inject(EventService);
   private authService = inject(AuthService);
   private socketService = inject(SocketService);
+  private router = inject(Router);
 
   question = signal<any>(null);
   option = signal<any>(null);
@@ -29,21 +32,16 @@ export class QuestionnaireUserList {
   totalPages = signal<number>(0);
   hasMore = computed(() => this.currentPage() < this.totalPages());
 
-  private navEffect = effect(async () => {
-    const state = history.state;
-
-    if (state?.questionOption) {
-      this.question.set(state.questionOption);
-    }
-    if (state?.option) {
-      this.option.set(state.option);
-    }
-
-    const response = await this.eventService.getEventQuestionOptionUsers(this.question()?.id, this.option()?.id);
-    this.users.set(response?.users);
-  });
-
   ngOnInit() {
+    const navigation = this.router.currentNavigation();
+    const state = navigation?.extras?.state as { questionOption: AnalyticsQuestion; option: AnalyticsQuestionOption };
+
+    if (state.questionOption || state.option) {
+      this.question.set(state.questionOption);
+      this.option.set(state.option);
+
+      this.loadUsers(1, false);
+    }
     this.setupNetworkConnectionListener();
   }
 
@@ -53,7 +51,9 @@ export class QuestionnaireUserList {
     try {
       this.isLoading.set(true);
 
-      const response = await this.eventService.getEventQuestionOptionUsers(this.question()?.id, this.option()?.id, page, 20);
+      const limit = page > 1 ? 10 : 20;
+
+      const response = await this.eventService.getEventQuestionOptionUsers(this.question()?.id, this.option()?.id, page, limit);
 
       this.totalPages.set(response?.pagination?.totalPages || 0);
       this.currentPage.set(page);

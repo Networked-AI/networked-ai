@@ -59,7 +59,7 @@ export class MySubscriptions implements OnInit {
   async loadSubscriptions(): Promise<void> {
     this.isLoading.set(true);
     try {
-      const subscriptionsData = await this.subscriptionService.getUserSubscriptions(1, 10);
+      const subscriptionsData = await this.subscriptionService.getUserSubscriptions(1, 20);
 
       // Ensure subscriptionsData is an array
       if (!Array.isArray(subscriptionsData)) {

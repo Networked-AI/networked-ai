@@ -48,7 +48,9 @@
 
         <p-menu #groupImageMenu [popup]="true" [model]="groupImageMenuItems()" appendTo="body"></p-menu>
 
-        <div class="body-16M neutral-01">{{ groupName() }}</div>
+        <div class="body-16M neutral-01 text-center break-all px-4 max-w-full">
+          {{ groupName() }}
+        </div>
         <div class="text-xs text-gray-500">Group · {{ members().length }} members</div>
         <div class="text-xs text-gray-400">
           Created by

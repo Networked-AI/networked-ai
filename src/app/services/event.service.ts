@@ -97,7 +97,7 @@ export class EventService extends BaseApiService {
 
   async getEventAttendeesList(eventIdOrSlug: string, params: IGetEventAttendeesListParams = {}): Promise<IGetEventAttendeesListResult> {
     try {
-      let httpParams = new HttpParams().set('page', String(params.page ?? 1)).set('limit', String(params.limit ?? 10));
+      let httpParams = new HttpParams().set('page', String(params.page ?? 1)).set('limit', String(params.limit ?? 20));
 
       if (params.rsvp_status) {
         httpParams = httpParams.set('rsvp_status', params.rsvp_status);
@@ -136,7 +136,7 @@ export class EventService extends BaseApiService {
 
   async getEventParticipantsList(eventIdOrSlug: string, params: IGetEventParticipantsListParams = {}): Promise<IGetEventParticipantsListResult> {
     try {
-      let httpParams = new HttpParams().set('page', String(params.page ?? 1)).set('limit', String(params.limit ?? 10));
+      let httpParams = new HttpParams().set('page', String(params.page ?? 1)).set('limit', String(params.limit ?? 20));
 
       if (params.search?.trim()) {
         httpParams = httpParams.set('search', params.search.trim());
@@ -1343,7 +1343,7 @@ export class EventService extends BaseApiService {
     }
   }
 
-  async getEventQuestionAnalysis(eventId: string, eventPhase: 'PreEvent' | 'PostEvent' | '', page: number = 1, limit: number = 20): Promise<any> {
+  async getEventQuestionAnalysis(eventId: string, eventPhase: 'PreEvent' | 'PostEvent' | ''): Promise<any> {
     try {
       let httpParams = new HttpParams();
       if (eventId) {
@@ -1351,13 +1351,6 @@ export class EventService extends BaseApiService {
       }
       if (eventPhase) {
         httpParams = httpParams.set('event_phase', eventPhase);
-      }
-      if (page && page > 0) {
-        httpParams = httpParams.set('page', page.toString());
-      }
-
-      if (limit && limit > 0) {
-        httpParams = httpParams.set('limit', limit.toString());
       }
       const response = await this.get<any>(`/events/question-analysis`, { params: httpParams });
       return response?.data;

@@ -55,7 +55,7 @@ export class ManageEventService extends BaseApiService {
       { label: 'Manage Roles', icon: 'assets/svg/manage-event/settings.svg', iconType: 'svg', action: 'manageRoles' },
       { label: 'Guest List', icon: 'assets/svg/manage-event/users.svg', iconType: 'svg', action: 'viewGuestList' },
       { label: 'Event Page QR', icon: 'assets/svg/scanner.svg', iconType: 'svg', action: 'viewEventPageQr' },
-      { label: 'Share Event', icon: 'pi pi-upload', iconType: 'pi', action: 'shareEvent' },
+      { label: 'Share Event', icon: 'assets/svg/manage-event/share-event.svg', iconType: 'svg', action: 'shareEvent' },
       { label: 'Cancel Event', icon: 'assets/svg/manage-event/calendar-x.svg', iconType: 'svg', danger: true, action: 'cancelEvent' }
     ];
 
@@ -183,12 +183,13 @@ export class ManageEventService extends BaseApiService {
   async shareEvent() {
     const eventId = this.currentEventData()?.id;
     if (eventId) {
-      const result = await this.modalService.openShareModal(eventId, 'Event',this.currentEventData()?.image_url);
+      const result = await this.modalService.openShareModal(eventId, 'Event', this.currentEventData()?.image_url);
       if (result) {
         this.toasterService.showSuccess('Event shared');
       }
     }
   }
+
   async scanQRCode(): Promise<void> {
     try {
       const { ScanResult } = await CapacitorBarcodeScanner.scanBarcode({ hint: CapacitorBarcodeScannerTypeHintALLOption.ALL });
@@ -197,8 +198,8 @@ export class ManageEventService extends BaseApiService {
       } else {
         this.toasterService.showError('No QR code detected');
       }
-    } catch (error) {
-      this.toasterService.showError('Failed to scan QR code');
+    } catch (error: any) {
+      this.toasterService.showError(error?.toString()|| 'Unable to scan QR code');
     }
   }
 

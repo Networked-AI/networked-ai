@@ -14,6 +14,7 @@ import {
 import { PostEventCard } from '@/components/card/post-event-card';
 import { ChangeDetectionStrategy, Component, computed, inject, signal, OnInit } from '@angular/core';
 import { IEvent } from '@/interfaces/event';
+import { AuthService } from '@/services/auth.service';
 
 @Component({
   selector: 'post-event-modal',
@@ -26,6 +27,7 @@ export class PostEventModal implements OnInit {
   private modalCtrl = inject(ModalController);
   private modalService = inject(ModalService);
   private eventService = inject(EventService);
+  private authService = inject(AuthService);
 
   searchQuery = signal<string>('');
   segmentValue = signal<'All Events' | 'My Events'>('All Events');
@@ -50,6 +52,8 @@ export class PostEventModal implements OnInit {
 
   private readonly pageLimit = 10;
   private searchTimeout?: ReturnType<typeof setTimeout>;
+
+  currentUser = computed(() => this.authService.currentUser());
 
   // Computed to get current events based on selected tab
   events = computed(() => {
@@ -77,6 +81,12 @@ export class PostEventModal implements OnInit {
 
   ngOnInit(): void {
     this.loadEvents();
+  }
+
+  private getRoles(): string {
+    return this.segmentValue() === 'All Events'
+      ? 'Host,CoHost,Sponsor,Speaker,Staff,Attendees'
+      : 'Host,CoHost';
   }
 
   async loadEvents(reset: boolean = true): Promise<void> {
@@ -107,8 +117,9 @@ export class PostEventModal implements OnInit {
       const response = await this.eventService.getEvents({
         page: currentPage,
         limit: this.pageLimit,
-        search: search,
-        include_participant_events: includeParticipantEvents
+        search,
+        user_id:this.currentUser()?.id,
+        roles: this.getRoles()
       });
 
       const events = response?.data?.data || [];
@@ -168,8 +179,9 @@ export class PostEventModal implements OnInit {
       const response = await this.eventService.getEvents({
         page: nextPage,
         limit: this.pageLimit,
-        search: search,
-        include_participant_events: includeParticipantEvents
+        search,
+        user_id:this.currentUser()?.id,
+        roles: this.getRoles()
       });
 
       const events = response?.data?.data || [];

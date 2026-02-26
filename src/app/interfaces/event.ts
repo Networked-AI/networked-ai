@@ -408,6 +408,13 @@ export interface AnalyticsQuestion {
   scaleData?: AnalyticsScale[];
 }
 
+export interface AnalyticsQuestionOption {
+  id?: string;
+  order?: number;
+  option?: string;
+  selected_count?: number;
+}
+
 export interface EventResponse {
   message?: string;
   success?: boolean;

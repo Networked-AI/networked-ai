@@ -62,7 +62,7 @@ export class EventUserList implements OnInit, OnDestroy {
   isLoadingMore = signal<boolean>(false);
   pagination = signal<IPagination | null>(null);
 
-  private readonly PAGE_SIZE = 10;
+  private readonly PAGE_SIZE = 20;
 
   hasMore = computed(() => {
     const pag = this.pagination();

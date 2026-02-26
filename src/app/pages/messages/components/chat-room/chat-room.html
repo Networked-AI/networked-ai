@@ -9,7 +9,9 @@
           <img fill placeholder class="rounded-full object-cover" (error)="onImageError($event)" [ngSrc]="getImageUrl(chatImage())" />
         </div>
         <!-- </ion-avatar> -->
-        <div class="body-16M neutral-01">{{ chatName() }}</div>
+        <div class="body-16M neutral-01 truncate max-w-[160px] sm:max-w-[260px] md:max-w-[360px] lg:max-w-[440px]">
+          {{ chatName() }}
+        </div>
       </div>
 
       <!-- <i class="pi pi-search"></i> -->
