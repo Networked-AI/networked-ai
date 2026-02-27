@@ -324,15 +324,22 @@ export class CreateEvent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     window.addEventListener('beforeunload', this.beforeUnloadHandler);
-    if (this.isModalMode) {
-      return;
-    }
+    if (this.isModalMode) return;
 
     const eventId = this.route.snapshot.paramMap.get('id');
     if (eventId) {
       this.editingEventId.set(eventId);
       this.isEditMode.set(true);
       this.loadEventForEdit();
+      return; // ✅ early return
+    }
+
+    // ✅ Check for duplicate mode
+    const navigation = this.router.currentNavigation();
+    const state = navigation?.extras?.state as any;
+    if (state?.duplicateEventId) {
+      this.loadEventForDuplicate(state.duplicateEventId);
+      return;
     }
 
     const initialStep = this.route.snapshot.queryParams['step'];
@@ -346,12 +353,58 @@ export class CreateEvent implements OnInit, OnDestroy {
     this.queryParamsSubscription = this.route.queryParamMap.subscribe((params) => {
       const currentStep = params.get('step');
       if (!currentStep) return;
-
       const requestedStep = parseInt(currentStep, 10);
       if (this.steps().includes(requestedStep) && requestedStep !== this.currentStep()) {
         this.currentStep.set(requestedStep);
       }
     });
+  }
+
+  async loadEventForDuplicate(eventId: string): Promise<void> {
+    const loading = await this.loadingCtrl.create({ mode: 'md' });
+    await loading.present();
+
+    try {
+      this.isLoading.set(true);
+      const eventData = await this.eventService.getEventById(eventId);
+
+      if (!eventData) return;
+
+      const formData = this.eventService.transformEventDataToForm(eventData);
+
+      const now = new Date();
+      const defaultStartTime = this.eventService.addMinutesToTime(this.eventService.getCurrentTime(), 30);
+
+      // ✅ Patch all data but reset date/time and strip IDs
+      this.eventForm().patchValue({
+        ...formData,
+        date: this.datePipe.transform(now, 'yyyy-MM-dd'),
+        start_time: defaultStartTime,
+        end_time: this.eventService.addMinutesToTime(defaultStartTime, 30),
+        until_finished: false,
+        is_repeating_event: false,
+        repeating_events: [],
+        repeat_count: null,
+        custom_repeat_count: null,
+        tickets: (formData.tickets || []).map(({ id, ...ticket }: any) => ticket),
+        promo_codes: (formData.promo_codes || []).map(({ id, ...promo }: any) => promo),
+        participants: (formData.participants || []).map(({ id, ...p }: any) => p),
+        medias: (formData.medias || []).map(({ id, ...media }: any) => media),
+        questionnaire: (formData.questionnaire || []).map(({ id, options, ...q }: any) => ({
+          ...q,
+          ...(options ? { options: options.map(({ id, ...opt }: any) => opt) } : {})
+        }))
+      });
+
+      this.isEditMode.set(false);
+      this.editingEventId.set(null);
+    } catch (error) {
+      const errorMessage = BaseApiService.getErrorMessage(error, 'Failed to load event for duplication.');
+      this.toasterService.showError(errorMessage);
+    } finally {
+      this.isLoading.set(false);
+      await loading.dismiss();
+    }
   }
 
   async ionViewWillEnter(): Promise<void> {

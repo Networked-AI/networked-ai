@@ -59,7 +59,9 @@
           }
         </div>
         <!-- title & host -->
-        <div class="body-16SB neutral-01 truncate">{{ eventData().title || 'Event Title' }}</div>
+        <div class="body-16SB neutral-01 break-words">
+          {{ eventData().title || 'Event Title' }}
+        </div>
         <div class="flex items-center gap-1 body-12 neutral-03">
           <span>Hosted by</span>
           <button type="button" class="body-12SB brand-02 flex items-center gap-1 max-w-full" (click)="onHostClick()">

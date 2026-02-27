@@ -8,7 +8,6 @@ import { NavigationService } from './navigation.service';
 import { ToasterService } from './toaster.service';
 import { EventService } from './event.service';
 import { CapacitorBarcodeScanner, CapacitorBarcodeScannerTypeHintALLOption } from '@capacitor/barcode-scanner';
-import { IEvent } from '@/interfaces/event';
 
 @Injectable({ providedIn: 'root' })
 export class ManageEventService extends BaseApiService {
@@ -52,6 +51,7 @@ export class ManageEventService extends BaseApiService {
       { label: 'Edit', icon: 'assets/svg/manage-event/edit.svg', iconType: 'svg', action: 'editEvent' },
       { label: 'Analytics', icon: 'assets/svg/manage-event/analytics.svg', iconType: 'svg', action: 'viewEventAnalytics' },
       { label: 'Questionnaire Responses', icon: 'assets/svg/manage-event/questionnaire.svg', iconType: 'svg', action: 'viewQuestionnaireResponses' },
+      { label: 'Create Duplicate Event', icon: 'duplicate-outline', iconType: 'ion', action: 'duplicateEvent' },
       { label: 'Manage Roles', icon: 'assets/svg/manage-event/settings.svg', iconType: 'svg', action: 'manageRoles' },
       { label: 'Guest List', icon: 'assets/svg/manage-event/users.svg', iconType: 'svg', action: 'viewGuestList' },
       { label: 'Event Page QR', icon: 'assets/svg/scanner.svg', iconType: 'svg', action: 'viewEventPageQr' },
@@ -65,7 +65,7 @@ export class ManageEventService extends BaseApiService {
     }
 
     if (isCoHost && !isHost) {
-      const allowedActions = ['viewEventAnalytics', 'viewGuestList', 'viewEventPageQr', 'shareEvent'];
+      const allowedActions = ['viewEventAnalytics', 'viewGuestList', 'viewEventPageQr', 'shareEvent', 'duplicateEvent'];
 
       return baseItems.filter((item) => allowedActions.includes(item['action'] || ''));
     }
@@ -123,7 +123,8 @@ export class ManageEventService extends BaseApiService {
       viewTapToPay: () => this.viewTapToPay(),
       shareEvent: () => this.shareEvent(),
       cancelEvent: () => this.cancelEvent(),
-      scanQRCode: () => this.scanQRCode()
+      scanQRCode: () => this.scanQRCode(),
+      duplicateEvent: () => this.duplicateEvent(),
     };
     actions[result.role]?.();
   }
@@ -228,6 +229,7 @@ export class ManageEventService extends BaseApiService {
       }
     }
   }
+
   private async handleQRCodeScanned(decodedText: string): Promise<void> {
     try {
       const payload = {
@@ -246,7 +248,7 @@ export class ManageEventService extends BaseApiService {
           this.scanQRCode();
         }
       } else {
-        const result = await this.modalService.openScanResult(false, 'Invalid QR code');
+      const result = await this.modalService.openScanResult(false, 'Invalid QR code');
 
         if (result === 'scan-again') {
           this.scanQRCode();
@@ -259,5 +261,11 @@ export class ManageEventService extends BaseApiService {
         this.scanQRCode();
       }
     }
+  }
+
+  duplicateEvent(): void {
+    const eventId = this.currentEventData()?.id;
+    if (!eventId) return;
+    this.navigationService.navigateForward('/event', false, { duplicateEventId: eventId });
   }
 }

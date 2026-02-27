@@ -28,8 +28,10 @@
                 <div class="relative flex-1">
                   <div class="h-3 rounded-full bg-neutral-100"></div>
                   <div
-                    class="absolute left-0 top-0 h-3 rounded-full bg-[#F5C77A]"
-                    [style.width.%]="(opt.selected_count / getMax(item.options)) * 100"
+                    class="absolute left-0 top-0 h-3 rounded-full"
+                    [class.bg-[#F5C77A]]="opt.selected_count > 0"
+                    [class.bg-neutral-200]="opt.selected_count === 0"
+                    [style.width.%]="opt.selected_count === 0 ? 100 : (opt.selected_count / getMax(item.options)) * 100"
                   ></div>
                 </div>
 
@@ -48,11 +50,13 @@
               @for (s of item.options; track $index) {
                 <div class="flex flex-1 flex-col items-center gap-1">
                   <!-- Fixed height bar container -->
-                  <div class="relative w-full h-[120px] rounded-md flex items-end overflow-hidden">
+                  <div class="relative w-full h-[120px] rounded-md flex items-end overflow-hidden bg-neutral-100">
                     <!-- Progress fill -->
                     <div
-                      class="w-full bg-[#F5C77A] flex items-end justify-center transition-all duration-300"
-                      [style.height.%]="getOptionPercentage(s.selected_count, item.options)"
+                      class="w-full flex items-end justify-center transition-all duration-300"
+                      [class.bg-[#F5C77A]]="s.selected_count > 0"
+                      [class.bg-neutral-200]="s.selected_count === 0"
+                      [style.height.%]="s.selected_count === 0 ? 20 : getOptionPercentage(s.selected_count, item.options)"
                     >
                       <div class="text-[14px] font-semibold mb-1">
                         {{ s.selected_count }}

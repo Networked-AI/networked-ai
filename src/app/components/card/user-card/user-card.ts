@@ -16,9 +16,13 @@ import { NavigationService } from '@/services/navigation.service';
 export class UserCard {
   // inputs
   user = input.required<any>();
+  buttonLabel = input<string>('Add');
+  buttonIcon = input<string>('pi-plus');
+  buttonIconPos = input<'left' | 'right'>('right');
 
   // outputs
   added = output<string>();
+  cardClicked = output<any>();
 
   // services
   private networkService = inject(NetworkService);
@@ -56,6 +60,12 @@ export class UserCard {
   }
 
   async onAddClick(): Promise<void> {
+    // If this is a custom button (not "Add"), emit cardClicked instead
+    if (this.buttonLabel() !== 'Add') {
+      this.cardClicked.emit(this.user());
+      return;
+    }
+
     const user = this.user();
     const userId = user?.id;
     if (!userId) return;

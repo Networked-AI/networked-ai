@@ -1,54 +1,44 @@
 <div #mapContainer class="map"></div>
 @if (showList()) {
-  <div class="map-container bg-white">
-    <div class="flex justify-between items-center p-4 border-b border-gray-200">
-      <h3 class="m-0 text-base font-semibold text-gray-900">Search Results</h3>
-      <button
-        class="bg-transparent border-none text-2xl text-gray-500 cursor-pointer p-0 w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-gray-100"
-        (click)="clearSearchRequest.emit(); showList.set(false)"
-      >
-        <div class="pi pi-times"></div>
-      </button>
-    </div>
-    <div class="max-h-96 overflow-y-auto">
+  <div class="map-container bg-neutral-06">    
+    <div class="py-4 bg-neutral-06 h-[213px] -mx-4">
       @if (isLoading()) {
-        <div class="flex justify-center items-center p-10">
-          <ion-spinner name="crescent" class="text-blue-600 w-8 h-8"></ion-spinner>
+        <div class="flex justify-center items-center p-10 min-h-[200px]">
+          <ion-spinner name="crescent" color="primary" class="w-8 h-8"></ion-spinner>
         </div>
       } @else if (users().length > 0) {
-        @for (user of users(); track user.id) {
-          <div
-            class="flex items-center p-3 cursor-pointer transition-colors border-b border-gray-100 hover:bg-gray-50 last:border-b-0"
-            (click)="navigateToUser(user)"
+        <div class="w-full">
+          <swiper-container
+            speed="100"
+            space-between="12"
+            slides-per-view="2.2"
+            allow-touch-move="true"
+            slides-offset-after="16"
+            slides-offset-before="16"
+            [modules]="swiperModules"
+            [breakpoints]="{ 
+              '640': { slidesPerView: 3.2 },
+              '768': { slidesPerView: 4.2 },
+              '1024': { slidesPerView: 5.2 }
+            }"
           >
-            <div class="w-12 h-12 rounded-full flex items-center justify-center shrink-0 relative overflow-hidden mr-4">
-              <img
-                fill
-                placeholder
-                [alt]="user.name"
-                (error)="onImageError($event)"
-                [ngSrc]="getUserImage(user.image_url)"
-                class="object-cover rounded-full"
-              />
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="font-semibold text-gray-900 text-sm mb-0.5 whitespace-nowrap overflow-hidden text-ellipsis">{{ user.name }}</div>
-              <div class="text-gray-500 text-xs whitespace-nowrap overflow-hidden text-ellipsis">@{{ user.username }}</div>
-            </div>
-            <div class="ml-3 shrink-0">
-              @if (user.latitude && user.longitude) {
-                <div class="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full text-xs font-medium">
-                  <ion-icon name="location-outline" class="text-sm"></ion-icon>
-                  View Location
-                </div>
-              }
-            </div>
-          </div>
-        }
+            @for (user of users(); track user.id) {
+              <swiper-slide>
+                <user-card 
+                  [user]="user" 
+                  buttonLabel="View Location"
+                  buttonIcon="pi-map-marker"
+                  buttonIconPos="left"
+                  (cardClicked)="locateOnMap($event)"
+                />
+              </swiper-slide>
+            }
+          </swiper-container>
+        </div>
       } @else {
-        <div class="text-center p-8 rounded-xl shadow-lg z-1000 min-w-[250px]">
+        <div class="text-center p-8">
           <ion-icon name="search-outline" class="text-5xl text-gray-400 mb-4"></ion-icon>
-          <h3 class="m-0 text-lg font-semibold text-gray-900 mb-2">No users found</h3>
+          <h3 class="m-0 text-lg font-semibold text-gray-900 mt-0! mb-2">No users found</h3>
           <p class="m-0 text-gray-500 text-sm">Try adjusting your search criteria</p>
         </div>
       }

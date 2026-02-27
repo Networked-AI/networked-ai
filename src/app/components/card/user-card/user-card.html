@@ -20,9 +20,9 @@
     <!-- add button -->
     <div class="w-full">
       <app-button
-        label="Add"
-        iconName="pi-plus"
-        iconPos="right"
+        [label]="buttonLabel()"
+        [iconName]="buttonIcon()"
+        [iconPos]="buttonIconPos()"
         height="40px"
         [disabled]="isAdding()"
         [isLoading]="isAdding()"

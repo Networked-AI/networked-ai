@@ -7,9 +7,8 @@ export interface MenuItem {
   icon?: string;
   action?: string;
   danger?: boolean;
-  iconType?: 'svg' | 'pi';
+  iconType?: 'svg' | 'pi' | 'ion'; 
 }
-
 @Component({
   imports: [IonIcon],
   selector: 'menu-modal',
