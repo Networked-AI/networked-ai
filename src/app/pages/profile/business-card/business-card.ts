@@ -1,25 +1,30 @@
-import { Button } from '@/components/form/button';
-import { IonIcon } from '@ionic/angular/standalone';
-import { IonHeader, IonToolbar, IonContent, IonFooter } from '@ionic/angular/standalone';
-import { NavigationService } from '@/services/navigation.service';
-import { AuthService } from '@/services/auth.service';
-import { ToasterService } from '@/services/toaster.service';
-import { Router } from '@angular/router';
-import { isPlatformBrowser, NgOptimizedImage } from '@angular/common';
-import { Capacitor } from '@capacitor/core';
 import { Share } from '@capacitor/share';
-import { Filesystem, Directory } from '@capacitor/filesystem';
-import * as htmlToImage from 'html-to-image';
-import { QrCodeComponent } from 'ng-qrcode';
-import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, ViewChild, ElementRef, DOCUMENT, PLATFORM_ID } from '@angular/core';
 import { IUser } from '@/interfaces/IUser';
-import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
-import { environment } from 'src/environments/environment';
-import { CommonShareFooter } from '@/components/common/common-share-footer/common-share-footer';
+import { Capacitor } from '@capacitor/core';
+import { QrCodeComponent } from 'ng-qrcode';
+import * as htmlToImage from 'html-to-image';
 import { Clipboard } from '@capacitor/clipboard';
+import { Button } from '@/components/form/button';
+import { UserService } from '@/services/user.service';
+import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { SocketService } from '@/services/socket.service';
+import { environment } from 'src/environments/environment';
+import { NetworkService } from '@/services/network.service';
+import { ToasterService } from '@/services/toaster.service';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { BaseApiService } from '@/services/base-api.service';
 import { MessagesService } from '@/services/messages.service';
-
+import { IonIcon, IonSpinner } from '@ionic/angular/standalone';
+import { ConnectionStatus } from '@/enums/connection-status.enum';
+import { NavigationService } from '@/services/navigation.service';
+import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
+import { isPlatformBrowser, NgOptimizedImage } from '@angular/common';
+import { Contacts, EmailType, PhoneType } from '@capacitor-community/contacts';
+import { IonHeader, IonToolbar, IonContent, IonFooter } from '@ionic/angular/standalone';
+import { CommonShareFooter } from '@/components/common/common-share-footer/common-share-footer';
+import { Component, inject, ChangeDetectionStrategy, signal, computed, OnInit, ViewChild, ElementRef, DOCUMENT, PLATFORM_ID } from '@angular/core';
 interface SocialLink {
   type: 'website' | 'facebook' | 'twitter' | 'instagram' | 'snapchat' | 'linkedin' | 'phone' | 'email';
   icon: string;
@@ -33,7 +38,7 @@ interface SocialLink {
   styleUrl: './business-card.scss',
   templateUrl: './business-card.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonContent, IonToolbar, IonHeader, IonFooter, Button, IonIcon, NgOptimizedImage, QrCodeComponent, CommonShareFooter]
+  imports: [IonSpinner, IonContent, IonToolbar, IonHeader, IonFooter, Button, IonIcon, NgOptimizedImage, QrCodeComponent, CommonShareFooter]
 })
 export class BusinessCardPage implements OnInit {
   @ViewChild('cardDownloadSection', { static: false, read: ElementRef }) cardDownloadSection?: ElementRef<HTMLDivElement>;
@@ -42,20 +47,59 @@ export class BusinessCardPage implements OnInit {
   private navigationService = inject(NavigationService);
   authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private userService = inject(UserService);
+  private socketService = inject(SocketService);
+  private networkService = inject(NetworkService);
   private toasterService = inject(ToasterService);
   private modalService = inject(ModalService);
   private readonly document = inject(DOCUMENT);
   private messagesService = inject(MessagesService);
-
   // platform
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
 
+  isLoading = signal(false);
   user = signal<IUser | null>(null);
   showMoreLinks = signal(false);
   isDownloading = signal(false);
+  isAddingToNetwork = signal(false);
+  isAcceptingRequest = signal(false);
+  isViewingOthersCard = signal(false);
+  connectionStatus = signal<ConnectionStatus | null>(null);
 
+  isAddedToNetwork = computed(() => this.connectionStatus() === ConnectionStatus.CONNECTED);
+  isRequestSent = computed(() => this.connectionStatus() === ConnectionStatus.REQUEST_SENT);
+  isRequestReceived = computed(() => this.connectionStatus() === ConnectionStatus.REQUEST_RECEIVED);
   isNativePlatform = computed(() => Capacitor.isNativePlatform());
+
+  networkButtonConfig = computed(() => {
+    if (this.isAddedToNetwork()) {
+      return { label: 'Connected', icon: '/assets/svg/user-check.svg', disabled: false, color: '#0A9E57', action: 'connected' };
+    } else if (this.isRequestSent()) {
+      return { label: 'Pending', iconName: 'pi-clock', disabled: false, action: 'pending' };
+    } else if (this.isRequestReceived()) {
+      return { label: 'Accept', iconName: 'pi-check', disabled: this.isAcceptingRequest(), action: 'accept' };
+    } else {
+      return { label: 'Add Network', iconName: 'pi-user-plus', disabled: this.isAddingToNetwork(), action: 'add' };
+    }
+  });
+
+  handleNetworkAction(): void {
+    switch (this.networkButtonConfig().action) {
+      case 'add':
+        this.addToNetwork();
+        break;
+      case 'accept':
+        this.acceptNetworkRequest();
+        break;
+      case 'pending':
+        this.withdrawNetworkRequest();
+        break;
+      case 'connected':
+        break;
+    }
+  }
 
   private readonly socialConfigs = [
     { type: 'website', icon: 'globe-outline', key: 'website' },
@@ -85,7 +129,7 @@ export class BusinessCardPage implements OnInit {
     const user = this.user();
     if (!user?.username) return '';
     const frontendUrl = environment.frontendUrl;
-    return `${frontendUrl}/${user.username}`;
+    return `${frontendUrl}/business-card/${user.username}`;
   });
 
   contactLinks = computed(() => {
@@ -158,15 +202,49 @@ export class BusinessCardPage implements OnInit {
   });
 
   ngOnInit(): void {
-    const navigation = this.router.currentNavigation();
-    const state: any = navigation?.extras?.state;
-    if (state?.user) {
-      this.user.set(state.user);
+    const usernameParam = this.route.snapshot.paramMap.get('username');
+
+    if (usernameParam) {
+      this.loadUserByUsername(usernameParam);
     } else {
-      const currentUser = this.authService.currentUser();
-      if (currentUser) {
-        this.user.set(currentUser);
+      const navigation = this.router.currentNavigation();
+      const state: any = navigation?.extras?.state;
+
+      if (state?.user) {
+        this.user.set(state.user);
+      } else {
+        const currentUser = this.authService.currentUser();
+        if (currentUser) this.user.set(currentUser);
       }
+
+      this.isViewingOthersCard.set(false);
+    }
+  }
+
+  constructor() {
+    this.setupNetworkConnectionListener();
+  }
+
+  private async loadUserByUsername(username: string): Promise<void> {
+    this.isLoading.set(true);
+
+    try {
+      const user = await this.userService.getUser(username);
+      this.user.set(user);
+
+      const currentUser = this.authService.currentUser();
+
+      const isOwnCard = currentUser?.id === user?.id || currentUser?.username === user?.username;
+
+      this.isViewingOthersCard.set(!isOwnCard);
+
+      this.connectionStatus.set((user as any)?.connection_status ?? null);
+    } catch (error) {
+      console.error('Error loading user for business card:', error);
+      this.toasterService.showError('User not found');
+      this.navigationService.back();
+    } finally {
+      this.isLoading.set(false);
     }
   }
 
@@ -402,5 +480,130 @@ export class BusinessCardPage implements OnInit {
 
   getImageUrl(url: string | undefined | null): string {
     return getImageUrlOrDefault(url || '');
+  }
+
+  private async ensureLoggedIn(): Promise<boolean> {
+    if (this.authService.getCurrentToken()) return true;
+    const result = await this.modalService.openLoginModal();
+    return result?.success ?? false;
+  }
+
+  async addToNetwork(): Promise<void> {
+    const wasLoggedIn = !!this.authService.getCurrentToken();
+
+    // ensure login
+    const isLoggedIn = await this.ensureLoggedIn();
+    if (!isLoggedIn) return;
+
+    const userId = this.user()?.id;
+    if (!userId) return;
+
+    // ✅ fetch fresh user ONLY if user just logged in
+    if (!wasLoggedIn) {
+      const freshUser = await this.userService.getUser(this.user()!.username!);
+      if (freshUser) {
+        const freshStatus = (freshUser?.connection_status as ConnectionStatus) ?? null;
+
+        this.connectionStatus.set(freshStatus);
+
+        if (freshStatus !== ConnectionStatus.NOT_CONNECTED) {
+          return;
+        }
+      }
+    }
+    try {
+      this.isAddingToNetwork.set(true);
+      await this.networkService.sendNetworkRequest(userId);
+      this.connectionStatus.set(ConnectionStatus.REQUEST_SENT);
+      this.toasterService.showSuccess('Network request sent!');
+    } catch (error: any) {
+      console.error('Error sending network request:', error);
+      const message = BaseApiService.getErrorMessage(error, 'Failed to send network request');
+      this.toasterService.showError(message);
+    } finally {
+      this.isAddingToNetwork.set(false);
+    }
+  }
+
+  async acceptNetworkRequest(): Promise<void> {
+    const userId = this.user()?.id;
+    if (!userId) return;
+    try {
+      this.isAcceptingRequest.set(true);
+      await this.networkService.acceptNetworkRequest(userId);
+      this.connectionStatus.set(ConnectionStatus.CONNECTED);
+      this.toasterService.showSuccess('Network request accepted!');
+    } catch (error) {
+      console.error('Error sending network request:', error);
+      const message = BaseApiService.getErrorMessage(error, 'Failed to send network request');
+      this.toasterService.showError(message);
+    } finally {
+      this.isAcceptingRequest.set(false);
+    }
+  }
+
+  async withdrawNetworkRequest(): Promise<void> {
+    const user = this.user();
+    const userId = user?.id;
+    if (!userId) return;
+    const result = await this.modalService.openConfirmModal({
+      icon: 'assets/svg/alert-white.svg',
+      title: 'Withdraw Invitation?',
+      description: `Are you sure you want to withdraw your network invitation to ${user?.name || user?.username}?`,
+      confirmButtonLabel: 'Withdraw',
+      cancelButtonLabel: 'Cancel',
+      confirmButtonColor: 'danger',
+      iconBgColor: '#C73838',
+      iconPosition: 'left',
+      onConfirm: async () => {
+        await this.networkService.cancelNetworkRequest(userId);
+        this.connectionStatus.set(ConnectionStatus.NOT_CONNECTED);
+        this.toasterService.showSuccess('Invitation withdrawn');
+      }
+    });
+  }
+
+  async onAddToContacts(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) {
+      this.toasterService.showError('Add to Contacts is only available on mobile');
+      return;
+    }
+
+    const user = this.user();
+    if (!user) return;
+    try {
+      const nameParts = user.name?.trim().split(' ') || [];
+      await Contacts.createContact({
+        contact: {
+          name: {
+            given: nameParts[0] || '',
+            family: nameParts.slice(1).join(' ') || ''
+          },
+          emails: user.email ? [{ type: EmailType.Work, address: user.email }] : [],
+          phones: user.mobile ? [{ type: PhoneType.Mobile, number: user.mobile }] : []
+        }
+      });
+      this.toasterService.showSuccess('Contact saved!');
+    } catch (error) {
+      this.toasterService.showError('Failed to save contact');
+    }
+  }
+
+  private setupNetworkConnectionListener(): void {
+    this.socketService.onAfterRegistration(() => {
+      this.socketService.on('network:connection:update', this.networkConnectionHandler);
+    });
+  }
+
+  private networkConnectionHandler = (payload: IUser) => {
+    if (!payload?.id) return;
+    const viewedUser = this.user();
+    if (viewedUser?.id === payload.id || (viewedUser as any)?.username === payload.username) {
+      this.connectionStatus.set(payload.connection_status as ConnectionStatus);
+    }
+  };
+
+  ngOnDestroy(): void {
+    this.socketService.off('network:connection:update', this.networkConnectionHandler);
   }
 }

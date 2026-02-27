@@ -82,6 +82,10 @@ export const appRoutes: Routes = [
     loadComponent: () => import('@/pages/profile/edit-profile').then((m) => m.EditProfile)
   },
   {
+    path: 'business-card/:username',
+    loadComponent: () => import('@/pages/profile/business-card/business-card').then(m => m.BusinessCardPage)
+  },
+  {
     path: 'profile/preferences',
     canActivate: [authGuard],
     loadComponent: () => import('@/pages/profile/profile-preferences').then((m) => m.ProfilePreferences)
