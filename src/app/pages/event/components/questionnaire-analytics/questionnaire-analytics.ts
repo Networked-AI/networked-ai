@@ -16,7 +16,7 @@ export class QuestionnaireAnalytics {
 
   navigateToUserList(item: AnalyticsQuestion, opt: any) {
     if (opt.selected_count <= 0) return;
-    this.navigationService.navigateForward(`/event/questionnaire-response/guests/${opt.option}`, false, { questionOption: item, option: opt });
+    this.navigationService.navigateForward(`/event/questionnaire-response/guests/${opt.id}`, false, { questionOption: item, option: opt });
   }
 
   getMax(options: any[]) {
