@@ -13,10 +13,11 @@ import {
   PLATFORM_ID,
   AfterViewInit,
   ChangeDetectionStrategy,
-  DestroyRef
+  DestroyRef,
+  CUSTOM_ELEMENTS_SCHEMA
 } from '@angular/core';
 import { Feature, Polygon } from 'geojson';
-import { isPlatformBrowser, NgOptimizedImage } from '@angular/common';
+import { isPlatformBrowser } from '@angular/common';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, from } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ModalService } from '@/services/modal.service';
@@ -24,8 +25,9 @@ import { NetworkService } from '@/services/network.service';
 import { ToasterService } from '@/services/toaster.service';
 import { environment } from 'src/environments/environment';
 import { IUser } from '@/interfaces/IUser';
-import { IonIcon, IonSpinner } from '@ionic/angular/standalone';
+import { IonIcon, IonSpinner, IonicSlides } from '@ionic/angular/standalone';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
+import { UserCard } from '@/components/card/user-card/user-card';
 
 type MapCenter = [number, number];
 
@@ -33,7 +35,8 @@ type MapCenter = [number, number];
   selector: 'network-map-view',
   styleUrl: './network-map-view.scss',
   templateUrl: './network-map-view.html',
-  imports: [IonIcon, IonSpinner, NgOptimizedImage],
+  imports: [IonIcon, IonSpinner, UserCard],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NetworkMapView implements AfterViewInit, OnDestroy {
@@ -66,6 +69,9 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
   users = signal<IUser[]>([]);
   isLoading = signal<boolean>(false);
   showList = signal<boolean>(false);
+
+  // swiper modules
+  swiperModules = [IonicSlides];
 
   // MapTiler (lazy-loaded)
   private Maptiler!: typeof import('@maptiler/sdk');
@@ -364,7 +370,7 @@ export class NetworkMapView implements AfterViewInit, OnDestroy {
     return [lng + deltaLng, lat + deltaLat];
   }
 
-  navigateToUser(user: IUser): void {
+  locateOnMap(user: IUser): void {
     if (!user.latitude || !user.longitude) {
       this.toasterService.showError('User location not available');
       return;

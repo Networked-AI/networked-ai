@@ -1290,6 +1290,35 @@ export class EventService extends BaseApiService {
     }
   }
 
+  async downloadQuestionnaireResponsesCSV(eventId: string, eventPhase: 'PreEvent' | 'PostEvent'): Promise<any> {
+    try {
+      let httpParams = new HttpParams().set('event_id', eventId).set('event_phase', eventPhase);
+      const response = await this.get<any>(`/events/questions-attendees/csv`, {
+        params: httpParams,
+        responseType: 'text'
+      });
+
+      return response;
+    } catch (error: any) {
+        const errorJson = JSON.parse(error.error);
+        throw new Error(errorJson.message);
+    }
+  }
+
+  async downloadQuestionnaireAnalyticsCSV(eventId: string, eventPhase: 'PreEvent' | 'PostEvent'): Promise<any> {
+    try {
+      let httpParams = new HttpParams().set('event_id', eventId).set('event_phase', eventPhase);
+      const response = await this.get<any>(`/events/question-analysis/csv`, {
+        params: httpParams,
+        responseType: 'text'
+      });  
+      return response;
+    } catch (error: any) {
+        const errorJson = JSON.parse(error.error);
+        throw new Error(errorJson.message);
+    }
+  }
+
   async getEventQuestionnaireResponses(
     eventId: string,
     eventPhase: 'PreEvent' | 'PostEvent',

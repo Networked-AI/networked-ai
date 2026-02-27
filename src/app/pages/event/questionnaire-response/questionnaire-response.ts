@@ -15,8 +15,12 @@ import { SegmentButton } from '@/components/common/segment-button';
 import { QuestionnaireAnalytics } from '../components/questionnaire-analytics';
 import { IonContent, IonToolbar, IonHeader, IonSpinner } from '@ionic/angular/standalone';
 import { Subject, debounceTime, distinctUntilChanged, from, switchMap, takeUntil } from 'rxjs';
-import { Component, computed, inject, signal, ChangeDetectionStrategy, effect, OnInit, untracked, OnDestroy } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy, effect, OnInit, untracked, OnDestroy, DOCUMENT } from '@angular/core';
 import { IonInfiniteScrollContent, IonInfiniteScroll, IonRefresher, IonRefresherContent, RefresherCustomEvent } from '@ionic/angular/standalone';
+import { Capacitor } from '@capacitor/core';
+import { Directory, Filesystem } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { BaseApiService } from '@/services/base-api.service';
 @Component({
   selector: 'questionnaire-response',
   styleUrl: './questionnaire-response.scss',
@@ -51,6 +55,7 @@ export class QuestionnaireResponse implements OnInit, OnDestroy {
   authService = inject(AuthService);
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
+  private readonly document = inject(DOCUMENT);
 
   isLoggedIn = computed(() => !!this.authService.currentUser());
 
@@ -246,11 +251,67 @@ export class QuestionnaireResponse implements OnInit, OnDestroy {
     this.questions.set(response?.questions);
   };
 
-  downloadResponses() {
+  async downloadResponses() {
     this.isDownloading.set(true);
-    setTimeout(() => {
+
+    try {
+      const eventId = this.eventId();
+      const phase = this.segmentValue() === 'pre-event' ? 'PreEvent' : 'PostEvent';
+      const isResponses = this.filter() === 'responses';
+
+      let csv: string;
+      let fileName: string;
+
+      if (isResponses) {
+        csv = await this.eventService.downloadQuestionnaireResponsesCSV(eventId, phase);
+        const eventName = this.eventData()?.slug || 'questionnaire-responses';
+        fileName = `${eventName}-${phase.toLowerCase()}-responses-${Date.now()}.csv`;
+      } else {
+        csv = await this.eventService.downloadQuestionnaireAnalyticsCSV(eventId, phase);
+        const eventName = this.eventData()?.slug || 'questionnaire-analytics';
+        fileName = `${eventName}-${phase.toLowerCase()}-analytics-${Date.now()}.csv`;
+      }
+
+      const BOM = '\uFEFF';
+      const content = BOM + csv;
+
+      if (Capacitor.getPlatform() === 'web') {
+        const blob = new Blob([content], {
+          type: 'text/csv;charset=utf-8;'
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = this.document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      const base64Data = btoa(unescape(encodeURIComponent(content)));
+
+      const savedFile = await Filesystem.writeFile({
+        path: fileName,
+        data: base64Data,
+        directory: Directory.Documents
+      });
+
+      if (Capacitor.getPlatform() === 'ios') {
+        await Share.share({
+          title: isResponses ? 'Questionnaire Responses' : 'Questionnaire Analytics',
+          url: savedFile.uri
+        });
+      } else {
+        this.toasterService.showSuccess('CSV saved successfully!');
+      }
+    } catch (error) {
+      console.error('CSV download failed', error);
+      const message = BaseApiService.getErrorMessage(error, 'Failed to download CSV');
+      this.toasterService.showError(message);
+    } finally {
       this.isDownloading.set(false);
-    }, 2000);
+    }
   }
 
   onImageError(event: Event): void {

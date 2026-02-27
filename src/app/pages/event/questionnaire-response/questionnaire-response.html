@@ -3,13 +3,13 @@
     <div class="flex items-center gap-2 max-sm:px-4 pt-2.5 cursor-pointer max-w-[672px] mx-auto">
       <div class="pi pi-arrow-left" (click)="goBack()"></div>
       <div class="body-14M neutral-02 text-center w-full">{{ isHost() ? 'Questionnaire Responses' : eventData()?.title }}</div>
-      <!-- @if (isHost() && !isViewResponse()) {
+      @if (isHost() && !isViewResponse()) {
         <div
           [class]="isDownloading() ? 'pi pi-spinner pi-spin' : 'pi pi-download'"
           [class.disabled]="isDownloading()"
           (click)="downloadResponses()"
         ></div>
-      } -->
+      }
     </div>
   </ion-toolbar>
 </ion-header>
