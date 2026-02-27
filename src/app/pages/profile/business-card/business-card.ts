@@ -241,7 +241,8 @@ export class BusinessCardPage implements OnInit {
       this.connectionStatus.set((user as any)?.connection_status ?? null);
     } catch (error) {
       console.error('Error loading user for business card:', error);
-      this.toasterService.showError('User not found');
+      const message = BaseApiService.getErrorMessage(error, 'User not found');
+      this.toasterService.showError(message);
       this.navigationService.back();
     } finally {
       this.isLoading.set(false);
