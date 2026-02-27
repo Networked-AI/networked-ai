@@ -12,6 +12,10 @@
           <div [class]="item.icon + ' !text-xl'"></div>
         }
 
+        @if (item.iconType === 'ion') {
+          <ion-icon [name]="item.icon" class="w-6 h-6 text-[#474747]"></ion-icon>
+        }
+
         <span class="body-16M">{{ item.label }}</span>
       </div>
 
