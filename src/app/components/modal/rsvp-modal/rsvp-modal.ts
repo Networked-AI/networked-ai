@@ -310,30 +310,27 @@ export class RsvpModal implements OnInit, OnDestroy {
         description = `Subscribe and save $${d} annually.`;
       }
     }
-    return new Promise(async (resolve) => {
-      await this.modalService.openConfirmModal({
-        icon: '/assets/svg/subscription/sponsorIcon.svg',
-        iconBgColor: this.SPONSOR_GRADIENT,
-        title,
-        description,
-        confirmButtonLabel: 'See Plans',
-        cancelButtonLabel: 'Not Now',
-        confirmButtonColor: 'primary',
-        iconPosition: 'center',
-        onConfirm: async () => {
-          const loginResult = await this.ensureLoggedIn();
-          if (loginResult?.success) {
-            await this.navigateToSubscriptionPlans();
-          }
-          resolve();
+    await this.modalService.openConfirmModal({
+      icon: '/assets/svg/subscription/sponsorIcon.svg',
+      iconBgColor: this.SPONSOR_GRADIENT,
+      title,
+      description,
+      confirmButtonLabel: 'See Plans',
+      cancelButtonLabel: 'Not Now',
+      confirmButtonColor: 'primary',
+      iconPosition: 'center',
+      onConfirm: async () => {
+        const loginResult = await this.ensureLoggedIn();
+        if (loginResult?.success) {
+          await this.navigateToSubscriptionPlans();
+          await this.modalCtrl.dismiss();
         }
-      });
+      }
     });
   }
 
   async navigateToSubscriptionPlans(): Promise<void> {
     if (this.sponsorPlans()?.length) {
-      await this.modalCtrl.dismiss();
       await this.modalService.openSubscriptionModal(this.sponsorPlans()[0].id);
     }
   }
@@ -400,7 +397,7 @@ export class RsvpModal implements OnInit, OnDestroy {
       this.hostPaysFees,
       this.additionalFees,
       this.hostName,
-      !isLoggedIn
+      !this.authService.getCurrentToken()
     );
 
     if (!rsvpConfirmData) return;
