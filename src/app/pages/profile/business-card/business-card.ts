@@ -97,6 +97,7 @@ export class BusinessCardPage implements OnInit {
         this.withdrawNetworkRequest();
         break;
       case 'connected':
+        this.showRemoveConnectionAlert();
         break;
     }
   }
@@ -225,6 +226,12 @@ export class BusinessCardPage implements OnInit {
     this.setupNetworkConnectionListener();
   }
 
+  private isSameAsCurrentUser(viewedUser: IUser | null): boolean {
+    const currentUser = this.authService.currentUser();
+    if (!currentUser || !viewedUser) return false;
+    return currentUser.id === viewedUser.id;
+  }
+
   private async loadUserByUsername(username: string): Promise<void> {
     this.isLoading.set(true);
 
@@ -232,12 +239,8 @@ export class BusinessCardPage implements OnInit {
       const user = await this.userService.getUser(username);
       this.user.set(user);
 
-      const currentUser = this.authService.currentUser();
-
-      const isOwnCard = currentUser?.id === user?.id || currentUser?.username === user?.username;
-
+      const isOwnCard = this.isSameAsCurrentUser(user);
       this.isViewingOthersCard.set(!isOwnCard);
-
       this.connectionStatus.set((user as any)?.connection_status ?? null);
     } catch (error) {
       console.error('Error loading user for business card:', error);
@@ -254,7 +257,6 @@ export class BusinessCardPage implements OnInit {
 
     const trimmedValue = value.trim();
 
-    // If not a URL, return as is
     if (!trimmedValue.startsWith('http://') && !trimmedValue.startsWith('https://')) {
       return type === 'website' ? trimmedValue : trimmedValue.startsWith('@') ? trimmedValue : `@${trimmedValue}`;
     }
@@ -443,7 +445,8 @@ export class BusinessCardPage implements OnInit {
           this.toasterService.showSuccess('Profile shared to your network successfully');
         } catch (error: any) {
           console.error('Error sharing profile in chat:', error);
-          this.toasterService.showError(error?.message || 'Failed to share profile');
+          const message = BaseApiService.getErrorMessage(error, 'Failed to share profile');
+          this.toasterService.showError(message);
           throw error;
         }
       }
@@ -496,15 +499,17 @@ export class BusinessCardPage implements OnInit {
     const isLoggedIn = await this.ensureLoggedIn();
     if (!isLoggedIn) return;
 
-    const userId = this.user()?.id;
-    if (!userId) return;
-
-    // ✅ fetch fresh user ONLY if user just logged in
+    // ✅ After login, re-check if the viewed user is now the logged-in user
     if (!wasLoggedIn) {
+      if (this.isSameAsCurrentUser(this.user())) {
+        this.isViewingOthersCard.set(false);
+        return;
+      }
+
+      // Fetch fresh connection status
       const freshUser = await this.userService.getUser(this.user()!.username!);
       if (freshUser) {
         const freshStatus = (freshUser?.connection_status as ConnectionStatus) ?? null;
-
         this.connectionStatus.set(freshStatus);
 
         if (freshStatus !== ConnectionStatus.NOT_CONNECTED) {
@@ -512,6 +517,10 @@ export class BusinessCardPage implements OnInit {
         }
       }
     }
+
+    const userId = this.user()?.id;
+    if (!userId) return;
+
     try {
       this.isAddingToNetwork.set(true);
       await this.networkService.sendNetworkRequest(userId);
@@ -535,8 +544,8 @@ export class BusinessCardPage implements OnInit {
       this.connectionStatus.set(ConnectionStatus.CONNECTED);
       this.toasterService.showSuccess('Network request accepted!');
     } catch (error) {
-      console.error('Error sending network request:', error);
-      const message = BaseApiService.getErrorMessage(error, 'Failed to send network request');
+      console.error('Error accepting network request:', error);
+      const message = BaseApiService.getErrorMessage(error, 'Failed to accept network request');
       this.toasterService.showError(message);
     } finally {
       this.isAcceptingRequest.set(false);
@@ -547,7 +556,7 @@ export class BusinessCardPage implements OnInit {
     const user = this.user();
     const userId = user?.id;
     if (!userId) return;
-    const result = await this.modalService.openConfirmModal({
+    await this.modalService.openConfirmModal({
       icon: 'assets/svg/alert-white.svg',
       title: 'Withdraw Invitation?',
       description: `Are you sure you want to withdraw your network invitation to ${user?.name || user?.username}?`,
@@ -560,6 +569,36 @@ export class BusinessCardPage implements OnInit {
         await this.networkService.cancelNetworkRequest(userId);
         this.connectionStatus.set(ConnectionStatus.NOT_CONNECTED);
         this.toasterService.showSuccess('Invitation withdrawn');
+      }
+    });
+  }
+
+  async showRemoveConnectionAlert(): Promise<void> {
+    const user = this.user();
+    if (!user?.id) return;
+
+    const username = user?.name || user?.username || 'this user';
+
+    await this.modalService.openConfirmModal({
+      icon: 'assets/svg/alert-white.svg',
+      title: 'Remove Network?',
+      description: `Are you sure you want to remove ${username} from your network list? The user won't be notified.`,
+      confirmButtonLabel: 'Remove',
+      cancelButtonLabel: 'Cancel',
+      confirmButtonColor: 'danger',
+      iconBgColor: '#C73838',
+      iconPosition: 'left',
+      onConfirm: async () => {
+        try {
+          await this.networkService.removeNetworkConnection(user.id);
+          this.connectionStatus.set(ConnectionStatus.NOT_CONNECTED);
+          this.toasterService.showSuccess('Network connection removed');
+        } catch (error) {
+          console.error('Error removing network connection:', error);
+          const message = BaseApiService.getErrorMessage(error, 'Failed to remove network connection');
+          this.toasterService.showError(message);
+          throw error;
+        }
       }
     });
   }
@@ -586,7 +625,8 @@ export class BusinessCardPage implements OnInit {
       });
       this.toasterService.showSuccess('Contact saved!');
     } catch (error) {
-      this.toasterService.showError('Failed to save contact');
+      const message = BaseApiService.getErrorMessage(error, 'Failed to save contact');
+      this.toasterService.showError(message);
     }
   }
 
