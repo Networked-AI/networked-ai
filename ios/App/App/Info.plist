@@ -129,5 +129,163 @@
        <string>pt-BR</string>
 	</array>
 
+	<!-- app icons -->
+	<key>CFBundleIcons</key>
+	<dict>
+		<key>CFBundlePrimaryIcon</key>
+		<dict>
+			<key>CFBundleIconFiles</key>
+			<array>
+				<string>AppIcon</string>
+			</array>
+		</dict>
+
+		<key>CFBundleAlternateIcons</key>
+		<dict>
+			<!-- app icon 1 (default) -->
+			<key>icon_1</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_1</string>
+				</array>
+			</dict>
+
+			<!-- app icon 2 -->
+			<key>icon_2</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_2</string>
+				</array>
+			</dict>
+
+			<!-- app icon 3 -->
+			<key>icon_3</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_3</string>
+				</array>
+			</dict>
+
+			<!-- app icon 4 -->
+			<key>icon_4</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_4</string>
+				</array>
+			</dict>
+
+			<!-- app icon 5 -->
+			<key>icon_5</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_5</string>
+				</array>
+			</dict>
+
+			<!-- app icon 6 -->
+			<key>icon_6</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_6</string>
+				</array>
+			</dict>
+
+			<!-- app icon 7 -->
+			<key>icon_7</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_7</string>
+				</array>
+			</dict>
+
+			<!-- app icon 8 -->
+			<key>icon_8</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_8</string>
+				</array>
+			</dict>
+
+			<!-- app icon 9 -->
+			<key>icon_9</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_9</string>
+				</array>
+			</dict>
+
+			<!-- app icon 10 -->
+			<key>icon_10</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_10</string>
+				</array>
+			</dict>
+
+			<!-- app icon 11 -->
+			<key>icon_11</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_11</string>
+				</array>
+			</dict>
+
+			<!-- app icon 12 -->
+			<key>icon_12</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_12</string>
+				</array>
+			</dict>
+
+			<!-- app icon 13 -->
+			<key>icon_13</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_13</string>
+				</array>
+			</dict>
+
+			<!-- app icon 14 -->
+			<key>icon_14</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_14</string>
+				</array>
+			</dict>
+
+			<!-- app icon 15 -->
+			<key>icon_15</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_15</string>
+				</array>
+			</dict>
+	
+			<!-- app icon 16 -->
+			<key>icon_16</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>icon_16</string>
+				</array>
+			</dict>
+		</dict>
+	</dict>
 </dict>
 </plist>
