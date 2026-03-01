@@ -83,4 +83,29 @@ public class IconSwitcherPlugin extends Plugin {
             call.reject("Error getting icons");
         }
     }
+
+    @PluginMethod
+    public void getCurrentIcon(PluginCall call) {
+
+        String pkg = getContext().getPackageName();
+        PackageManager pm = getContext().getPackageManager();
+
+        for (String alias : aliases) {
+            ComponentName component = new ComponentName(pkg, pkg + "." + alias);
+
+            int state = pm.getComponentEnabledSetting(component);
+
+            if (state == PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+                JSObject result = new JSObject();
+                result.put("iconName", alias);
+                call.resolve(result);
+                return;
+            }
+        }
+
+        // if none found, return null (default)
+        JSObject result = new JSObject();
+        result.put("iconName", null);
+        call.resolve(result);
+    }
 }

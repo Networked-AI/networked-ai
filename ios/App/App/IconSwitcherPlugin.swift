@@ -10,6 +10,7 @@ public class IconSwitcherPlugin: CAPPlugin, CAPBridgedPlugin {
     public let jsName = "IconSwitcher"
     public let pluginMethods: [CAPPluginMethod] = [
         CAPPluginMethod(name: "setIcon", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getCurrentIcon", returnType: CAPPluginReturnPromise),
         CAPPluginMethod(name: "getAvailableIcons", returnType: CAPPluginReturnPromise)
     ]
 
@@ -66,5 +67,16 @@ public class IconSwitcherPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func getAvailableIcons(_ call: CAPPluginCall) {
         call.resolve([ "icons": aliases ])
+    }
+
+    @objc func getCurrentIcon(_ call: CAPPluginCall) {
+        DispatchQueue.main.async {
+            if let current = UIApplication.shared.alternateIconName {
+                call.resolve(["iconName": current])
+            } else {
+                // nil means primary icon
+                call.resolve(["iconName": NSNull()])
+            }
+        }
     }
 }
