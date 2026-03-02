@@ -145,6 +145,13 @@
                   <div class="heading-h3 neutral-01">{{ currentUser()?.total_events_attended || 0 }}</div>
                   <div class="body-12 neutral-03">Attended</div>
                 </div>
+
+                @if ((currentUser()?.total_attendees || 0) > 0) {
+                  <div class="flex flex-col items-center w-full">
+                    <div class="heading-h3 neutral-01">{{ currentUser()?.total_attendees }}</div>
+                    <div class="body-12 neutral-03">Attendees</div>
+                  </div>
+                }
               </div>
             </div>
             <div class="flex flex-col gap-3">

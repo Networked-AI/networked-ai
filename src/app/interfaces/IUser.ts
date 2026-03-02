@@ -45,6 +45,7 @@ export interface IUser {
   total_events_cohosted?: number;
   total_events_sponsored?: number;
   total_events_attended?: number;
+  total_attendees?: number;
   college_university_name?: string;
   total_gamification_points?: number;
   total_gamification_points_weekly?: number;

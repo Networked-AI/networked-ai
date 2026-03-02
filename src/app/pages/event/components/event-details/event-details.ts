@@ -296,7 +296,8 @@ export class EventDetails implements OnInit {
     const date = await this.modalService.openDateTimeModal('date', currentDate, minDate);
 
     if (date) {
-      form.patchValue({ date });
+      const formattedDate = this.datePipe.transform(date, 'yyyy-MM-dd');
+      form.patchValue({ date: formattedDate });
     }
   }
 

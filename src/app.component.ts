@@ -1,6 +1,7 @@
 import { addIcons } from 'ionicons';
 import * as icons from 'ionicons/icons';
 import { Capacitor } from '@capacitor/core';
+import { isPlatformBrowser } from '@angular/common';
 import { AuthService } from '@/services/auth.service';
 import { UserService } from '@/services/user.service';
 import { HapticService } from '@/services/haptic.service';
@@ -10,8 +11,8 @@ import { IonRouterOutlet } from '@ionic/angular/standalone';
 import { NavigationService } from '@/services/navigation.service';
 import { LiveUpdateService } from '@/services/live-update.service';
 import { PermissionsService } from '@/services/permissions.service';
-import { inject, effect, Component, viewChild } from '@angular/core';
 import { PushNotificationService } from '@/services/push-notification.service';
+import { inject, effect, Component, viewChild, PLATFORM_ID } from '@angular/core';
 import { AppUpdate, AppUpdateAvailability, AppUpdateResultCode } from '@capawesome/capacitor-app-update';
 
 @Component({
@@ -24,6 +25,7 @@ import { AppUpdate, AppUpdateAvailability, AppUpdateResultCode } from '@capaweso
 })
 export class AppComponent {
   // services
+  private platformId = inject(PLATFORM_ID);
   private authService = inject(AuthService);
   private userService = inject(UserService);
   private hapticService = inject(HapticService);
@@ -66,6 +68,9 @@ export class AppComponent {
 
     // setup deep linking (native only)
     this.setupDeepLinking();
+
+    // setup status bar scroll to top (iOS only)
+    this.setupStatusBarScrollToTop();
   }
 
   private async initUpdates(): Promise<void> {
@@ -120,6 +125,18 @@ export class AppComponent {
       } catch {
         this.navigationService.navigateForward(url);
       }
+    });
+  }
+
+  private setupStatusBarScrollToTop(): void {
+    if (!isPlatformBrowser(this.platformId) || Capacitor.getPlatform() !== 'ios') return;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.addEventListener('statusTap', async () => {
+        const contents = Array.from(document.querySelectorAll('ion-content'));
+        const activeContent = contents[contents.length - 1];
+        await activeContent?.scrollToTop(500);
+      });
     });
   }
 }
