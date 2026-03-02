@@ -17,6 +17,13 @@
           <div class="body-16SB neutral-01">{{ user.total_events_attended || 0 }}</div>
           <div class="body-12 neutral-03">Attended</div>
         </div>
+
+        @if ((user.total_attendees || 0) > 0) {
+          <div class="flex-1">
+            <div class="body-16SB neutral-01">{{ user.total_attendees }}</div>
+            <div class="body-12 neutral-03">Attendees</div>
+          </div>
+        }
       </div>
     </div>
 
