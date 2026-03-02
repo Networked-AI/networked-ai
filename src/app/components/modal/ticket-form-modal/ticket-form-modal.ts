@@ -254,7 +254,8 @@ export class TicketFormModal implements OnInit {
 
     const time = await this.modalService.openDateTimeModal('time', currentTime);
     if (time) {
-      const timeOnly = this.datePipe.transform(time, 'HH:mm') ?? '';
+      const timePart = typeof time === 'string' && time.includes('T') ? time.split('T')[1] : time;
+      const timeOnly = typeof timePart === 'string' ? timePart.slice(0, 5) : timePart;
       form.patchValue({ [type]: timeOnly });
     }
   }

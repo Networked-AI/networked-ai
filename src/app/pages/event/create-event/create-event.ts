@@ -899,7 +899,8 @@ export class CreateEvent implements OnInit, OnDestroy {
 
     const mediasWithOrder = await this.uploadAndFormatMedia(mediaItems);
     const startDate = this.eventService.combineDateAndTime(eventDate, eventStartTime);
-    const endDate = untilFinished ? null : this.eventService.combineDateAndTime(eventDate, eventEndTime);
+    // const endDate = untilFinished ? null : this.eventService.combineDateAndTime(eventDate, eventEndTime);
+    const endDate = this.eventService.combineDateAndTime(eventDate, eventEndTime);
 
     // Add subscriber exclusive ticket if is_subscriber_exclusive is true
     let tickets = eventData.tickets || [];
