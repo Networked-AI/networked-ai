@@ -243,11 +243,8 @@ export class TicketFormModal implements OnInit {
 
     const date = await this.modalService.openDateTimeModal('date', currentDate, minDate, maxDate);
     if (date) {
-      if (type === 'sales_start_date') {
-        form.patchValue({ sales_start_date: date });
-      } else {
-        form.patchValue({ sales_end_date: date });
-      }
+      const formattedDate = this.datePipe.transform(date, 'yyyy-MM-dd');
+      form.patchValue({ [type]: formattedDate });
     }
   }
 
@@ -257,11 +254,8 @@ export class TicketFormModal implements OnInit {
 
     const time = await this.modalService.openDateTimeModal('time', currentTime);
     if (time) {
-      if (type === 'sale_start_time') {
-        form.patchValue({ sale_start_time: time });
-      } else {
-        form.patchValue({ sale_end_time: time });
-      }
+      const timeOnly = this.datePipe.transform(time, 'HH:mm') ?? '';
+      form.patchValue({ [type]: timeOnly });
     }
   }
 

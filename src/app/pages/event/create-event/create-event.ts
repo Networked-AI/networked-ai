@@ -427,9 +427,13 @@ export class CreateEvent implements OnInit, OnDestroy {
         });
       }
 
+      const startTime = this.eventService.addMinutesToTime(this.eventService.getCurrentTime(), 30);
+      const endTime = this.eventService.addMinutesToTime(startTime, 30);
+
       form.patchValue({
         date: this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
-        start_time: this.eventService.addMinutesToTime(this.eventService.getCurrentTime(), 30),
+        start_time: startTime,
+        end_time: endTime,
         is_public: true,
         participants: defaultParticipants
       });
@@ -459,7 +463,7 @@ export class CreateEvent implements OnInit, OnDestroy {
       const endTimeControl = form.get('end_time');
 
       if (value) {
-        endTimeControl?.setValue('23:59', { emitEvent: false });
+        endTimeControl?.setValue('23:59');
       }
     });
 
