@@ -37,7 +37,7 @@
 
                 <div class="flex items-center gap-2 body-14M">
                   {{ opt.selected_count }}
-                  <i class="pi pi-arrow-right text-neutral-400" (click)="navigateToUserList(item, opt)"></i>
+                  <i class="pi pi-arrow-right text-neutral-400" [class.cursor-pointer]="opt.selected_count > 0" (click)="navigateToUserList(item, opt)"></i>
                 </div>
               </div>
             }

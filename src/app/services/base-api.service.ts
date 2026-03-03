@@ -1,6 +1,6 @@
 import { Observable, firstValueFrom } from 'rxjs';
 import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 
 export interface ApiError {
   error?: any;
@@ -72,10 +72,13 @@ export class BaseApiService {
     }
   }
 
-  // POST request with JSON body
-  protected async post<T>(url: string, body?: any): Promise<T> {
+  protected async post<T>(
+    url: string,
+    body?: unknown,
+    options?: { params?: HttpParams; headers?: HttpHeaders | Record<string, string | string[]>; context?: HttpContext }
+  ): Promise<T> {
     try {
-      return await firstValueFrom(this.http.post<T>(url, body));
+      return await firstValueFrom(this.http.post<T>(url, body, options));
     } catch (error) {
       return this.handleError(error);
     }
