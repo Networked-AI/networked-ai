@@ -6,6 +6,7 @@ import { ModalService } from '@/services/modal.service';
 import { environment } from 'src/environments/environment';
 import { NavigationService } from '@/services/navigation.service';
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { IS_RSVP_FLOW } from '@/interceptors/request-context';
 
 let isLogoutModalOpen = false;
 let isPasswordNotSetModalOpen = false;
@@ -101,14 +102,14 @@ const handleApiError = async (
 
     try {
       const email = req?.body?.email;
+      const isRsvpModalFlow = req?.context?.get?.(IS_RSVP_FLOW) === true;
 
       // wait 500ms to close the login loading modal
       await new Promise((resolve) => setTimeout(resolve, 500));
-
       const result = await modalService.openConfirmModal({
         iconName: 'pi-lock',
         iconPosition: 'center',
-        iconBgColor: '#F5BC61',
+        iconBgColor: 'linear-gradient(138.06deg, #F5BC61 8.51%, #C89034 48.28%, #9E660A 85.69%)',
         title: 'Forgot password?',
         cancelButtonLabel: 'Close',
         confirmButtonColor: 'primary',
@@ -117,8 +118,15 @@ const handleApiError = async (
       });
 
       if (result?.role === 'confirm') {
-        const route = email ? `/forgot-password?email=${encodeURIComponent(email)}` : '/forgot-password';
-        await navigationService.navigateForward(route, false);
+        if (isRsvpModalFlow) {
+          await modalService.openForgotPasswordModal({
+            prefillEmail: email ?? null
+          });
+        } else {
+          await modalService.dismissAllModals();
+          const route = email ? `/forgot-password?email=${encodeURIComponent(email)}` : '/forgot-password';
+          await navigationService.navigateForward(route, false);
+        }
       }
     } catch (err) {
       console.error('Error handling PASSWORD_NOT_SET:', err);

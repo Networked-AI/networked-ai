@@ -50,6 +50,7 @@ export class PostCard {
   private networkService = inject(NetworkService);
 
   private datePipe = new DatePipe('en-US');
+  iconBgColor = 'linear-gradient(138.06deg, #F5BC61 8.51%, #C89034 48.28%, #9E660A 85.69%)';
 
   onMore = output<void>();
 
@@ -338,8 +339,8 @@ export class PostCard {
       });
 
       await this.modalService.openConfirmModal({
-        icon: 'assets/svg/deleteWhiteIcon.svg',
-        iconBgColor: '#F5BC61',
+        iconName: 'pi pi-check',
+        iconBgColor: this.iconBgColor,
         title: 'Report Submitted',
         description: 'We use these reports to show you less of this kind of content in the future.',
         confirmButtonLabel: 'Done'
@@ -490,7 +491,7 @@ export class PostCard {
       confirmButtonLabel: 'Open',
       cancelButtonLabel: 'Stay',
       confirmButtonColor: 'primary',
-      iconBgColor: '#F5BC61',
+      iconBgColor: this.iconBgColor,
       iconPosition: 'left'
     });
  

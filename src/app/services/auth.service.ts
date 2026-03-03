@@ -6,6 +6,8 @@ import { signal, inject, Injector, Injectable } from '@angular/core';
 import { ISendOtpPayload, IVerifyOtpPayload } from '@/interfaces/IAuth';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { IAuthUser, IAuthResponse, ILoginPayload, IRegisterPayload } from '@/interfaces/IAuth';
+import { HttpContext } from '@angular/common/http';
+import { IS_RSVP_FLOW } from '@/interceptors/request-context';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService extends BaseApiService {
@@ -102,8 +104,9 @@ export class AuthService extends BaseApiService {
     }
   }
 
-  async login(payload: ILoginPayload): Promise<IAuthResponse> {
-    const response = await this.post<IAuthResponse>('/auth/login', payload);
+  async login(payload: ILoginPayload, options?: { isRsvpModal?: boolean }): Promise<IAuthResponse> {
+    const context = options?.isRsvpModal ? new HttpContext().set(IS_RSVP_FLOW, true) : undefined;
+    const response = await this.post<IAuthResponse>('/auth/login', payload, context ? { context } : undefined);
 
     // call get user and update active account with full user response
     if (response?.data?.token && response?.data?.user) {
