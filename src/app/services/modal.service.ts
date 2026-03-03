@@ -680,7 +680,7 @@ export class ModalService {
     return data;
   }
 
-  async openShareModal(id: any, type: 'Event' | 'Post' | 'Plan',image_url ?: string): Promise<any | null> {
+  async openShareModal(id: any, type: 'Event' | 'Post' | 'Plan', image_url?: string): Promise<any | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -688,7 +688,7 @@ export class ModalService {
       initialBreakpoint: 1,
       component: ShareModal,
       cssClass: 'modal-60-percent-height',
-      componentProps: { id, type ,image_url}
+      componentProps: { id, type, image_url }
     });
     await modal.present();
     const { data } = await modal.onWillDismiss();
@@ -882,7 +882,8 @@ export class ModalService {
     hostPaysFees?: boolean,
     additionalFees?: string | number | null,
     hostName?: string,
-    isGuestMode?: boolean
+    isGuestMode?: boolean,
+    participants?: Array<{ user_id?: string; user?: { id?: string }; role?: string }>
   ): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
@@ -891,8 +892,20 @@ export class ModalService {
       initialBreakpoint: 1,
       cssClass: 'modal-60-percent-height',
       component: RsvpDetailsModal,
-      componentProps: { eventTitle, date, location, eventId, rsvpData, hostPaysFees, additionalFees, hostName, isGuestMode: isGuestMode ?? false }
+      componentProps: {
+        eventTitle,
+        date,
+        location,
+        eventId,
+        rsvpData,
+        hostPaysFees,
+        additionalFees,
+        hostName,
+        isGuestMode: isGuestMode ?? false,
+        participants
+      }
     });
+
     await modal.present();
     const { data } = await modal.onDidDismiss();
     return data || null;
@@ -956,7 +969,7 @@ export class ModalService {
     return data || null;
   }
 
-  async openLoginModal(returnUrl?: string): Promise<{ success: boolean; isNewUser?: boolean } | null> {
+  async openLoginModal(returnUrl?: string, prefillEmail?: string): Promise<{ success: boolean; isNewUser?: boolean } | null> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
@@ -967,6 +980,7 @@ export class ModalService {
 
       componentProps: {
         isRsvpModal: true,
+        prefillEmail: prefillEmail ?? null,
         onLoginSuccess: (isNewUser?: boolean) => {
           if (returnUrl) {
             this.navCtrl.navigateForward(returnUrl);
@@ -1016,21 +1030,23 @@ export class ModalService {
     return data ?? null;
   }
 
-  async openForgotPasswordModal(): Promise<any> {
+  async openForgotPasswordModal(options?: { prefillEmail?: string | null }): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       handle: true,
       breakpoints: [0, 1],
       initialBreakpoint: 1,
+      cssClass: 'modal-80-percent-height',
       component: ForgotPassword,
       componentProps: {
         isRsvpModal: true,
+        prefillEmail: options?.prefillEmail ?? null,
         onForgotPasswordSuccess: () => {
           modal.dismiss();
-          this.close();
         }
       }
     });
+
     await modal.present();
     const { data } = await modal.onWillDismiss();
     return data || null;

@@ -548,7 +548,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
 
       await this.modalService.openConfirmModal({
         iconName: 'pi-check',
-        iconBgColor: '#F5BC61',
+        iconBgColor: 'linear-gradient(138.06deg, #F5BC61 8.51%, #C89034 48.28%, #9E660A 85.69%)',
         title: 'Subscription Confirmed!',
         description: "You'll receive notifications when the host adds new events to the subscription.",
         confirmButtonLabel: 'Done',
@@ -611,12 +611,11 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
   private async showSubscriptionCancelledModal(endDate: string): Promise<void> {
     await this.modalService.openConfirmModal({
       iconName: 'pi-check',
-      iconBgColor: '#F5BC61',
+      iconBgColor: 'linear-gradient(138.06deg, #F5BC61 8.51%, #C89034 48.28%, #9E660A 85.69%)',
       title: 'Subscription Cancelled',
       description: `You've cancelled your subscription. You'll still have full access to this plan until the next billing period on ${endDate}.`,
       confirmButtonLabel: 'Done',
       confirmButtonColor: 'primary',
-      customColor: '#F5BC61',
       iconPosition: 'center',
       onConfirm: async () => {
         this.navigationService.back();

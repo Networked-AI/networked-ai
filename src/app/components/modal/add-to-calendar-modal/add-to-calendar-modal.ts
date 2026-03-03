@@ -26,7 +26,7 @@ export class AddToCalendarModal implements OnInit {
   @Input() eventData: any;
 
   calendarLink: any;
-  
+
   // platform
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
@@ -44,6 +44,27 @@ export class AddToCalendarModal implements OnInit {
     return this.datePipe.transform(date, "yyyyMMdd'T'HHmmss") ?? '';
   }
 
+  private getEventDescription(): string {
+    const htmlToText = (html: string = ''): string => {
+      const text = html
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/(p|div|li|ul|ol|h[1-6])>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/\n{2,}/g, '\n')
+        .trim();
+
+      const textarea = this.document.createElement('textarea');
+      textarea.innerHTML = text;
+      return textarea.value;
+    };
+
+    const cleanDescription = htmlToText(this.eventData?.description || this.eventData?.desc || '');
+
+    const eventLink = `${environment.frontendUrl}/event/${this.eventData?.slug}`;
+
+    return `${cleanDescription}\n\n${eventLink}`;
+  }
+
   // 🔹 Build calendar links
   private getCalendarLink() {
     if (!this.eventData?.start_date || !this.eventData?.end_date) return null;
@@ -52,9 +73,7 @@ export class AddToCalendarModal implements OnInit {
     const end = this.formatGoogleDate(this.eventData.end_date);
 
     const title = encodeURIComponent(this.eventData.title || '');
-    const description = encodeURIComponent(
-      `${this.eventData.description || this.eventData.desc || ''}\n\n${environment.frontendUrl}/event/${this.eventData.slug}`
-    );
+    const description = encodeURIComponent(this.getEventDescription());
     const location = encodeURIComponent(this.eventData.location || '');
 
     return (
@@ -71,22 +90,9 @@ export class AddToCalendarModal implements OnInit {
     if (Capacitor.getPlatform() !== 'ios') return;
 
     try {
-      const htmlToText = (html: string = ''): string => {
-        const text = html
-          .replace(/<br\s*\/?>/gi, '\n')
-          .replace(/<\/(p|div|li|ul|ol|h[1-6])>/gi, '\n')
-          .replace(/<[^>]+>/g, '')
-          .replace(/\n{2,}/g, '\n')
-          .trim();
-
-        const textarea = this.document.createElement('textarea');
-        textarea.innerHTML = text;
-        return textarea.value;
-      };
-
       const title = this.eventData?.title || 'Untitled Event';
       const location = this.eventData?.location || this.eventData?.address || '';
-      const notes = htmlToText(this.eventData?.description || this.eventData?.desc || '');
+      const notes = this.getEventDescription();
 
       const startDate = new Date(this.eventData?.start_date);
       const endDate = new Date(this.eventData?.end_date);

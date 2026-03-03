@@ -90,7 +90,7 @@
                   placeholder
                   class="rounded-[8px] overflow-hidden object-cover"
                   (error)="onImageError($event)"
-                  [ngSrc]="getImageUrl(event.thumbnail_url)"
+                  [ngSrc]="getImageUrl(event.image_url || event.thumbnail_url)"
                   [alt]="event.title"
                 />
               </div>

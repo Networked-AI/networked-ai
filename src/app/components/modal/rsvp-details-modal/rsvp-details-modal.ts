@@ -71,7 +71,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   @Input() additionalFees: string | number | null = null;
   @Input() hostName: string = '';
   @Input() isGuestMode: boolean = false;
-
+  @Input() participants: Array<{ user_id?: string; user?: { id?: string }; role?: string }> = [];
   modalCtrl = inject(ModalController);
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
@@ -88,7 +88,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   currentUser = signal<IUser | null>(null);
   guestAttendances = signal<Map<number, 'going' | 'maybe'>>(new Map());
   guestIncognitos = signal<Map<number, boolean>>(new Map());
-
+  isActuallyNewUser = signal<boolean>(false);
   // Stripe
   isLoadingPayment = signal<boolean>(false);
   paymentErrorMessage = signal<string>('');
@@ -169,7 +169,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
     if (this.isUpdatingUserDetails()) return 'Updating details...';
     if (this.isLoadingPayment()) return 'Processing Payment...';
     if (this.isGuestMode && this.guestStep() === 'details') {
-      return this.isGuestFreeFlow() ? 'Confirm RSVP' : 'Create Account';
+      return 'Create Account';
     }
     if (this.totalPrice() > 0) return `Pay $${this.formattedTotal()} and Confirm`;
     return 'Confirm RSVP';
@@ -247,10 +247,10 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
 
   onPromoStateChange(change: PromoCodeSectionStateChange): void {
     const { reason, state } = change;
-  
+
     // Store previous applied promo id BEFORE mutating state
     const previousPromoId = this.rsvp.promoState().appliedPromoCode?.id ?? null;
-  
+
     if (!state.promoCode && !state.promoValidation.isValid) {
       this.rsvp.clearPromo();
     } else {
@@ -265,14 +265,14 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
         message: state.promoValidation.message
       });
     }
-  
+
     // Compare AFTER mutation
     const currentPromoId = this.rsvp.promoState().appliedPromoCode?.id ?? null;
-  
+
     const promoWasRemoved = previousPromoId && !currentPromoId;
     const promoWasApplied = !previousPromoId && currentPromoId;
     const promoWasChanged = previousPromoId && currentPromoId && previousPromoId !== currentPromoId;
-  
+
     if (promoWasRemoved || promoWasApplied || promoWasChanged) {
       void this.syncPaymentIntent();
     }
@@ -338,6 +338,42 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
     this.emailInputRef()?.shouldValidate.set(true);
     if (!(await validateFields(this.form, ['firstName', 'lastName', 'email']))) {
       this.emailInputRef()?.shouldValidate.set(false);
+
+      // ── Email already registered → open login modal pre-filled ──
+      const emailControl = this.form.get('email');
+      if (emailControl?.errors?.['taken']) {
+        const email = emailControl.value?.trim() ?? '';
+
+        const confirmResult = await this.modalService.openConfirmModal({
+          iconName: 'pi-user',
+          iconPosition: 'center',
+          iconBgColor:'linear-gradient(138.06deg, #F5BC61 8.51%, #C89034 48.28%, #9E660A 85.69%)',
+          title: 'Account already exists',
+          description: 'An account with this email already exists. Do you want to login instead?',
+          cancelButtonLabel: 'Cancel',
+          confirmButtonLabel: 'Login',
+          confirmButtonColor: 'primary'
+        });
+
+        if (confirmResult?.role === 'confirm') {
+          const loginResult = await this.modalService.openLoginModal(undefined, email);
+
+          if (loginResult?.success) {
+            const user = await this.userService.getCurrentUser();
+            this.currentUser.set(user);
+            this.populateFormsWithUserData();
+            this.guestStep.set('verified');
+            this.isActuallyNewUser.set(false);
+
+            if (this.totalPrice() > 0) {
+              await this.fetchPaymentIntent();
+            }
+          }
+        }
+
+        return false;
+      }
+
       this.toasterService.showError('Please fill all details and use a valid email that is not already registered.');
       return false;
     }
@@ -354,6 +390,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
       }
       await this.modalService.openLoadingModal('Creating your account...');
       await this.authService.register({ email });
+      this.isActuallyNewUser.set(true);
       const fn = this.form.get('firstName')?.value?.trim() || '';
       const ln = this.form.get('lastName')?.value?.trim() || '';
       await this.userService.updateCurrentUser(this.userService.generateUserPayload({ first_name: fn, last_name: ln }));
@@ -455,6 +492,10 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   }
 
   async dismiss(): Promise<void> {
+    if (this.isCurrentUserHostOrCoHost()) {
+      this.toasterService.showError('You are the host or co-host. You cannot RSVP as a guest.');
+      return;
+    }
     if (this.isGuestMode && this.guestStep() === 'details') {
       const ok = await this.continueAsGuest();
       if (!ok) return;
@@ -524,6 +565,17 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
     }
   }
 
+  private isCurrentUserHostOrCoHost(): boolean {
+    const user = this.authService.currentUser();
+    if (!user?.id || !this.participants?.length) return false;
+
+    return this.participants.some((p) => {
+      const uid = p.user_id ?? p.user?.id;
+      const role = (p.role ?? '').toLowerCase();
+      return uid === user.id && (role === 'host' || role === 'cohost');
+    });
+  }
+
   async finalizeRsvpAndClose(): Promise<void> {
     const guestDetails = Array.from({ length: this.guestForms.length }, (_, i) => {
       const g = this.guestForms.at(i) as FormGroup;
@@ -550,7 +602,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
       promoValidation: this.promoValidation(),
       promoInput: promo.promoInput,
       stripePaymentIntentId: this.stripePaymentIntentId(),
-      isNewUser: this.isGuestMode
+      isNewUser: this.isActuallyNewUser()
     });
   }
 

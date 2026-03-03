@@ -325,7 +325,7 @@ export class PostComments implements OnInit, OnDestroy {
 
       await this.modalService.openConfirmModal({
         icon: 'assets/svg/deleteWhiteIcon.svg',
-        iconBgColor: '#F5BC61',
+        iconBgColor: 'linear-gradient(138.06deg, #F5BC61 8.51%, #C89034 48.28%, #9E660A 85.69%)',
         title: 'Report Submitted',
         description: 'We use these reports to show you less of this kind of content in the future.',
         confirmButtonLabel: 'Done'

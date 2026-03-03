@@ -62,6 +62,7 @@
           <text-input
             type="date"
             label="Date"
+            [readonly]="true"
             [showLabel]="false"
             iconName="pi-calendar"
             placeholder="Select date"
@@ -72,6 +73,7 @@
           <text-input
             type="time"
             label="Time"
+            [readonly]="true"
             [showLabel]="false"
             iconName="pi-clock"
             placeholder="Select time"
@@ -98,6 +100,7 @@
               label="Date"
               iconName="pi-calendar"
               [showLabel]="false"
+              [readonly]="true"
               (click)="openDateModal('sales_end_date')"
               placeholder="Select date"
               controlName="sales_end_date"
@@ -107,6 +110,7 @@
               type="time"
               label="Time"
               iconName="pi-clock"
+              [readonly]="true"
               [showLabel]="false"
               placeholder="Select time"
               controlName="sale_end_time"

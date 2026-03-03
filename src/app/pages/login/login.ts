@@ -33,6 +33,7 @@ type LoginMethod = 'email' | 'mobile';
 export class Login implements OnDestroy, AfterViewInit {
   @Input() onLoginSuccess: (isNewUser?: boolean) => void = () => {};
   @Input() isRsvpModal: boolean = false;
+  @Input() prefillEmail: string | null = null;
   // services
   router = inject(Router);
   fb = inject(FormBuilder);
@@ -60,7 +61,12 @@ export class Login implements OnDestroy, AfterViewInit {
   // subscriptions
   private queryParamsSubscription!: Subscription;
 
-  ngAfterViewInit(){
+  ngAfterViewInit() {
+    if (this.prefillEmail) {
+      this.activeTab.set('email');
+      this.loginForm().patchValue({ email: this.prefillEmail });
+    }
+
     if (this.isRsvpModal) return;
 
     this.queryParamsSubscription = this.route.queryParamMap.subscribe((params) => {
@@ -124,7 +130,7 @@ export class Login implements OnDestroy, AfterViewInit {
 
       // login with email and password
       const { email, password } = this.loginForm().value;
-      await this.authService.login({ email: email!, password: password! });
+      await this.authService.login({ email: email!, password: password! }, { isRsvpModal: this.isRsvpModal });
       if (this.isRsvpModal) {
         this.onLoginSuccess(false);
       } else {
@@ -252,12 +258,18 @@ export class Login implements OnDestroy, AfterViewInit {
   }
 
   async goToForgotPassword() {
+    const email = this.loginForm().get('email')?.value ?? null;
+
     if (this.isRsvpModal) {
-      await this.modalService.dismissAllModals();
+      await this.modalService.openForgotPasswordModal({
+        prefillEmail: email
+      });
+      return;
     }
 
-    const email = this.loginForm().get('email')?.value;
+    // Normal flow (non-RSVP login page)
     const route = email ? `/forgot-password?email=${encodeURIComponent(email)}` : '/forgot-password';
+
     await this.navigationService.navigateForward(route, false);
   }
 

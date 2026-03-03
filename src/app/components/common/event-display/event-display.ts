@@ -108,7 +108,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
       confirmButtonLabel: 'Open',
       cancelButtonLabel: 'Stay',
       confirmButtonColor: 'primary',
-      iconBgColor: '#F5BC61',
+      iconBgColor: 'linear-gradient(138.06deg, #F5BC61 8.51%, #C89034 48.28%, #9E660A 85.69%)',
       iconPosition: 'left'
     });
 

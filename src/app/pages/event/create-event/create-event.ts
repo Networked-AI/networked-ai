@@ -126,6 +126,7 @@ export class CreateEvent implements OnInit, OnDestroy {
 
   step1Fields = ['title', 'date', 'address', 'category_id', 'description', 'vibes', 'start_time', 'end_time', 'until_finished'];
   step2Fields = ['tickets', 'promo_codes', 'is_subscription', 'subscription_plan', 'host_pays_platform_fee', 'additional_fees'];
+  iconBgColor = 'linear-gradient(138.06deg, #F5BC61 8.51%, #C89034 48.28%, #9E660A 85.69%)';
 
   stepHeading = computed(() => {
     const stepHeadings: Record<number, string> = {
@@ -363,7 +364,7 @@ export class CreateEvent implements OnInit, OnDestroy {
   async loadEventForDuplicate(eventId: string): Promise<void> {
     const loading = await this.loadingCtrl.create({ mode: 'md' });
     await loading.present();
-
+    const currentUser = this.authService.currentUser();
     try {
       this.isLoading.set(true);
       const eventData = await this.eventService.getEventById(eventId);
@@ -388,7 +389,15 @@ export class CreateEvent implements OnInit, OnDestroy {
         custom_repeat_count: null,
         tickets: (formData.tickets || []).map(({ id, ...ticket }: any) => ticket),
         promo_codes: (formData.promo_codes || []).map(({ id, ...promo }: any) => promo),
-        participants: (formData.participants || []).map(({ id, ...p }: any) => p),
+        participants: [
+          {
+            user_id: currentUser?.id,
+            role: 'Host',
+            thumbnail_url: currentUser?.thumbnail_url,
+            name: currentUser?.name
+          },
+          ...(formData.participants || []).filter((p: any) => (p.role || '').toLowerCase() !== 'host').map(({ id, ...p }: any) => p)
+        ],
         medias: (formData.medias || []).map(({ id, ...media }: any) => media),
         questionnaire: (formData.questionnaire || []).map(({ id, options, ...q }: any) => ({
           ...q,
@@ -427,9 +436,13 @@ export class CreateEvent implements OnInit, OnDestroy {
         });
       }
 
+      const startTime = this.eventService.addMinutesToTime(this.eventService.getCurrentTime(), 30);
+      const endTime = this.eventService.addMinutesToTime(startTime, 30);
+
       form.patchValue({
         date: this.datePipe.transform(new Date(), 'yyyy-MM-dd'),
-        start_time: this.eventService.addMinutesToTime(this.eventService.getCurrentTime(), 30),
+        start_time: startTime,
+        end_time: endTime,
         is_public: true,
         participants: defaultParticipants
       });
@@ -459,7 +472,7 @@ export class CreateEvent implements OnInit, OnDestroy {
       const endTimeControl = form.get('end_time');
 
       if (value) {
-        endTimeControl?.setValue('23:59', { emitEvent: false });
+        endTimeControl?.setValue('23:59');
       }
     });
 
@@ -854,7 +867,7 @@ export class CreateEvent implements OnInit, OnDestroy {
       confirmButtonLabel: 'Done',
       confirmButtonColor: 'primary',
       shareButtonLabel: 'Share',
-      iconBgColor: '#F5BC61',
+      iconBgColor: this.iconBgColor,
       onShare: async () => {
         await this.modalService.openShareModal(response?.data.id, 'Event');
       }
@@ -895,7 +908,8 @@ export class CreateEvent implements OnInit, OnDestroy {
 
     const mediasWithOrder = await this.uploadAndFormatMedia(mediaItems);
     const startDate = this.eventService.combineDateAndTime(eventDate, eventStartTime);
-    const endDate = untilFinished ? null : this.eventService.combineDateAndTime(eventDate, eventEndTime);
+    // const endDate = untilFinished ? null : this.eventService.combineDateAndTime(eventDate, eventEndTime);
+    const endDate = this.eventService.combineDateAndTime(eventDate, eventEndTime);
 
     // Add subscriber exclusive ticket if is_subscriber_exclusive is true
     let tickets = eventData.tickets || [];
@@ -962,7 +976,7 @@ export class CreateEvent implements OnInit, OnDestroy {
         confirmButtonLabel: 'Done',
         confirmButtonColor: 'primary',
         shareButtonLabel: 'Share',
-        iconBgColor: '#F5BC61',
+        iconBgColor: this.iconBgColor,
         onShare: async () => {
           await this.modalService.openShareModal(createResponse?.data?.events[0].id, 'Event');
         }
@@ -1002,7 +1016,7 @@ export class CreateEvent implements OnInit, OnDestroy {
   async showRepublishEventConfirmationModal(): Promise<{ dismissed: boolean; notify: boolean }> {
     const result = await this.modalService.openConfirmModal({
       iconPosition: 'left',
-      iconBgColor: '#F5BC61',
+      iconBgColor: this.iconBgColor,
       title: 'Republish Event?',
       icon: 'assets/svg/launch.svg',
       confirmButtonColor: 'primary',
