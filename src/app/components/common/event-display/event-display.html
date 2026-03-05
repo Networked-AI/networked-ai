@@ -185,7 +185,7 @@
     <!-- description text -->
     @if (eventData().description) {
       <div class="flex flex-col gap-3 px-4">
-        <div class="body-14M neutral-02" [innerHTML]="description()"></div>
+        <div class="body-14M neutral-02 wrap-break-word overflow-wrap-anywhere" [innerHTML]="description()"></div>
       </div>
     }
 
