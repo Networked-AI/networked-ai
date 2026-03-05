@@ -61,10 +61,18 @@
           }
 
           <!-- Event related notifications -->
-          @else if (notification?.type === 'MyEvents' || notification?.type === 'Events') {
+          @else if (notification?.type === 'MyEvents' || notification?.type === 'Events' || notification?.type === 'EventReminder') {
             <div class="relative shrink-0">
               <div class="notification-icon">
-                <ion-icon src="assets/svg/notification/rocket.svg" class="w-6 h-6" />
+                <div class="relative w-12 h-12 rounded-full overflow-hidden">
+                  <img 
+                    fill
+                    placeholder
+                    (error)="onImageError($event)"
+                    class="rounded-full object-cover"
+                    [ngSrc]="getImageUrl(notification?.event?.thumbnail_url || '')"
+                  />
+                </div>
 
                 @if (!notification.is_read) {
                   <div class="w-4 h-4 bg-[#34C759] rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white"></div>
@@ -84,7 +92,15 @@
           @else if (notification?.type === 'PostEventQuestionnaire') {
             <div class="relative shrink-0">
               <div class="notification-icon">
-                <ion-icon src="assets/svg/notification/rocket.svg" class="w-6 h-6" />
+                <div class="relative w-12 h-12 rounded-full overflow-hidden">
+                  <img 
+                    fill
+                    placeholder
+                    (error)="onImageError($event)"
+                    class="rounded-full object-cover"
+                    [ngSrc]="getImageUrl(notification?.event?.thumbnail_url || '')"
+                  />
+                </div>
                 @if (!notification.is_read) {
                   <div class="w-4 h-4 bg-[#34C759] rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white"></div>
                 }
@@ -159,8 +175,15 @@
           <!-- Other notifications -->
           @else {
             <div class="relative shrink-0">
-              <img src="assets/images/profile.jpeg" class="w-12 h-12 rounded-full object-cover" />
-
+                <div class="relative w-12 h-12 rounded-full overflow-hidden">
+                  <img
+                    fill
+                    placeholder
+                    (error)="onImageError($event)"
+                    class="rounded-full object-cover"
+                    [ngSrc]="getImageUrl(notification?.related_user?.thumbnail_url || '')"
+                  />
+                </div>
               @if (!notification.is_read) {
                 <div class="w-4 h-4 bg-[#34C759] rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white"></div>
               }
