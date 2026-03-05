@@ -68,7 +68,9 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
 
   description = computed(() => {
     const description = this.eventData().description;
-    return description ? this.sanitizer.bypassSecurityTrustHtml(description) : '';
+    if (!description) return '';
+    const normalized = description.replace(/&nbsp;/g, ' ');
+    return this.sanitizer.bypassSecurityTrustHtml(normalized);
   });
 
   dateItemsForDisplay = computed(() => {

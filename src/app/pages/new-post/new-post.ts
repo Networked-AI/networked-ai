@@ -32,7 +32,7 @@ import { IUser } from '@/interfaces/IUser';
 import { SwiperContainer } from 'swiper/element';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
 import { VideoJsPlayerComponent } from '@/components/common/video-js-player';
-import { TextareaModule } from 'primeng/textarea';
+import { TextareaModule } from 'primeng/textarea'; 
 
 @Component({
   selector: 'new-post',
@@ -53,7 +53,7 @@ import { TextareaModule } from 'primeng/textarea';
     ReactiveFormsModule,
     NgOptimizedImage,
     Mentions,
-    TextareaModule,
+    TextareaModule, 
     OverlayModule,
     VideoJsPlayerComponent
   ]

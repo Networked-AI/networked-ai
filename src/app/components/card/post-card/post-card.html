@@ -33,7 +33,7 @@
         </div>
         @if (post().content) {
           <div
-            class="body-12 mt-1 break-words whitespace-pre-wrap"
+            class="body-12 mt-1 wrap-break-word whitespace-pre-wrap"
             [innerHTML]="renderText(post().content || '')"
             (click)="onMentionClick($event); hapticService.onClick()"
           ></div>

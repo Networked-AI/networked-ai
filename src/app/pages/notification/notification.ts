@@ -12,7 +12,7 @@ import { NotificationsService } from '@/services/notifications.service';
 import { AuthService } from '@/services/auth.service';
 import { NavigationService } from '@/services/navigation.service';
 import { ModalService } from '@/services/modal.service';
-import { IonContent, IonHeader, IonIcon, IonToolbar, NavController } from '@ionic/angular/standalone';
+import { IonContent, IonHeader, IonToolbar, NavController } from '@ionic/angular/standalone';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { IonRefresher, IonInfiniteScroll, IonRefresherContent, RefresherCustomEvent, IonInfiniteScrollContent } from '@ionic/angular/standalone';
 import { BaseApiService } from '@/services/base-api.service';
@@ -24,7 +24,6 @@ import { HapticService } from '@/services/haptic.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     Button,
-    IonIcon,
     IonHeader,
     IonContent,
     IonToolbar,
