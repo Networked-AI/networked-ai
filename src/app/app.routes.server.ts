@@ -73,7 +73,7 @@ export const serverRoutes: ServerRoute[] = [
   },
   {
     path: 'group-invitation/:id',
-    renderMode: RenderMode.Client
+    renderMode: RenderMode.Server
   },
   {
     path: 'event/questionnaire-response/:id',

@@ -1,6 +1,7 @@
 import { IEvent } from '@/interfaces/event';
 import { DOCUMENT } from '@angular/common';
 import { FeedPost } from '@/interfaces/IFeed';
+import { ChatRoom } from '@/interfaces/IChat';
 import { EventService } from './event.service';
 import { getImageUrlOrDefault } from '@/utils/helper';
 import { Meta, Title } from '@angular/platform-browser';
@@ -79,6 +80,32 @@ export class OgService {
       image: this.getImageUrl(user.thumbnail_url),
       url: `${environment.frontendUrl}/${user.username}`,
       type: 'profile'
+    });
+  }
+
+  // OG tags for group invitation share link
+  setOgTagInGroupInvitation(room: ChatRoom) {
+    const name = room.name || 'Group';
+    const users = room.users ?? [];
+    const count = users.length;
+    const memberPart =
+      count === 0
+        ? 'Join this group on Networked AI.'
+        : count === 1
+          ? `${users[0]?.name || 'Someone'} is a member. Join now!`
+          : count === 2
+            ? `${users[0]?.name || ''}, ${users[1]?.name || ''} and others are members. Join now!`
+            : `${users[0]?.name || ''}, ${users[1]?.name || ''} and ${count - 2} others are members. Join now!`;
+    const description = memberPart.slice(0, 200);
+
+    const groupImage = room.event_id ? room.event?.thumbnail_url : room.profile_image;
+
+    this.setOgTags({
+      title: `Group Invitation: ${name}`,
+      description,
+      image: this.getImageUrl(groupImage || ''),
+      url: `${environment.frontendUrl}/group-invitation/${room.id}`,
+      type: 'website'
     });
   }
 

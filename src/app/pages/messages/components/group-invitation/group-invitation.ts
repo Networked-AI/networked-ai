@@ -36,7 +36,7 @@ export class GroupInvitation {
     return {
       id: room.id,
       name: room.name,
-      image: room.profile_image || room.event_image || '/assets/group-placeholder.png',
+      image: room.event_id ? room.event?.thumbnail_url : room.profile_image || '/assets/group-placeholder.png',
 
       membersCount: users.length,
 
@@ -53,12 +53,19 @@ export class GroupInvitation {
 
   isJoining = signal(false);
 
+  private async ensureLoggedIn(): Promise<boolean> {
+    if (this.authService.getCurrentToken()) return true;
+    const result = await this.modalService.openLoginModal();
+    return result?.success ?? false;
+  }
+
   close() {
     this.modalService.close();
     this.navigationService.navigateForward('/messages', true);
   }
 
   async joinRoom(): Promise<void> {
+    if (!(await this.ensureLoggedIn())) return;
     try {
       const userId = this.authService.currentUser()?.id;
       const roomId = this.group()?.id;

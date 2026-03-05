@@ -16,6 +16,7 @@ import { NavigationService } from '@/services/navigation.service';
 import { SocketService } from '@/services/socket.service';
 import { ToasterService } from '@/services/toaster.service';
 import { MediaService } from '@/services/media.service';
+import { OgService } from '@/services/og.service';
 import { environment } from 'src/environments/environment';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { FormsModule } from '@angular/forms';
@@ -63,6 +64,7 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
   private route = inject(ActivatedRoute);
   tempGroupName = signal(this.groupName());
   private modalService = inject(ModalService);
+  private ogService = inject(OgService);
   groupImage = signal<string | null>('assets/images/profile.jpeg');
   isSavingGroupImage = signal(false);
   roomId = signal<string | null>(null);
@@ -114,8 +116,6 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
     const groupId = this.route.snapshot.paramMap.get('id');
     const currentRoomId = this.roomId();
 
-    if (!this.isLoggedIn()) return;
-
     const roomIdToUse = groupId || currentRoomId;
     if (roomIdToUse) {
       if (groupId) {
@@ -132,9 +132,9 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
       await this.modalService.openGroupInvitationModal(this.chatRoom());
     }
   }
-  async ngOnInit() {
+  async ngOnInit(): Promise<void> {
     const navigation = this.router.currentNavigation();
-    const state: any = navigation?.extras?.state || history.state || {};
+    const state: any = navigation?.extras?.state || {};
     const stateRoom = state?.chatRoom as ChatRoom | undefined;
     if (state?.from === 'new-group') {
       this.fromGroupCreation.set(true);
@@ -142,6 +142,21 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
 
     if (stateRoom) {
       this.applyRoom(stateRoom);
+      return;
+    }
+
+    const routePath = this.router.url;
+    const groupId = this.route.snapshot.paramMap.get('id');
+    if (groupId) this.roomId.set(groupId);
+
+    if (!this.chatRoom()) {
+      const room = await this.messagesService.getChatRoomById(this.roomId()!);
+      this.applyRoom(room);
+    }
+
+    if (groupId && routePath.includes('group-invitation')) {
+      const room = this.chatRoom();
+      if (room) this.ogService.setOgTagInGroupInvitation(room);
     }
   }
 
@@ -175,15 +190,6 @@ export class ChatInfo implements ViewWillEnter, OnDestroy {
   }
 
   async ionViewWillEnter() {
-    if (!this.isLoggedIn()) {
-      const result = await this.modalService.openLoginModal();
-
-      if (result?.success) {
-        this.setupRoomUpdateListener();
-        await this.initializePage(true);
-      }
-      return;
-    }
     this.setupRoomUpdateListener();
     await this.initializePage(true);
   }
