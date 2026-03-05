@@ -101,6 +101,25 @@
             </div>
           }
 
+          <!-- ChatMessage or ChatRoomCreated notifications -->
+          @else if (notification?.type === 'ChatMessage' || notification?.type === 'ChatRoomCreated') {
+            <div class="relative shrink-0">
+              <div class="relative w-12 h-12 rounded-full overflow-hidden">
+                <img fill placeholder (error)="onImageError($event)" class="rounded-full object-cover"
+                  [ngSrc]="getImageUrl(getChatMessageNotificationImage(notification))" />
+              </div>
+            
+              @if (!notification.is_read) {
+              <div class="w-4 h-4 bg-[#34C759] rounded-full absolute -bottom-0.5 -right-0.5 border-2 border-white"></div>
+              }
+            </div>
+            
+            <div class="flex-1 flex flex-col gap-1">
+              <div class="body-14R text-neutral-01 line-clamp-2" [innerHTML]="notification.body"></div>
+              <div class="body-12 text-neutral-03 mt-1">{{ notification.created_at | timeAgo: refreshTick() }}</div>
+            </div>
+          }
+
           <!-- RSVP request related notifications -->
           @else if (notification?.type === 'RsvpRequest') {
             <div class="relative shrink-0">

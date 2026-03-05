@@ -360,6 +360,19 @@ export class Notification {
   }
 
   getImageUrl(imageUrl = ''): string {
-    return getImageUrlOrDefault(imageUrl, 'assets/images/profile.jpeg');
+    return getImageUrlOrDefault(imageUrl, '');
+  }
+
+  /** Image URL for ChatMessage notifications: event/group image or related_user avatar. */
+  getChatMessageNotificationImage(notification: INotification): string {
+    const room = notification.chat_room;
+    if (room) {
+      if (!room.is_personal) {
+        return room.event_id ? room.event?.thumbnail_url || '' : room.profile_image || '';
+      } else {
+        return notification.related_user?.thumbnail_url || '';
+      }
+    }
+    return '';
   }
 }
