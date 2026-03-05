@@ -20,6 +20,9 @@
           </div>
         }
       </div>
+      <div class="px-4">
+        <app-button label="Add Guest" color="primary" icon="assets/svg/addUserIcon.svg" (click)="addGuest()" />
+      </div>
       <div class="flex gap-2 mt-4 p-4">
         <searchbar
           class="w-full"
@@ -47,7 +50,6 @@
 
   <div class="h-full flex justify-center">
     <div class="w-full max-w-[672px] p-4 flex flex-col">
-
       <div class="flex items-center gap-2 mt-3 text-sm">
         <ion-icon src="assets/svg/checkmark-circle.svg" class="w-6 h-6" />
         <div class="body-16M">
@@ -61,7 +63,7 @@
         </div>
       } @else {
         <div class="mt-4 space-y-3">
-          @for (s of filteredGuestList(); track s.id) {
+          @for (s of this.attendees(); track s.id) {
             <div class="flex items-center gap-3 py-3 px-2 border-b border-gray-200 cursor-pointer" (click)="onCardClick(s)">
               <!-- Avatar -->
               <div class="relative">
@@ -104,18 +106,23 @@
                     {{ s?.event_ticket?.ticket_type }}
                   </span>
 
-                  @if (s?.payment_status !== 'refunded') {
-                    @if ((s?.amount_paid ?? 0) > 0) {
+                  @if ((s?.amount_paid ?? 0) > 0) {
+                    @if (s?.payment_status === 'succeeded') {
                       <span class="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-[#1D6D46]"> Paid </span>
-                    } @else if (s?.event_ticket?.ticket_type != 'Free') {
+                    } @else if (s?.payment_status === 'refunded') {
+                      <span class="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-[#DC2626]"> Refunded </span>
+                    } @else {
                       <span class="text-[10px] px-2 py-0.5 rounded-full bg-orange-100 text-[#9E660A]"> Unpaid </span>
                     }
                   }
-                  @if (s?.payment_status === 'refunded') {
-                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-red-100 text-[#DC2626]"> Refunded </span>
-                  }
                   @if (s?.parent_user_id) {
                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-[#092a85]"> guest </span>
+                  }
+
+                  @if (s?.payment_mode === 'cash') {
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-[#092a85]"> On the spot </span>
+                  } @else if (s?.payment_mode === 'in-app') {
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-[#1D6D46]"> In-App </span>
                   }
                 </div>
               </div>

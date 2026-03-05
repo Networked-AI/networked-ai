@@ -28,10 +28,13 @@
           <div class="relative-block-container">
             <div>
               <textarea
+                rows="1"
+                pTextarea
+                [autoResize]="true"
                 #textareaEl
                 cdkOverlayOrigin
                 #textareaOrigin="cdkOverlayOrigin"
-                class="w-full border-none outline-none resize-none"
+                class="w-full max-h-[120px] overflow-y-auto! !border-none !shadow-none !outline-none resize-none scrollbar-hide !p-0.5"
                 [formControl]="textCtrl"
                 [placeholder]="'Start writing here...'"
                 wrap="hard"

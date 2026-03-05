@@ -23,6 +23,7 @@ import { ModalService } from './modal.service';
 import { NavigationService } from './navigation.service';
 import {
   IEventAttendee,
+  IAddGuestPayload,
   IEventAttendeesCounts,
   IGetEventAttendeesListParams,
   IGetEventAttendeesListResult,
@@ -31,7 +32,9 @@ import {
   IGetEventParticipantsListResult,
   IGetEventParticipantsListParams,
   IPagination,
-  IRefundAttendeeResponse
+  IRefundAttendeeResponse,
+  IAddGuestResponse,
+  IMarkAsPaidResponse
 } from '@/interfaces/IEventAttendee';
 
 @Injectable({ providedIn: 'root' })
@@ -330,16 +333,6 @@ export class EventService extends BaseApiService {
     return allMedias;
   }
 
-  formatTime(timeString: string): string {
-    if (!timeString) return '';
-
-    const [hours, minutes] = timeString.split(':').map(Number);
-    const date = new Date();
-    date.setHours(hours, minutes, 0, 0);
-
-    return this.datePipe.transform(date, 'hh:mm a') ?? '';
-  }
-
   getCurrentTime(): string {
     const now = new Date();
     return this.datePipe.transform(now, 'HH:mm') ?? '';
@@ -632,24 +625,6 @@ export class EventService extends BaseApiService {
     formData.plan_ids = eventData.plan_ids && Array.isArray(eventData.plan_ids) ? eventData.plan_ids : [];
 
     return formData;
-  }
-
-  formatFormDateTime(date: string | null, startTime: string | null, endTime: string | null, untilFinished: boolean): string {
-    if (!date || !startTime) return '';
-
-    const dateObj = new Date(date);
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const dayName = dayNames[dateObj.getDay()];
-    const month = dateObj.getMonth() + 1;
-    const day = dateObj.getDate();
-
-    const formattedStartTime = this.formatTime(startTime);
-    const formattedEndTime = untilFinished ? '' : endTime ? this.formatTime(endTime) : '';
-
-    if (formattedEndTime) {
-      return `${dayName} ${month}/${day}, ${formattedStartTime} - ${formattedEndTime}`;
-    }
-    return `${dayName} ${month}/${day}, ${formattedStartTime}`;
   }
 
   createDateItemsFromForm(repeatingEvents: any[], baseDate: string | null, isRepeating: boolean): SegmentButtonItem[] {
@@ -1552,5 +1527,30 @@ export class EventService extends BaseApiService {
       .trim();
 
     return text;
+  }
+
+  async addGuest(payload: IAddGuestPayload): Promise<IAddGuestResponse> {
+    try {
+      const response = await this.post<IAddGuestResponse>('/event-attendees/add', payload);
+      return response;
+    } catch (error) {
+      console.error('Error adding guest:', error);
+      throw error;
+    }
+  }
+
+  async markAsPaid(eventId: string, attendeeId: string, markAsPaid: boolean): Promise<IMarkAsPaidResponse> {
+    try {
+      const body = {
+        event_id: eventId,
+        attendee_id: attendeeId,
+        mark_as_paid: markAsPaid
+      };
+      const response = await this.post<IMarkAsPaidResponse>('/event-attendees/mark-as-paid', body);
+      return response;
+    } catch (error) {
+      console.error('Error marking as paid:', error);
+      throw error;
+    }
   }
 }

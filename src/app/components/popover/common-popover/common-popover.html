@@ -3,7 +3,7 @@
     <div (click)="item.command()" class="flex items-center gap-3 px-1 py-1 cursor-pointer rounded-lg">
       <div class="w-10 h-10 flex items-center justify-center">
         @if (item.icon) {
-          <div class="pi pi-{{ item.icon }} neutral-02 !text-[16px] p-1"></div>
+          <i class="pi pi-{{ item.icon }} neutral-02 text-[16px]"></i>
         }
         @if (item.iconPath) {
           <ion-icon [src]="item.iconPath" class="w-[16px] h-[16px]"></ion-icon>

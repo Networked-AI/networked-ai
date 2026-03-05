@@ -33,6 +33,7 @@ export class ConfirmModal {
   @Input() iconBgColor?: string;
   @Input() customColor?: string;
   @Input() cancelButtonLabel = '';
+  @Input() cancelButtonIcon = '';
   @Input() confirmButtonLabel = 'Confirm';
   @Input() confirmButtonLabelSignal?: Signal<string>;
   @Input() iconPosition: 'left' | 'center' = 'center';
