@@ -119,10 +119,12 @@
                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-[#092a85]"> guest </span>
                   }
 
-                  @if (s?.payment_mode === 'cash') {
-                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-[#092a85]"> On the spot </span>
-                  } @else if (s?.payment_mode === 'in-app') {
-                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-[#1D6D46]"> In-App </span>
+                  @if ((s?.amount_paid ?? 0) > 0) {
+                    @if (s?.payment_mode === 'cash') {
+                      <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-[#092a85]"> On the spot </span>
+                    } @else if (s?.payment_mode === 'in-app') {
+                      <span class="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-[#1D6D46]"> In-App </span>
+                    }
                   }
                 </div>
               </div>
