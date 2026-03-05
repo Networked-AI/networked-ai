@@ -72,7 +72,6 @@ export const appRoutes: Routes = [
   },
   {
     path: 'group-invitation/:id',
-    canActivate: [authGuard],
     loadComponent: () => import('@/pages/messages/components/chat-info').then((m) => m.ChatInfo)
   },
   // profile routes (lazy loaded)
