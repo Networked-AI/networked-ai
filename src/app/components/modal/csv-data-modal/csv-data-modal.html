@@ -9,51 +9,67 @@
     </div>
     <div class="px-4 pb-2 flex items-center justify-between border-b border-surface-300">
       <div class="body-14R neutral-02">{{ filteredGuests().length }} contact{{ filteredGuests().length === 1 ? '' : 's' }} found</div>
-      <button class="body-14M text-primary underline" type="button" (click)="toggleSelectAll()">
-        {{ allSelected() ? 'Clear all' : 'Select all' }}
-      </button>
+      <!-- ✅ checkbox + label replacing plain text button -->
+      <div class="flex items-center gap-2 cursor-pointer" (click)="toggleSelectAll()">
+        <p-checkbox
+          [binary]="true"
+          [ngModel]="allSelected()"
+          (click)="$event.stopPropagation(); hapticService.onClick()"
+          (ngModelChange)="toggleSelectAll()"
+        />
+        <span class="body-14M text-primary">Select all</span>
+      </div>
     </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
-  <div class="px-4 py-4 space-y-3">
-    @if (filteredGuests().length === 0) {
+<ion-content [scrollY]="false">
+  @if (filteredGuests().length === 0) {
+    <div class="px-4 py-4">
       <app-empty-state
         [title]="'No Contacts Found'"
         [message]="searchQuery() ? 'Try searching for a different keyword.' : 'No contacts available.'"
         [showClearButton]="!!searchQuery()"
         (clear)="onSearchChange('')"
       />
-    } @else {
-      @for (guest of filteredGuests(); track $index) {
-        <div
-          class="border rounded-2xl p-3 flex items-start gap-3 cursor-pointer relative"
-          [class.border-surface-500]="isSelected($index)"
-          [class.border-surface-300]="!isSelected($index)"
-          [class.bg-orange-50]="isSelected($index)"
-          (click)="toggleGuest($index)"
-        >
-          <!-- Checkbox top-right -->
-          <div class="absolute top-3 right-3">
-            <p-checkbox [binary]="true" [ngModel]="isSelected($index)" (ngModelChange)="toggleGuest($index)" (click)="$event.stopPropagation()" />
-          </div>
-
-          <div class="flex-1 pr-8">
-            <div class="body-16M neutral-01">
-              {{ guest.name || 'Unnamed contact' }}
-            </div>
-            @if (guest.email) {
-              <div class="body-14R neutral-02 break-all">{{ guest.email }}</div>
-            }
-            @if (guest.phone) {
-              <div class="body-14R neutral-02 break-all">{{ guest.phone }}</div>
-            }
-          </div>
+    </div>
+  } @else {
+    <cdk-virtual-scroll-viewport
+      [itemSize]="20"
+      [style.height]="selectedCount() > 0 ? 'calc(100vh - 430px)' : 'calc(100vh - 250px)'"
+      class="virtual-scroll-viewport px-4 py-4"
+    >
+      <div
+        *cdkVirtualFor="let guest of filteredGuests(); let i = index"
+        class="border rounded-2xl p-3 flex items-start gap-3 cursor-pointer relative m-3"
+        [class.border-surface-500]="isSelected(i)"
+        [class.border-surface-300]="!isSelected(i)"
+        [class.bg-orange-50]="isSelected(i)"
+        (click)="toggleGuest(i)"
+      >
+        <div class="absolute top-3 right-3">
+          <p-checkbox
+            [binary]="true"
+            [ngModel]="isSelected(i)"
+            (ngModelChange)="toggleGuest(i)"
+            (click)="$event.stopPropagation(); hapticService.onClick()"
+          />
         </div>
-      }
-    }
-  </div>
+
+        <div class="flex-1 pr-8">
+          <div class="body-16M neutral-01">{{ guest.name || 'Unnamed contact' }}</div>
+
+          @if (guest.email) {
+            <div class="body-14R neutral-02 break-all">{{ guest.email }}</div>
+          }
+
+          @if (guest.phone) {
+            <div class="body-14R neutral-02 break-all">{{ guest.phone }}</div>
+          }
+        </div>
+      </div>
+    </cdk-virtual-scroll-viewport>
+  }
 </ion-content>
 
 @if (selectedCount() > 0) {
@@ -61,23 +77,25 @@
     <ion-toolbar mode="md">
       <div class="p-4 flex flex-col gap-2">
         <app-button
-          [label]="'Send SMS to ' + selectedCount()"
+          [label]="'Send SMS to ' + selectedCount() + ' ' + (selectedCount() === 1 ? 'guest' : 'guests')"
           color="primary"
           class="w-full"
           [isLoading]="isSubmitting() === 'sms'"
           [disabled]="!!isSubmitting()"
           (click)="onSendSms()"
         />
+
         <app-button
-          [label]="'Send Email to ' + selectedCount()"
+          [label]="'Send Email to ' + selectedCount() + ' ' + (selectedCount() === 1 ? 'guest' : 'guests')"
           color="secondary"
           class="w-full"
           [isLoading]="isSubmitting() === 'email'"
           [disabled]="!!isSubmitting()"
           (click)="onSendEmail()"
         />
+
         <app-button
-          [label]="'Send Email &amp; SMS to ' + selectedCount()"
+          [label]="'Send Email & SMS to ' + selectedCount() + ' ' + (selectedCount() === 1 ? 'guest' : 'guests')"
           color="primary"
           class="w-full"
           [isLoading]="isSubmitting() === 'both'"

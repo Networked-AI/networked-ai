@@ -6,9 +6,11 @@ import { ToasterService } from '@/services/toaster.service';
 import { ModalController } from '@ionic/angular/standalone';
 import { EmptyState } from '@/components/common/empty-state';
 import { isPlatformBrowser } from '@angular/common';
+import { ScrollingModule } from '@angular/cdk/scrolling';
 import { Input, Component, ChangeDetectionStrategy, inject, signal, computed, PLATFORM_ID } from '@angular/core';
 import { IonHeader, IonFooter, IonToolbar, IonContent } from '@ionic/angular/standalone';
 import { ModalService } from '@/services/modal.service';
+import { HapticService } from '@/services/haptic.service';
 
 export interface ICsvGuestItem {
   name: string;
@@ -21,7 +23,7 @@ export interface ICsvGuestItem {
   styleUrl: './csv-data-modal.scss',
   templateUrl: './csv-data-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [Button, IonHeader, IonToolbar, IonContent, IonFooter, Searchbar, EmptyState, FormsModule, CheckboxModule]
+  imports: [Button, IonHeader, IonToolbar, IonContent, IonFooter, Searchbar, EmptyState, FormsModule, CheckboxModule, ScrollingModule]
 })
 export class CsvDataModal {
   @Input() guests: ICsvGuestItem[] = [];
@@ -31,9 +33,8 @@ export class CsvDataModal {
 
   private toasterService = inject(ToasterService);
   private modalCtrl = inject(ModalController);
-  private platformId = inject(PLATFORM_ID);
   private modalService = inject(ModalService);
-  private isBrowser = isPlatformBrowser(this.platformId);
+  hapticService = inject(HapticService);
 
   isSubmitting = signal<'sms' | 'email' | 'both' | null>(null);
   allGuests = signal<ICsvGuestItem[]>([]);
@@ -106,7 +107,6 @@ export class CsvDataModal {
     const phones = guests.map((g) => g.phone?.trim()).filter((p): p is string => !!p);
     if (!phones.length) {
       this.toasterService.showError('No phone numbers found for the selected contacts.');
-      return;
     }
   }
 
@@ -114,7 +114,6 @@ export class CsvDataModal {
     const emails = guests.map((g) => g.email?.trim()).filter((e): e is string => !!e);
     if (!emails.length) {
       this.toasterService.showError('No email addresses found for the selected contacts.');
-      return;
     }
   }
 
