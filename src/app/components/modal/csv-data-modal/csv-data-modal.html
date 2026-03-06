@@ -1,0 +1,90 @@
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex items-center justify-between pb-0">
+      <div class="heading-h3 neutral-01">Imported Contacts</div>
+      <i class="pi pi-times cursor-pointer" (click)="close()"></i>
+    </div>
+    <div class="px-4 py-3">
+      <searchbar [searchQuery]="searchQuery()" placeholder="Search contact" (searchChange)="onSearchChange($event)" (clear)="onSearchClear()" />
+    </div>
+    <div class="px-4 pb-2 flex items-center justify-between border-b border-surface-300">
+      <div class="body-14R neutral-02">{{ filteredGuests().length }} contact{{ filteredGuests().length === 1 ? '' : 's' }} found</div>
+      <button class="body-14M text-primary underline" type="button" (click)="toggleSelectAll()">
+        {{ allSelected() ? 'Clear all' : 'Select all' }}
+      </button>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="px-4 py-4 space-y-3">
+    @if (filteredGuests().length === 0) {
+      <app-empty-state
+        [title]="'No Contacts Found'"
+        [message]="searchQuery() ? 'Try searching for a different keyword.' : 'No contacts available.'"
+        [showClearButton]="!!searchQuery()"
+        (clear)="onSearchChange('')"
+      />
+    } @else {
+      @for (guest of filteredGuests(); track $index) {
+        <div
+          class="border rounded-2xl p-3 flex items-start gap-3 cursor-pointer relative"
+          [class.border-surface-500]="isSelected($index)"
+          [class.border-surface-300]="!isSelected($index)"
+          [class.bg-orange-50]="isSelected($index)"
+          (click)="toggleGuest($index)"
+        >
+          <!-- Checkbox top-right -->
+          <div class="absolute top-3 right-3">
+            <p-checkbox [binary]="true" [ngModel]="isSelected($index)" (ngModelChange)="toggleGuest($index)" (click)="$event.stopPropagation()" />
+          </div>
+
+          <div class="flex-1 pr-8">
+            <div class="body-16M neutral-01">
+              {{ guest.name || 'Unnamed contact' }}
+            </div>
+            @if (guest.email) {
+              <div class="body-14R neutral-02 break-all">{{ guest.email }}</div>
+            }
+            @if (guest.phone) {
+              <div class="body-14R neutral-02 break-all">{{ guest.phone }}</div>
+            }
+          </div>
+        </div>
+      }
+    }
+  </div>
+</ion-content>
+
+@if (selectedCount() > 0) {
+  <ion-footer mode="md">
+    <ion-toolbar mode="md">
+      <div class="p-4 flex flex-col gap-2">
+        <app-button
+          [label]="'Send SMS to ' + selectedCount()"
+          color="primary"
+          class="w-full"
+          [isLoading]="isSubmitting() === 'sms'"
+          [disabled]="!!isSubmitting()"
+          (click)="onSendSms()"
+        />
+        <app-button
+          [label]="'Send Email to ' + selectedCount()"
+          color="secondary"
+          class="w-full"
+          [isLoading]="isSubmitting() === 'email'"
+          [disabled]="!!isSubmitting()"
+          (click)="onSendEmail()"
+        />
+        <app-button
+          [label]="'Send Email &amp; SMS to ' + selectedCount()"
+          color="primary"
+          class="w-full"
+          [isLoading]="isSubmitting() === 'both'"
+          [disabled]="!!isSubmitting()"
+          (click)="onSendEmailAndSms()"
+        />
+      </div>
+    </ion-toolbar>
+  </ion-footer>
+}

@@ -50,6 +50,26 @@
       <div class="text-center leading-tight text-[11px] text-gray-600">Email</div>
     </button>
 
+    <!-- Upload CSV (Event only) -->
+    @if (type() === 'Event') {
+      <button type="button" class="flex flex-col items-center gap-1 pr-3! cursor-pointer" (click)="onUploadCsv.emit()">
+        <div class="flex items-center justify-center">
+          <div class="bg-neutral-06 h-[56px] w-[56px] min-w-[56px] rounded-full flex justify-center items-center">
+            <ion-icon src="assets/svg/footer-share.svg" class="h-6 w-6" />
+          </div>
+        </div>
+        <div class="text-center leading-tight text-[11px] text-gray-600">Upload CSV</div>
+      </button>
+      <button type="button" class="flex flex-col items-center gap-1 pr-3! cursor-pointer" (click)="onDownloadSampleFile.emit()">
+        <div class="flex items-center justify-center">
+          <div class="bg-neutral-06 h-[56px] w-[56px] min-w-[56px] rounded-full flex justify-center items-center">
+            <ion-icon src="assets/svg/downloadBlackIcon.svg" class="h-6 w-6" />
+          </div>
+        </div>
+        <div class="text-center leading-tight text-[11px] text-gray-600">Download Sample CSV</div>
+      </button>
+    }
+
     <!-- Whatsapp -->
     <button type="button" class="flex flex-col items-center gap-1 pr-3! cursor-pointer" (click)="onWhatsapp.emit()">
       <div class="flex items-center justify-center">
@@ -81,17 +101,14 @@
     </button>
 
     @if (image_url()) {
-    <button type="button" class="flex flex-col items-center gap-1 pr-3! cursor-pointer"
-      (click)="onDownloadImage.emit()">
-      <div class="flex items-center justify-center">
-        <div class="bg-neutral-06 h-[56px] w-[56px] min-w-[56px] rounded-full flex justify-center items-center">
-          <ion-icon src="assets/svg/downloadBlackIcon.svg" class="h-6 w-6" />
+      <button type="button" class="flex flex-col items-center gap-1 pr-3! cursor-pointer" (click)="onDownloadImage.emit()">
+        <div class="flex items-center justify-center">
+          <div class="bg-neutral-06 h-[56px] w-[56px] min-w-[56px] rounded-full flex justify-center items-center">
+            <ion-icon src="assets/svg/downloadBlackIcon.svg" class="h-6 w-6" />
+          </div>
         </div>
-      </div>
-      <div class="text-center leading-tight text-[11px] text-gray-600">
-        Download
-      </div>
-    </button>
+        <div class="text-center leading-tight text-[11px] text-gray-600">Download</div>
+      </button>
     }
   </div>
 </div>
