@@ -382,7 +382,8 @@ export class GuestList implements OnInit, OnDestroy {
       }
     } catch (error) {
       console.error('Error loading attendees:', error);
-      this.navigationService.navigateForward(`/event/${eventId}`, true);
+      const message = BaseApiService.getErrorMessage(error, 'Error loading attendees:');
+      this.toasterService.showError(message);
     } finally {
       this.isLoading.set(false);
     }
@@ -412,7 +413,8 @@ export class GuestList implements OnInit, OnDestroy {
       this.pagination.set(pagination);
       if (counts) this.counts.set(counts);
     } catch (error) {
-      console.error('Error loading more attendees:', error);
+      const message = BaseApiService.getErrorMessage(error, 'Error loading more attendees.');
+      this.toasterService.showError(message);
     } finally {
       this.isLoadingMore.set(false);
     }

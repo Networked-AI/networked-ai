@@ -154,8 +154,8 @@ export class QuestionnaireResponse implements OnInit, OnDestroy {
         this.loadData();
       }
     } catch (error) {
-      console.error('Error checking access:', error);
-      this.navigationService.navigateForward(`/event/${this.eventId()}`, true);
+      const message = BaseApiService.getErrorMessage(error, 'Error checking access');
+      this.toasterService.showError(message);
     }
   }
 
@@ -185,7 +185,8 @@ export class QuestionnaireResponse implements OnInit, OnDestroy {
         this.totalPages.set(response?.pagination?.totalPages || 0);
       }
     } catch (error) {
-      this.toasterService.showError('Failed to load data');
+      const message = BaseApiService.getErrorMessage(error, 'Failed to load data.');
+      this.toasterService.showError(message);
     } finally {
       this.isDataLoading.set(false);
     }
@@ -225,7 +226,8 @@ export class QuestionnaireResponse implements OnInit, OnDestroy {
 
       this.currentPage.set(nextPage);
     } catch (error) {
-      console.error('Error loading more data:', error);
+      const message = BaseApiService.getErrorMessage(error, 'Failed to load data.');
+      this.toasterService.showError(message);
     } finally {
       this.isLoadingMore.set(false);
       infiniteScroll.complete();
