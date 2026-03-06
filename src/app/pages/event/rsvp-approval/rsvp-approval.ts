@@ -6,6 +6,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Searchbar } from '@/components/common/searchbar';
 import { ToasterService } from '@/services/toaster.service';
 import { EmptyState } from '@/components/common/empty-state';
+import { BaseApiService } from '@/services/base-api.service';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { NavigationService } from '@/services/navigation.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
@@ -128,8 +129,8 @@ export class RsvpApproval implements OnInit {
       await this.loadRequests('pending');
       this.isInitialLoad = false;
     } catch (error) {
-      console.error('Error checking access:', error);
-      this.navigationService.navigateForward(`/event/${this.eventId()}`);
+      const message = BaseApiService.getErrorMessage(error, 'Error checking access.');
+      this.toasterService.showError(message);
     }
   }
 
@@ -147,8 +148,8 @@ export class RsvpApproval implements OnInit {
         this.processedRequests.set(response?.data?.data || response?.data || []);
       }
     } catch (error) {
-      console.error('Error loading RSVP requests:', error);
-      this.toasterService.showError('Failed to load RSVP requests');
+      const message = BaseApiService.getErrorMessage(error, 'Failed to load RSVP requests');
+      this.toasterService.showError(message);
     } finally {
       this.isLoading.set(false);
     }
@@ -182,8 +183,8 @@ export class RsvpApproval implements OnInit {
 
       this.toasterService.showSuccess('RSVP request approved successfully');
     } catch (error) {
-      console.error('Error approving RSVP request:', error);
-      this.toasterService.showError('Failed to approve RSVP request');
+      const message = BaseApiService.getErrorMessage(error, 'Failed to approve RSVP request.');
+      this.toasterService.showError(message);
     } finally {
       await loadingModal.dismiss();
       this.processingRequestId.set(null);
@@ -209,8 +210,8 @@ export class RsvpApproval implements OnInit {
 
       this.toasterService.showSuccess('RSVP request rejected successfully');
     } catch (error) {
-      console.error('Error rejecting RSVP request:', error);
-      this.toasterService.showError('Failed to reject RSVP request');
+      const message = BaseApiService.getErrorMessage(error, 'Failed to reject RSVP request.');
+      this.toasterService.showError(message);
     } finally {
       await loadingModal.dismiss();
       this.processingRequestId.set(null);

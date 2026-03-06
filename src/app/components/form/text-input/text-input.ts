@@ -80,6 +80,8 @@ export class TextInput implements OnInit {
   onInputChange(event: Event) {
     const value = (event.target as HTMLInputElement).value;
     this.control.setValue(value);
+    this.control.markAsDirty();
+    this.control.markAsTouched();
   }
 
   checkValidation(): void {

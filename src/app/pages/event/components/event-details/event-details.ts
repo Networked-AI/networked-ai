@@ -120,7 +120,10 @@ export class EventDetails implements OnInit {
     this.syncFormToSignal('vibes', this.selectedMetaTags);
 
     effect(() => {
-      this.eventForm().get('medias')?.setValue(this.mediaItems());
+      const items = this.mediaItems();
+      const control = this.eventForm().get('medias');
+      control?.setValue(items);
+      if (items.length > 0) control?.markAsDirty();
     });
 
     effect(() => {
@@ -349,6 +352,7 @@ export class EventDetails implements OnInit {
         state: locationData.state || '',
         country: locationData.country || ''
       });
+      this.eventForm().markAsDirty();
     }
   }
 
