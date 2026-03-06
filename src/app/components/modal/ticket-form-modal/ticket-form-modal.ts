@@ -11,6 +11,7 @@ import { DescriptionGeneratorService } from '@/services/description-generator.se
 import { FormGroup, Validators, FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { IonHeader, IonFooter, IonContent, IonToolbar, IonSpinner } from '@ionic/angular/standalone';
 import { Input, OnInit, inject, signal, computed, Component, ChangeDetectionStrategy } from '@angular/core';
+import { BaseApiService } from '@/services/base-api.service';
 
 @Component({
   selector: 'ticket-form-modal',
@@ -178,7 +179,8 @@ export class TicketFormModal implements OnInit {
       this.showDescriptionEditor.set(true);
     } catch (error: any) {
       console.error('Error generating ticket description:', error);
-      this.toasterService.showError(error?.message || 'Failed to generate description. Please try again.');
+      const msg = BaseApiService.getErrorMessage(error, 'Failed to generate description. Please try again.');
+      this.toasterService.showError(msg);
 
       // Set a fallback description on error
       const fallbackDescription = 'This is a generated ticket description. You can customize this content to better match your ticket details.';

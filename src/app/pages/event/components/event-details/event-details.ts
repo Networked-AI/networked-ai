@@ -32,6 +32,7 @@ import { CommonModule, DOCUMENT, DatePipe, NgOptimizedImage } from '@angular/com
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { DescriptionGeneratorService } from '@/services/description-generator.service';
 import { VideoJsPlayerComponent } from '@/components/common/video-js-player';
+import { BaseApiService } from '@/services/base-api.service';
 
 @Component({
   selector: 'event-details',
@@ -530,7 +531,8 @@ export class EventDetails implements OnInit {
       this.isCustomize.set(true);
     } catch (error: any) {
       console.error('Error generating description:', error);
-      this.toasterService.showError(error?.message || 'Failed to generate description. Please try again.');
+      const msg = BaseApiService.getErrorMessage(error, 'Failed to generate description. Please try again.');
+      this.toasterService.showError(msg);
 
       // Set a fallback description on error
       const fallbackDescription =

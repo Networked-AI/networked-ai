@@ -39,7 +39,6 @@ jobs:
           DASHBOARD_URL=${{ secrets.DASHBOARD_URL }}
 
           TENOR_API_KEY=${{ secrets.TENOR_API_KEY }}
-          OPEN_AI_API_KEY=${{ secrets.OPEN_AI_API_KEY }}
 
           FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}
           FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
