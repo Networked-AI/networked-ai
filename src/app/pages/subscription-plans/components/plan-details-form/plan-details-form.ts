@@ -14,6 +14,7 @@ import { TextAreaInput } from '@/components/form/text-area-input';
 import { DescriptionGeneratorService } from '@/services/description-generator.service';
 import { IonReorderGroup, IonReorder, ItemReorderEventDetail } from '@ionic/angular/standalone';
 import { Component, input, output, computed, signal, ChangeDetectionStrategy, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import { BaseApiService } from '@/services/base-api.service';
 
 export interface Benefit {
   id: string;
@@ -245,8 +246,8 @@ export class PlanDetailsForm implements OnInit, OnDestroy {
       this.cdr.markForCheck();
     } catch (error: any) {
       console.error('Error generating description:', error);
-      const errorMessage = error?.message || 'Failed to generate description. Please try again.';
-      this.toasterService.showError(errorMessage);
+      const msg = BaseApiService.getErrorMessage(error, 'Failed to generate description. Please try again.');
+      this.toasterService.showError(msg);
     } finally {
       this.isGeneratingDescription.set(false);
     }

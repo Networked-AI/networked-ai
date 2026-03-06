@@ -2,7 +2,7 @@ import { Login } from '@/pages/login';
 import { IUser } from '@/interfaces/IUser';
 import { Signup } from '@/pages/signup/signup';
 import { EventQr } from '@/pages/event/event-qr';
-import { SubscriptionPlan } from '@/interfaces/event';
+import { EventTicket, SubscriptionPlan } from '@/interfaces/event';
 import { MenuItem } from '@/components/modal/menu-modal';
 import { CreateEvent } from '@/pages/event/create-event';
 import { RsvpModal } from '@/components/modal/rsvp-modal';
@@ -60,6 +60,7 @@ import { AddToCalendarModal } from '@/components/modal/add-to-calendar-modal';
 import { UserSubscriptionPlans } from '@/pages/subscription-plans/user-subscription-plans';
 import { ScanResultModal } from '@/components/modal/scan-result-modal';
 import { PlanData } from '@/interfaces/ISubscripton';
+import { GuestFormModal } from '@/components/modal/guest-form-modal/guest-form-modal';
 
 @Injectable({ providedIn: 'root' })
 export class ModalService {
@@ -401,6 +402,7 @@ export class ModalService {
     backdropDismiss?: boolean;
     confirmButtonLabel: string;
     cancelButtonLabel?: string;
+    cancelButtonIcon?: string;
     confirmButtonColor?: string;
     onConfirm?: () => Promise<any>;
     iconPosition?: 'left' | 'center';
@@ -1196,6 +1198,73 @@ export class ModalService {
 
     await modal.present();
     const { data } = await modal.onWillDismiss();
+    return data || null;
+  }
+
+  async openAddGuestModal(
+    eventId?: string,
+    tickets: EventTicket[] = [],
+    hostPaysFees?: boolean,
+    additionalFees?: string | number | null
+  ): Promise<string | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: GuestFormModal,
+      cssClass: 'modal-60-percent-height',
+      backdropDismiss: false,
+      componentProps: {
+        eventId,
+        tickets,
+        hostPaysFees: hostPaysFees ?? false,
+        additionalFees: additionalFees ?? null
+      }
+    });
+
+    await modal.present();
+
+    const { role } = await modal.onWillDismiss();
+    return role ?? null;
+  }
+
+  async openRsvpTicketModal(
+    tickets: EventTicket[],
+    eventId: string,
+    eventTitle: string = 'Select Ticket',
+    hostPaysFees?: boolean,
+    additionalFees?: string | number | null,
+    selectedTicket?: EventTicket | null
+  ): Promise<{
+    selectedTicket: EventTicket;
+    attendeeAmounts?: {
+      event_ticket_id: string;
+      platform_fee_amount: number;
+      amount_paid: number;
+      host_payout_amount: number;
+    };
+  } | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      cssClass: 'modal-60-percent-height',
+      component: RsvpModal,
+      componentProps: {
+        tickets,
+        eventId,
+        eventTitle,
+        isGuestMode: true,
+        hostPaysFees: hostPaysFees ?? false,
+        additionalFees: additionalFees ?? null,
+        selectedTicketSignal: selectedTicket
+      }
+    });
+
+    await modal.present();
+    const { data } = await modal.onDidDismiss();
     return data || null;
   }
 }

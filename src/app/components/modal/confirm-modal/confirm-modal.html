@@ -34,7 +34,14 @@
           <app-button [label]="shareButtonLabel" iconName="pi-upload" color="secondary" (click)="share()" class="flex-1" [disabled]="isLoading()" />
         }
         @if (cancelButtonLabel) {
-          <app-button [label]="cancelButtonLabel" color="secondary" (click)="cancel()" class="flex-1" [disabled]="isLoading()" />
+          <app-button
+            [label]="cancelButtonLabel"
+            color="secondary"
+            (click)="cancel()"
+            class="flex-1"
+            [disabled]="isLoading()"
+            [icon]="cancelButtonIcon"
+          />
         }
       }
       <app-button

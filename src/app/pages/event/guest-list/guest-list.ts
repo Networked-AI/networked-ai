@@ -25,13 +25,7 @@ import {
   IonInfiniteScrollContent
 } from '@ionic/angular/standalone';
 import { IUser } from '@/interfaces/IUser';
-import {
-  IEventAttendee,
-  IEventAttendeesCounts,
-  IGetEventAttendeesParams,
-  IPagination,
-  IRefundAttendeeResponse
-} from '@/interfaces/IEventAttendee';
+import { IEventAttendee, IEventAttendeesCounts, IGetEventAttendeesParams, IPagination, IRefundAttendeeResponse } from '@/interfaces/IEventAttendee';
 import { Button } from '@/components/form/button';
 import { HapticService } from '@/services/haptic.service';
 import { IEvent } from '@/interfaces/event';
@@ -147,8 +141,6 @@ export class GuestList implements OnInit, OnDestroy {
       }, 300);
     });
   }
-  menuItems: MenuItem[] = [];
-
   stats = computed(() => {
     const c = this.counts();
     if (c) {
@@ -171,17 +163,10 @@ export class GuestList implements OnInit, OnDestroy {
   getMenuItems(guest: IEventAttendee): MenuItem[] {
     const items: MenuItem[] = [];
 
-    if (guest?.payment_status === 'succeeded') {
-      items.push({
-        label: 'Issue Refund',
-        command: () => this.issueRefund(),
-        iconPath: 'assets/svg/guest-list/refund-issue.svg'
-      });
-    }
+    const isCash = guest?.payment_mode === 'cash';
+    const amountPaid = guest?.amount_paid ?? 0;
 
-    // Only show for guests without parent_user_id
     if (guest?.parent_user_id == null) {
-      // Add as Network → only if not connected
       if (guest.user?.connection_status === 'NotConnected') {
         items.push({
           label: 'Add as Network',
@@ -190,7 +175,6 @@ export class GuestList implements OnInit, OnDestroy {
         });
       }
 
-      // Send Message → only if connected
       if (guest.user?.connection_status === 'Connected') {
         items.push({
           label: 'Send Message',
@@ -199,17 +183,47 @@ export class GuestList implements OnInit, OnDestroy {
         });
       }
     }
+    // Issue Refund → only for non-cash, succeeded payments with actual amount
+    if (guest?.payment_status === 'succeeded' && !isCash && amountPaid > 0) {
+      items.push({
+        label: 'Issue Refund',
+        command: () => this.issueRefund(),
+        iconPath: 'assets/svg/guest-list/refund-issue.svg'
+      });
+    }
 
-    // Uncheck-in → only if checked in
+    // Mark as Unpaid → only for succeeded payments with actual amount
+    if (guest?.payment_status === 'succeeded' && amountPaid > 0) {
+      items.push({
+        label: 'Mark as Unpaid',
+        command: () => this.markAsUnpaid(),
+        icon: 'times-circle'
+      });
+    }
+
+    // Mark as Paid → only for pending with actual amount paid
+    if (guest?.payment_status === 'pending' && amountPaid > 0) {
+      items.push({
+        label: 'Mark as Paid',
+        command: () => this.markAsPaid(),
+        icon: 'check-circle'
+      });
+    }
+
     if (guest.is_checked_in) {
       items.push({
         label: 'Uncheck-in',
         command: () => this.uncheckIn(),
         iconPath: 'assets/svg/guest-list/uncheck-in.svg'
       });
+    } else {
+      items.push({
+        label: 'Check-in',
+        command: () => this.checkInFromMenu(),
+        iconPath: 'assets/svg/guest-list/check-in.svg'
+      });
     }
 
-    // Remove Guest → always available
     items.push({
       label: 'Remove Guest',
       command: () => this.removeGuest(),
@@ -218,20 +232,19 @@ export class GuestList implements OnInit, OnDestroy {
 
     return items;
   }
-
   async issueRefund() {
     this.closePopover();
 
     const guestId = this.selectedGuestId();
     if (!guestId) return;
 
-    const guest = this.attendees().find(a => a.id === guestId);
+    const guest = this.attendees().find((a) => a.id === guestId);
     const guestName = guest?.user?.name || guest?.user?.username || 'Guest';
 
     // Show confirmation modal
     const result = await this.modalService.openConfirmModal({
-      icon: 'assets/svg/guest-list/refund-issue.svg',
-      iconBgColor: '#ABABAB',
+      icon: 'assets/svg/guest-list/refund-issue-white.svg',
+      iconBgColor: '#C73838',
       title: 'Issue Refund',
       description: `Are you sure you want to issue a refund to ${guestName}? This action cannot be undone.`,
       confirmButtonLabel: 'Issue Refund',
@@ -244,26 +257,18 @@ export class GuestList implements OnInit, OnDestroy {
 
           // Update the attendee in the current listing with the updated attendee from API response
           if (response?.data) {
-            this.attendees.update((list) =>
-              list.map((attendee) =>
-                attendee.id === guestId ? { ...attendee, ...response.data } : attendee
-              )
-            );
+            this.attendees.update((list) => list.map((attendee) => (attendee.id === guestId ? { ...attendee, ...response.data } : attendee)));
           }
           this.toasterService.showSuccess(response.message || 'Refund processed successfully');
         } catch (error) {
-          console.error('Error processing refund:', error);
-          this.toasterService.showError('Failed to process refund');
+          const message = BaseApiService.getErrorMessage(error, 'Failed to process refund.');
+          this.toasterService.showError(message);
         }
       }
     });
 
     // If user cancelled, do nothing
     if (!result || result.role !== 'confirm') return;
-  }
-
-  checkInGuest() {
-    console.log('Check-in Guest');
   }
 
   openPopover(event: Event, user: IEventAttendee): void {
@@ -282,8 +287,8 @@ export class GuestList implements OnInit, OnDestroy {
       await this.networkService.sendNetworkRequest(guestId);
       this.toasterService.showSuccess('Network request sent successfully');
     } catch (error) {
-      console.error('Error sending network request:', error);
-      this.toasterService.showError('Failed to send network request');
+      const message = BaseApiService.getErrorMessage(error, 'Failed to send network request.');
+      this.toasterService.showError(message);
     } finally {
       this.isChecking.set(false);
     }
@@ -306,23 +311,42 @@ export class GuestList implements OnInit, OnDestroy {
   async removeGuest() {
     this.closePopover();
 
-    this.isChecking.set(true);
     const guestId = this.selectedGuestId();
     if (!guestId) return;
 
-    try {
-      await this.eventService.deleteAttendees(guestId);
-      this.attendees.update((list) => list.filter((a) => a.id !== guestId));
-      this.toasterService.showSuccess('guest remove successfully.');
-    } catch (error) {
-      console.error(error);
-      this.toasterService.showError('Failed to remove guest.');
-    } finally {
-      this.isChecking.set(false);
-    }
-  }
+    const guest = this.attendees().find((a) => a.id === guestId);
+    const guestName = guest?.user?.name || guest?.user?.username || 'Guest';
 
-  filteredGuestList = computed(() => this.attendees());
+    const result = await this.modalService.openConfirmModal({
+      icon: 'assets/svg/deleteWhiteIcon.svg',
+      iconBgColor: '#C73838',
+      title: 'Remove Guest',
+      description: `Are you sure you want to remove ${guestName} from this event? This action cannot be undone.`,
+      confirmButtonLabel: 'Remove Guest',
+      cancelButtonLabel: 'Cancel',
+      confirmButtonColor: 'danger',
+      iconPosition: 'left',
+      onConfirm: async () => {
+        this.isChecking.set(true);
+
+        try {
+          await this.eventService.deleteAttendees(guestId);
+
+          this.attendees.update((list) => list.filter((a) => a.id !== guestId));
+
+          this.toasterService.showSuccess('Guest removed successfully.');
+        } catch (error) {
+          const message = BaseApiService.getErrorMessage(error, 'Failed to remove guest.');
+          this.toasterService.showError(message);
+        } finally {
+          this.isChecking.set(false);
+        }
+      }
+    });
+
+    // if cancelled → do nothing
+    if (!result || result.role !== 'confirm') return;
+  }
 
   async ngOnInit(): Promise<void> {
     if (!this.isLoggedIn()) {
@@ -355,7 +379,6 @@ export class GuestList implements OnInit, OnDestroy {
           return;
         }
         this.eventData.set(eventData);
-        await this.loadAttendeesOnly();
       }
     } catch (error) {
       console.error('Error loading attendees:', error);
@@ -455,7 +478,7 @@ export class GuestList implements OnInit, OnDestroy {
 
   async downloadGuestList() {
     this.isDownloading.set(true);
-    
+
     try {
       const csv = await this.eventService.downloadEventAttendeesCSV(this.eventId()!);
 
@@ -509,59 +532,44 @@ export class GuestList implements OnInit, OnDestroy {
     if (result) this.filter.set(result);
   }
 
-  async checkIn(id: string) {
+  private async updateCheckInStatus(guestId: string, isCheckedIn: boolean): Promise<void> {
+    const event = this.eventData();
+    if (!event?.id) return;
+
     try {
-      this.selectedGuestId.set(id);
       this.isChecking.set(true);
-      const event = this.eventData();
-      if (!event?.id) return;
-      let payload = {
-        event_id: event.id,
-        attendee_id: id,
-        is_checked_in: true
-      };
-      await this.eventService.changeCheckInStatus(payload);
-      this.attendees.update((list) => list.map((a) => (a.id === id ? { ...a, is_checked_in: true } : a)));
-      this.counts.update((counts: any) =>
-        counts ? { ...counts, total_checkedin_guest: counts.total_checkedin_guest + 1 } : { total_checkedin_guest: 1 }
-      );
-      this.toasterService.showSuccess('Check-in successfully');
+      await this.eventService.changeCheckInStatus({ event_id: event.id, attendee_id: guestId, is_checked_in: isCheckedIn });
+      this.attendees.update((list) => list.map((a) => (a.id === guestId ? { ...a, is_checked_in: isCheckedIn } : a)));
+      this.counts.update((counts: any) => {
+        if (!counts) return { total_checkedin_guest: isCheckedIn ? 1 : 0 };
+        return { ...counts, total_checkedin_guest: counts.total_checkedin_guest + (isCheckedIn ? 1 : -1) };
+      });
+      this.toasterService.showSuccess(isCheckedIn ? 'Check-in successfully' : 'Uncheck-in successfully');
     } catch (error) {
-      console.error(error);
-      this.toasterService.showError('Failed to check in');
+      const message = BaseApiService.getErrorMessage(error, isCheckedIn ? 'Failed to check in' : 'Failed to uncheck in');
+      this.toasterService.showError(message);
     } finally {
       this.isChecking.set(false);
     }
   }
 
-  async uncheckIn() {
-    this.closePopover();
+  async checkIn(id: string): Promise<void> {
+    this.selectedGuestId.set(id);
+    await this.updateCheckInStatus(id, true);
+  }
 
-    this.isChecking.set(true);
+  async checkInFromMenu(): Promise<void> {
+    this.closePopover();
     const guestId = this.selectedGuestId();
     if (!guestId) return;
-    try {
-      this.selectedGuestId.set(guestId);
-      this.isChecking.set(true);
-      const event = this.eventData();
-      if (!event?.id) return;
-      let payload = {
-        event_id: event.id,
-        attendee_id: guestId,
-        is_checked_in: false
-      };
-      await this.eventService.changeCheckInStatus(payload);
-      this.attendees.update((list) => list.map((a) => (a.id === guestId ? { ...a, is_checked_in: false } : a)));
-      this.counts.update((counts: any) =>
-        counts ? { ...counts, total_checkedin_guest: counts.total_checkedin_guest - 1 } : { total_checkedin_guest: 0 }
-      );
-      this.toasterService.showSuccess('Uncheck-in successfully');
-    } catch (error) {
-      console.error(error);
-      this.toasterService.showError('Failed to check in');
-    } finally {
-      this.isChecking.set(false);
-    }
+    await this.updateCheckInStatus(guestId, true);
+  }
+
+  async uncheckIn(): Promise<void> {
+    this.closePopover();
+    const guestId = this.selectedGuestId();
+    if (!guestId) return;
+    await this.updateCheckInStatus(guestId, false);
   }
 
   onCardClick(user: IEventAttendee) {
@@ -590,12 +598,12 @@ export class GuestList implements OnInit, OnDestroy {
       users.map((attendee) =>
         attendee.user?.id === userId
           ? {
-            ...attendee,
-            user: {
-              ...attendee.user,
-              connection_status: newStatus
+              ...attendee,
+              user: {
+                ...attendee.user,
+                connection_status: newStatus
+              }
             }
-          }
           : attendee
       )
     );
@@ -612,7 +620,7 @@ export class GuestList implements OnInit, OnDestroy {
 
   async onRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
-      await this.loadAttendees();
+      await this.loadAttendeesOnly();
     } catch (error) {
       console.error('Error refreshing:', error);
     } finally {
@@ -627,5 +635,111 @@ export class GuestList implements OnInit, OnDestroy {
     } finally {
       infiniteScroll.complete();
     }
+  }
+
+  async addGuest(): Promise<void> {
+    const eventId = this.eventId();
+    if (!eventId) return;
+
+    const tickets = this.eventData()?.tickets ?? [];
+    const settings = this.eventData()?.settings as any | undefined;
+    const hostPaysFees = settings?.host_pays_platform_fee ?? false;
+    const additionalFees = settings?.additional_fees ?? null;
+
+    const result = await this.modalService.openAddGuestModal(eventId, tickets, hostPaysFees, additionalFees);
+    // User cancelled the form
+    if (!result || result !== 'save') {
+      return;
+    }
+
+    // Refresh list after successful add
+    await this.loadAttendeesOnly();
+
+    // Show success confirm modal
+    const successResult = await this.modalService.openConfirmModal({
+      iconName: 'pi-check',
+      iconBgColor: 'linear-gradient(138.06deg, #F5BC61 8.51%, #C89034 48.28%, #9E660A 85.69%)',
+      title: 'Guest Confirmed!',
+      description: 'You can check your RSVP details in your profile › attending events.',
+      confirmButtonLabel: 'Done',
+      cancelButtonLabel: 'Create Another',
+      iconPosition: 'center',
+      cancelButtonIcon: '/assets/svg/addUserIconGray.svg'
+    });
+
+    if (!successResult || successResult.role === 'cancel') {
+      this.addGuest();
+    }
+  }
+
+  async markAsPaid(): Promise<void> {
+    await this.updatePaymentStatus(true);
+  }
+
+  async markAsUnpaid(): Promise<void> {
+    await this.updatePaymentStatus(false);
+  }
+
+  private async updatePaymentStatus(isPaid: boolean): Promise<void> {
+    this.closePopover();
+
+    const guestId = this.selectedGuestId();
+    const eventId = this.eventId();
+    if (!guestId || !eventId) return;
+
+    const guest = this.attendees().find((a) => a.id === guestId);
+    const guestName = guest?.user?.name || guest?.user?.username || 'Guest';
+
+    const config = isPaid
+      ? {
+          iconName: 'pi pi-check',
+          iconBgColor: 'linear-gradient(138.06deg, #F5BC61 8.51%, #C89034 48.28%, #9E660A 85.69%)',
+          title: 'Mark as Paid',
+          description: `Are you sure you want to mark ${guestName} as paid?`,
+          confirmButtonLabel: 'Mark as Paid',
+          confirmButtonColor: undefined,
+          fallbackStatus: 'succeeded'
+        }
+      : {
+          iconName: 'pi pi-times',
+          iconBgColor: '#C73838',
+          title: 'Mark as Unpaid',
+          description: `Are you sure you want to mark ${guestName} as unpaid?`,
+          confirmButtonLabel: 'Mark as Unpaid',
+          confirmButtonColor: 'danger' as const,
+          fallbackStatus: 'pending'
+        };
+
+    const result = await this.modalService.openConfirmModal({
+      iconName: config.iconName,
+      iconBgColor: config.iconBgColor,
+      title: config.title,
+      description: config.description,
+      confirmButtonLabel: config.confirmButtonLabel,
+      cancelButtonLabel: 'Cancel',
+      confirmButtonColor: config.confirmButtonColor,
+      iconPosition: 'left',
+      onConfirm: async () => {
+        try {
+          this.isChecking.set(true);
+          const response: any = await this.eventService.markAsPaid(eventId, guestId, isPaid);
+
+          this.attendees.update((list) =>
+            list.map((attendee) =>
+              attendee.id === guestId ? { ...attendee, ...(response?.data ?? { payment_status: config.fallbackStatus }) } : attendee
+            )
+          );
+
+          this.toasterService.showSuccess(response?.message || `${config.title} successfully`);
+        } catch (error) {
+          const message = BaseApiService.getErrorMessage(error, `Failed to ${config.title.toLowerCase()}`);
+          this.toasterService.showError(message);
+        } finally {
+          this.isChecking.set(false);
+        }
+      }
+    });
+
+    if (!result || result.role !== 'confirm') return;
   }
 }

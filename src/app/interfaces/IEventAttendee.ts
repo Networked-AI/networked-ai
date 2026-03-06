@@ -44,6 +44,7 @@ export interface IEventAttendee {
   user?: IUser;
   event_ticket?: IEventAttendeeTicket;
   payment_status?: string | null;
+  payment_mode?: string | null;
 }
 
 export interface IGetEventAttendeesParams extends IListParamsBase {
@@ -102,6 +103,49 @@ export interface IGetEventParticipantsListResult {
   pagination: IPagination;
 }
 export interface IRefundAttendeeResponse {
+  success: boolean;
+  message: string;
+  data: IEventAttendee;
+}
+
+export interface IGuestFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  ticketType: string | null;
+  paymentMethod: 'Cash' | 'InApp';
+  markAsPaid: boolean;
+  sendPaymentLink: boolean;
+}
+
+export interface IAddGuestAttendeePayload {
+  name: string;
+  email: string;
+  event_ticket_id: string;
+  platform_fee_amount: number;
+  amount_paid: number;
+  host_payout_amount: number;
+  payment_mode: 'cash' | 'in-app';
+  is_paid: boolean;
+  send_link: boolean;
+}
+
+export interface IAddGuestPayload {
+  event_id: string;
+  attendee: IAddGuestAttendeePayload;
+}
+
+export interface IAddGuestResponse {
+  success: boolean;
+  message: string;
+  data: {
+    content: IEventAttendee;
+    payment_link: string | null;
+  };
+}
+
+export interface IMarkAsPaidResponse {
   success: boolean;
   message: string;
   data: IEventAttendee;

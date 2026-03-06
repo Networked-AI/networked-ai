@@ -27,7 +27,6 @@ jobs:
         run: |
           cat > .env << EOF
           API_URL=${{ secrets.API_URL }}
-          OPEN_AI_API_KEY=${{ secrets.OPEN_AI_API_KEY }}
           TENOR_API_KEY=${{ secrets.TENOR_API_KEY }}
           MAPTILER_API_KEY=${{ secrets.MAPTILER_API_KEY }}
           UNSPLASH_API_KEY=${{ secrets.UNSPLASH_API_KEY }}

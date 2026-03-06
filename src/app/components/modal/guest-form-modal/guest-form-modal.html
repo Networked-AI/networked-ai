@@ -1,0 +1,127 @@
+<ion-header mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex items-center justify-between">
+      <div class="heading-h3 neutral-01">Add Guest List</div>
+      <i class="pi pi-times" (click)="close()"></i>
+    </div>
+  </ion-toolbar>
+</ion-header>
+
+<!-- Form Content -->
+<ion-content>
+  <div class="px-4">
+    <form [formGroup]="guestForm()" class="flex flex-col gap-4">
+      <div class="flex gap-3">
+        <text-input
+          controlName="firstName"
+          label="First Name"
+          [showLabel]="true"
+          [required]="true"
+          placeholder="Ethan"
+          class="flex-1"
+          [isSubmitted]="isSubmitted()"
+        />
+        <text-input
+          controlName="lastName"
+          label="Last Name"
+          [showLabel]="true"
+          [required]="true"
+          placeholder="Cortazzo"
+          class="flex-1"
+          [isSubmitted]="isSubmitted()"
+        />
+      </div>
+
+      <!-- Email -->
+      <email-input #emailInputRef controlName="email" label="Email" placeholder="user@gmail.com" [required]="true" [isSubmitted]="isSubmitted()" />
+
+      <!-- Ticket Type -->
+      <text-input
+        label="Ticket Type"
+        [readonly]="true"
+        controlName="ticket_name"
+        (click)="openTicketSelector()"
+        placeholder=" Select the ticket type"
+        [isSubmitted]="isSubmitted()"
+        endIconName="pi-chevron-right"
+      />
+
+      <!-- Payment -->
+      @if (!selectedTicket() || (selectedTicket()?.price ?? 0) > 0) {
+        <!-- Payment -->
+        <div>
+          <label class="neutral-02 body-14M">Payment</label>
+
+          <div class="flex gap-2 my-3">
+            <chip class="flex-1" (click)="setPaymentMethod('cash')" [color]="guestForm().value.payment_mode === 'cash' ? 'lgold' : ''">
+              <span class="flex justify-center">Cash</span>
+            </chip>
+
+            <chip class="flex-1" (click)="setPaymentMethod('in-app')" [color]="guestForm().value.payment_mode === 'in-app' ? 'lgold' : ''">
+              <span class="flex justify-center">In-App</span>
+            </chip>
+          </div>
+
+          @if (guestForm().value.payment_mode === 'cash') {
+            <div class="flex items-center gap-2">
+              <p-checkbox formControlName="is_paid" [binary]="true"></p-checkbox>
+              <label>Mark as Paid</label>
+            </div>
+          }
+
+          @if (guestForm().value.payment_mode === 'in-app') {
+            <div class="flex items-center gap-2">
+              <p-checkbox formControlName="send_link" [binary]="true" [disabled]="true"></p-checkbox>
+              <label>Send payment link to email</label>
+            </div>
+          }
+        </div>
+      }
+    </form>
+
+    <!-- Ticket Summary -->
+    @if (selectedTicket()) {
+      <div class="border border-surface-300 rounded-2xl p-4 flex flex-col gap-3 my-4">
+        <div class="body-16M neutral-01 border-b border-surface-300 pb-3">Order Summary</div>
+
+        <!-- Ticket row -->
+        <div class="flex items-center justify-between">
+          <span class="body-14R neutral-02">{{ selectedTicket()!.name }} x1</span>
+          <span class="body-14M neutral-01">${{ selectedTicket()!.price.toFixed(2) }}</span>
+        </div>
+
+        <!-- Additional Fee (% of ticket price) -->
+        @if (+(additionalFees ?? 0) > 0) {
+          <div class="flex items-center justify-between">
+            <span class="body-14R neutral-02">Additional Fee ({{ additionalFees }}%)</span>
+            <span class="body-14M neutral-01"> ${{ ((selectedTicket()!.price * +(additionalFees ?? 0)) / 100).toFixed(2) }} </span>
+          </div>
+        }
+
+        <!-- Platform Fee -->
+        @if ((guestForm().value.platform_fee_amount ?? 0) > 0 && !hostPaysFees) {
+          <div class="flex items-center justify-between">
+            <span class="body-14R neutral-02">Platform Fee</span>
+            <span class="body-14M neutral-01">${{ (guestForm().value.platform_fee_amount ?? 0).toFixed(2) }}</span>
+          </div>
+        }
+
+        <!-- Total -->
+        <div class="border-t border-surface-300 pt-3 flex items-center justify-between">
+          <span class="body-16M neutral-01">Total</span>
+          <span class="body-16M neutral-01">${{ (guestForm().value.amount_paid ?? 0).toFixed(2) }}</span>
+        </div>
+      </div>
+    }
+  </div>
+</ion-content>
+
+<!-- Footer -->
+<ion-footer mode="md">
+  <ion-toolbar mode="md">
+    <div class="p-4 flex gap-2">
+      <app-button label="Cancel" (click)="close()" color="secondary" class="flex-1" />
+      <app-button label="Add Guest" (click)="addGuest()" color="primary" class="flex-1" [isLoading]="isSubmitting()" [disabled]="isSubmitting()" />
+    </div>
+  </ion-toolbar>
+</ion-footer>

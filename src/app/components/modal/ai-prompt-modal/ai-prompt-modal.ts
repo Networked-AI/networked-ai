@@ -1,9 +1,9 @@
 import { Clipboard } from '@capacitor/clipboard';
 import { ToasterService } from '@/services/toaster.service';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
-import { ModalController, IonSpinner, ToastController, IonToolbar, IonHeader, IonFooter, IonContent } from '@ionic/angular/standalone';
+import { ModalController, IonSpinner, IonToolbar, IonHeader, IonFooter, IonContent } from '@ionic/angular/standalone';
 import { Component, inject, ChangeDetectionStrategy, Input, signal, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { DescriptionGeneratorService } from '@/services/description-generator.service';
+import { BaseApiService } from '@/services/base-api.service';
 
 interface Message {
   role: 'system' | 'user' | 'assistant';
@@ -18,10 +18,9 @@ interface Message {
   imports: [IonContent, IonFooter, IonHeader, IonToolbar, IonSpinner]
 })
 export class AIPromptModal implements OnInit, AfterViewInit {
-  private http = inject(HttpClient);
   private modalCtrl = inject(ModalController);
   private toasterService = inject(ToasterService);
-
+  private descriptionGenerator = inject(DescriptionGeneratorService);
   @Input() conversation: any[] = [];
   @Input() isEvent: boolean = false;
 
@@ -73,24 +72,7 @@ export class AIPromptModal implements OnInit, AfterViewInit {
     const newConversation: Message[] = [...this.conversationData(), { role: 'user', content: currentPrompt }];
 
     try {
-      const headers = new HttpHeaders({
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${environment.openaiKey}`
-      });
-
-      const result = await this.http
-        .post<any>(
-          'https://api.openai.com/v1/chat/completions',
-          {
-            model: 'gpt-3.5-turbo',
-            messages: newConversation,
-            max_tokens: 4000
-          },
-          { headers }
-        )
-        .toPromise();
-
-      const aiResponse = result.choices[0].message.content;
+      const aiResponse = await this.descriptionGenerator.generateDescription(newConversation, 4000);
       const updatedResponse = aiResponse.replace(/width="\d+"/, 'width="100%"');
 
       const updatedConversation: Message[] = [...newConversation, { role: 'assistant', content: updatedResponse }];
@@ -100,7 +82,8 @@ export class AIPromptModal implements OnInit, AfterViewInit {
       this.autoGrowTextArea();
     } catch (error) {
       console.error('Error sending prompt:', error);
-      await this.toasterService.showError('Error sending prompt. Please try again.');
+      const msg = BaseApiService.getErrorMessage(error, 'Error generating description. Please try again.');
+      await this.toasterService.showError(msg);
     } finally {
       this.loading.set(false);
     }

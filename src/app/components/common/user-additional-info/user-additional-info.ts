@@ -8,6 +8,7 @@ import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TextAreaInput } from '@/components/form/text-area-input';
 import { input, Component, signal, computed, inject } from '@angular/core';
 import { DescriptionGeneratorService } from '@/services/description-generator.service';
+import { BaseApiService } from '@/services/base-api.service';
 
 @Component({
   selector: 'user-additional-info',
@@ -80,7 +81,8 @@ export class UserAdditionalInfo {
     } catch (error: any) {
       console.error('Error generating profile description:', error);
 
-      this.toasterService.showError(error?.message || 'Failed to generate profile description. Please try again.');
+      const msg = BaseApiService.getErrorMessage(error, 'Failed to generate profile description. Please try again.');
+      this.toasterService.showError(msg);
 
       // Safe fallback
       const fallbackDescription = 'This is a short profile description. You can customize it to better reflect who you are.';

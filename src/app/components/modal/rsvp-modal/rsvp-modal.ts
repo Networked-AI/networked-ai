@@ -1,5 +1,7 @@
+import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
@@ -15,7 +17,19 @@ import { Input, signal, inject, OnInit, computed, Component, OnDestroy, ChangeDe
   styleUrl: './rsvp-modal.scss',
   templateUrl: './rsvp-modal.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IonContent, IonFooter, IonToolbar, IonHeader, CommonModule, Button, IonIcon, ShowMoreComponent, PromoCodeSectionComponent]
+  imports: [
+    Button,
+    IonIcon,
+    IonFooter,
+    IonHeader,
+    IonContent,
+    IonToolbar,
+    FormsModule,
+    CommonModule,
+    CheckboxModule,
+    ShowMoreComponent,
+    PromoCodeSectionComponent
+  ]
 })
 export class RsvpModal implements OnInit, OnDestroy {
   @Input() tickets: TicketDisplay[] = [];
@@ -34,6 +48,8 @@ export class RsvpModal implements OnInit, OnDestroy {
   @Input() hasSubscribed: boolean = false;
   @Input() isSubscriberExclusive: boolean = false;
   @Input() participants: Array<{ user_id?: string; user?: { id?: string }; role?: string }> = [];
+  @Input() isGuestMode: boolean = false;
+  @Input() selectedTicketSignal: TicketDisplay | null = null;
 
   modalCtrl = inject(ModalController);
   authService = inject(AuthService);
@@ -41,7 +57,7 @@ export class RsvpModal implements OnInit, OnDestroy {
   private toasterService = inject(ToasterService);
 
   rsvp = createRsvpState({ hostPaysFees: false, additionalFees: null });
-
+  selectedTicket = signal<TicketDisplay | null>(null);
   ticketsData = signal<TicketDisplay[]>([]);
   questionnaireResult = signal<any>(null);
   currentTime = signal<Date>(new Date());
@@ -119,6 +135,9 @@ export class RsvpModal implements OnInit, OnDestroy {
     this.ticketsData.set(ticketsToInitialize);
     this._syncTicketsToState();
     this.startTimeUpdate();
+    if (this.selectedTicketSignal) {
+      this.selectTicket(this.selectedTicketSignal);
+    }
   }
 
   canDecrement(ticket: TicketDisplay): boolean {
@@ -456,10 +475,56 @@ export class RsvpModal implements OnInit, OnDestroy {
 
   async close(): Promise<void> {
     await this.modalCtrl.dismiss();
-    this.modalService.close();
+    // this.modalService.close();
   }
 
   ngOnDestroy(): void {
     if (this.countdownInterval) clearInterval(this.countdownInterval);
   }
+
+  selectTicket(ticket: TicketDisplay, checked?: boolean): void {
+    if (this.getTicketStatus(ticket) !== 'available') return;
+
+    const shouldSelect = checked !== undefined ? checked : this.selectedTicket()?.id !== ticket.id;
+    this.selectedTicket.set(shouldSelect ? ticket : null);
+    if (this.isGuestMode) {
+      const updatedTickets = this.ticketsData().map((t) => ({
+        ...t,
+        selectedQuantity: shouldSelect && t.id === ticket.id ? 1 : 0
+      }));
+      this.ticketsData.set(updatedTickets);
+      this._syncTicketsToState();
+    }
+  }
+
+  async dismissWithTicket(): Promise<void> {
+    const ticket = this.selectedTicket();
+    if (!ticket) return;
+
+    let attendeeAmounts: {
+      event_ticket_id: string;
+      platform_fee_amount: number;
+      amount_paid: number;
+      host_payout_amount: number;
+    } | null = null;
+
+    if (this.isGuestMode) {
+      const attendees = this.rsvp.summary().attendees;
+      const first = attendees[0];
+      if (first) {
+        attendeeAmounts = {
+          event_ticket_id: first.event_ticket_id,
+          platform_fee_amount: first.platform_fee_amount,
+          amount_paid: first.amount_paid,
+          host_payout_amount: first.host_payout_amount
+        };
+      }
+    }
+
+    await this.modalCtrl.dismiss({
+      selectedTicket: ticket,
+      attendeeAmounts: attendeeAmounts ?? undefined
+    });
+  }
+
 }
