@@ -24,9 +24,9 @@ export class ManageEventService extends BaseApiService {
     const eventData = this.currentEventData();
     const now = Date.now();
     if (!eventData) return false;
-    const eventStart = new Date(eventData.start_date).getTime();
+    const eventStart = new Date(eventData.end_date).getTime();
 
-    // Event is completed if start date is in the past
+    // event is completed if end date is in the past
     return eventStart < now;
   });
 

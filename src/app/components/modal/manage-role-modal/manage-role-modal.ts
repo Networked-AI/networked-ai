@@ -70,6 +70,11 @@ export class ManageRoleModal implements OnInit {
       label: 'Add Speaker',
       icon: 'pi pi-plus',
       command: () => this.addParticipant('Speaker')
+    },
+    {
+      label: 'Add Staff',
+      icon: 'pi pi-plus',
+      command: () => this.addParticipant('Staff')
     }
   ];
 

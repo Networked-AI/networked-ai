@@ -186,9 +186,9 @@ export class Event implements OnInit, OnDestroy {
   isEventCompleted = computed(() => {
     const eventData = this.currentEventData();
     const now = Date.now();
-    const eventStart = new Date(eventData.start_date).getTime();
+    const eventStart = new Date(eventData.end_date).getTime();
 
-    // Event is completed if start date is in the past
+    // event is completed if end date is in the past
     return eventStart < now;
   });
 
