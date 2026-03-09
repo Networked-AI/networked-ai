@@ -100,7 +100,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
       description: `
       <span class="text-neutral-500">
       Event Location:
-      <span class="font-semibold text-neutral-900 break-words">
+      <span class="font-semibold text-neutral-900 wrap-break-word">
       ${location}
       </span>
       </span><br/><br/>
@@ -125,8 +125,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
     } else {
       url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
     }
-
-    await Browser.open({ url });
+    if (this.isBrowser) window.open(url, '_blank');
   }
 
   canViewAttendees = computed(() => {
