@@ -1,5 +1,5 @@
 import { Subscription } from 'rxjs';
-import { IEvent } from '@/interfaces/event';
+import { NgTemplateOutlet } from '@angular/common';
 import { EventService } from '@/services/event.service';
 import { AuthService } from '@/services/auth.service';
 import { EventCard } from '@/components/card/event-card';
@@ -11,7 +11,19 @@ import { HostFirstEventCard } from '@/components/card/host-first-event-card';
 import { NoUpcomingEventCard } from '@/components/card/no-upcoming-event-card';
 import { UserRecommendations } from '@/components/common/user-recommendations';
 import { IonicSlides, IonSkeletonText } from '@ionic/angular/standalone';
-import { signal, computed, Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, effect, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  signal,
+  computed,
+  Component,
+  ChangeDetectionStrategy,
+  inject,
+  OnInit,
+  OnDestroy,
+  effect,
+  CUSTOM_ELEMENTS_SCHEMA,
+  ViewChild,
+  ElementRef
+} from '@angular/core';
 
 interface NetworkSuggestion {
   id: string;
@@ -29,7 +41,7 @@ interface NetworkSuggestion {
   templateUrl: './home-event.html',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CityCard, EventCard, UpcomingEventCard, HostFirstEventCard, NoUpcomingEventCard, UserRecommendations, IonSkeletonText]
+  imports: [CityCard, EventCard, UpcomingEventCard, HostFirstEventCard, NoUpcomingEventCard, UserRecommendations, IonSkeletonText, NgTemplateOutlet]
 })
 export class HomeEvent implements OnInit, OnDestroy {
   // services
@@ -45,7 +57,18 @@ export class HomeEvent implements OnInit, OnDestroy {
   // variables
   swiperModules = [IonicSlides];
   private queryParamsSubscription?: Subscription;
+  recommendedPage = signal(1);
+  publicPage = signal(1);
+  myEventsPage = signal(1);
 
+  isLoadingMore = signal(false);
+  hasMoreRecommended = signal(true);
+  hasMorePublic = signal(true);
+  hasMoreMyEvents = signal(true);
+  @ViewChild('recommendedSwiper') recommendedSwiperRef?: ElementRef;
+  @ViewChild('myEventsSwiper') myEventsSwiperRef?: ElementRef;
+  @ViewChild('publicSwiper') publicSwiperRef?: ElementRef;
+  readonly PAGE_LIMIT = 10;
   currentUser = this.authService.currentUser;
   isLoggedIn = computed(() => !!this.authService.currentUser());
 
@@ -169,8 +192,8 @@ export class HomeEvent implements OnInit, OnDestroy {
 
     try {
       this.isLoading.set(true);
-      await this.eventService.getEvents({
-        limit: 3,
+      const res = await this.eventService.getEvents({
+        limit: this.PAGE_LIMIT,
         append: !reset,
         roles: 'Host,CoHost,Sponsor',
         is_my_events: true,
@@ -178,6 +201,9 @@ export class HomeEvent implements OnInit, OnDestroy {
         start_date: new Date().toString(),
         from_home: true
       });
+      const p = res?.data?.pagination;
+      this.hasMoreMyEvents.set((p?.currentPage ?? 1) < (p?.totalPages ?? 1));
+      if (reset) this.myEventsPage.set(1);
     } catch (error) {
       console.error('Error loading my events:', error);
     } finally {
@@ -188,26 +214,27 @@ export class HomeEvent implements OnInit, OnDestroy {
   private async handleAccountChangeAndLogin(): Promise<void> {
     this.eventService.resetAllEvents();
     this.eventService.cityCards.set([]);
+    this.resetPagination(); // ← add
     await this.loadAllEvents(true);
     await this.loadUpcomingEvents();
     await this.loadTopCities(true);
   }
 
   private async loadRecommendedEvents(reset: boolean = true): Promise<void> {
-    // Don't call API if user is not logged in
-    if (!this.isLoggedIn()) {
-      return;
-    }
+    if (!this.isLoggedIn()) return;
 
     try {
       this.isLoading.set(true);
-      await this.eventService.getEvents({
-        limit: 3,
+      const res = await this.eventService.getEvents({
+        limit: this.PAGE_LIMIT,
         append: !reset,
         is_recommended: true,
         start_date: new Date().toString(),
         from_home: true
       });
+      const p = res?.data?.pagination;
+      this.hasMoreRecommended.set((p?.currentPage ?? 1) < (p?.totalPages ?? 1));
+      if (reset) this.recommendedPage.set(1);
     } catch (error) {
       console.error('Error loading recommended events:', error);
     } finally {
@@ -218,13 +245,16 @@ export class HomeEvent implements OnInit, OnDestroy {
   private async loadPublicEvents(reset: boolean = true): Promise<void> {
     try {
       this.isLoading.set(true);
-      await this.eventService.getEvents({
+      const res = await this.eventService.getEvents({
         is_public: true,
-        limit: 3,
+        limit: this.PAGE_LIMIT,
         append: !reset,
         start_date: new Date().toString(),
         from_home: true
       });
+      const p = res?.data?.pagination;
+      this.hasMorePublic.set((p?.currentPage ?? 1) < (p?.totalPages ?? 1));
+      if (reset) this.publicPage.set(1);
     } catch (error) {
       console.error('Error loading public events:', error);
     } finally {
@@ -238,27 +268,33 @@ export class HomeEvent implements OnInit, OnDestroy {
       const loggedIn = this.isLoggedIn();
 
       if (!loggedIn) {
-        // When not logged in, only load public events
-        await this.loadPublicEvents(reset);
+        const res = await this.eventService.getEvents({
+          is_public: true,
+          limit: this.PAGE_LIMIT,
+          append: !reset,
+          start_date: new Date().toString(),
+          from_home: true
+        });
+        const p = res?.data?.pagination;
+        this.hasMorePublic.set((p?.currentPage ?? 1) < (p?.totalPages ?? 1));
       } else {
-        // When logged in, load both recommended and public events
-        await Promise.all([
+        const [rec, pub, mine] = await Promise.all([
           this.eventService.getEvents({
-            limit: 3,
+            limit: this.PAGE_LIMIT,
             append: !reset,
             is_recommended: true,
             start_date: new Date().toString(),
             from_home: true
           }),
           this.eventService.getEvents({
-            limit: 3,
+            limit: this.PAGE_LIMIT,
             is_public: true,
             append: !reset,
             start_date: new Date().toString(),
             from_home: true
           }),
           this.eventService.getEvents({
-            limit: 3,
+            limit: this.PAGE_LIMIT,
             append: !reset,
             roles: 'Host,CoHost,Sponsor',
             is_my_events: true,
@@ -267,6 +303,14 @@ export class HomeEvent implements OnInit, OnDestroy {
             from_home: true
           })
         ]);
+
+        // ✅ set hasMore from page 1 response
+        const rp = rec?.data?.pagination;
+        const pp = pub?.data?.pagination;
+        const mp = mine?.data?.pagination;
+        this.hasMoreRecommended.set((rp?.currentPage ?? 1) < (rp?.totalPages ?? 1));
+        this.hasMorePublic.set((pp?.currentPage ?? 1) < (pp?.totalPages ?? 1));
+        this.hasMoreMyEvents.set((mp?.currentPage ?? 1) < (mp?.totalPages ?? 1));
       }
     } catch (error) {
       console.error('Error loading events:', error);
@@ -274,7 +318,6 @@ export class HomeEvent implements OnInit, OnDestroy {
       this.isLoading.set(false);
     }
   }
-
   ngOnDestroy(): void {
     this.queryParamsSubscription?.unsubscribe();
   }
@@ -290,10 +333,9 @@ export class HomeEvent implements OnInit, OnDestroy {
   async refresh(): Promise<void> {
     try {
       this.eventService.resetAllEvents();
+      this.resetPagination(); // ← add
       this.loadAllEvents(true);
-      if (this.isLoggedIn()) {
-        this.loadUpcomingEvents(true);
-      }
+      if (this.isLoggedIn()) this.loadUpcomingEvents(true);
       this.loadTopCities(true);
     } catch (error) {
       console.error('Error refreshing events:', error);
@@ -342,5 +384,112 @@ export class HomeEvent implements OnInit, OnDestroy {
     } finally {
       this.isLoading.set(false);
     }
+  }
+  onReachEnd(event: any, type: 'recommended' | 'public' | 'myEvents'): void {
+    const swiper = event?.detail?.[0];
+    if (!swiper?.isEnd) return;
+
+    switch (type) {
+      case 'recommended':
+        this.onRecommendedSlideEnd();
+        break;
+      case 'public':
+        this.onPublicSlideEnd();
+        break;
+      case 'myEvents':
+        this.onMyEventsSlideEnd();
+        break;
+    }
+  }
+  
+  private updateSwiper(ref?: ElementRef, previousSlideIndex?: number): void {
+    setTimeout(() => {
+      const swiper = ref?.nativeElement?.swiper;
+      if (!swiper) return;
+      swiper.update();
+      if (previousSlideIndex !== undefined) {
+        swiper.slideTo(previousSlideIndex, 0, false);
+      }
+    }, 100);
+  }
+  async onRecommendedSlideEnd(): Promise<void> {
+    if (this.isLoadingMore() || !this.hasMoreRecommended()) return;
+    const nextPage = this.recommendedPage() + 1;
+    // ✅ capture current index BEFORE loading
+    const currentIndex = this.recommendedSwiperRef?.nativeElement?.swiper?.activeIndex ?? 0;
+    try {
+      this.isLoadingMore.set(true);
+      const response = await this.eventService.getEvents({
+        page: nextPage,
+        limit: this.PAGE_LIMIT,
+        append: true,
+        is_recommended: true,
+        start_date: new Date().toString(),
+        from_home: true
+      });
+      const pagination = response?.data?.pagination;
+      this.hasMoreRecommended.set((pagination?.currentPage ?? nextPage) < (pagination?.totalPages ?? 1));
+      this.recommendedPage.set(nextPage);
+      this.updateSwiper(this.recommendedSwiperRef, currentIndex); // ✅ restore position
+    } finally {
+      this.isLoadingMore.set(false);
+    }
+  }
+
+  async onPublicSlideEnd(): Promise<void> {
+    if (this.isLoadingMore() || !this.hasMorePublic()) return;
+    const nextPage = this.publicPage() + 1;
+    const currentIndex = this.publicSwiperRef?.nativeElement?.swiper?.activeIndex ?? 0;
+    try {
+      this.isLoadingMore.set(true);
+      const response = await this.eventService.getEvents({
+        page: nextPage,
+        limit: this.PAGE_LIMIT,
+        append: true,
+        is_public: true,
+        start_date: new Date().toString(),
+        from_home: true
+      });
+      const pagination = response?.data?.pagination;
+      this.hasMorePublic.set((pagination?.currentPage ?? nextPage) < (pagination?.totalPages ?? 1));
+      this.publicPage.set(nextPage);
+      this.updateSwiper(this.publicSwiperRef, currentIndex);
+    } finally {
+      this.isLoadingMore.set(false);
+    }
+  }
+
+  async onMyEventsSlideEnd(): Promise<void> {
+    if (this.isLoadingMore() || !this.hasMoreMyEvents()) return;
+    const nextPage = this.myEventsPage() + 1;
+    const currentIndex = this.myEventsSwiperRef?.nativeElement?.swiper?.activeIndex ?? 0;
+    try {
+      this.isLoadingMore.set(true);
+      const response = await this.eventService.getEvents({
+        page: nextPage,
+        limit: this.PAGE_LIMIT,
+        append: true,
+        roles: 'Host,CoHost,Sponsor',
+        is_my_events: true,
+        user_id: this.currentUser()?.id,
+        start_date: new Date().toString(),
+        from_home: true
+      });
+      const pagination = response?.data?.pagination;
+      this.hasMoreMyEvents.set((pagination?.currentPage ?? nextPage) < (pagination?.totalPages ?? 1));
+      this.myEventsPage.set(nextPage);
+      this.updateSwiper(this.myEventsSwiperRef, currentIndex);
+    } finally {
+      this.isLoadingMore.set(false);
+    }
+  }
+  // Reset pagination on refresh/account change
+  private resetPagination(): void {
+    this.recommendedPage.set(1);
+    this.publicPage.set(1);
+    this.myEventsPage.set(1);
+    this.hasMoreRecommended.set(true);
+    this.hasMorePublic.set(true);
+    this.hasMoreMyEvents.set(true);
   }
 }

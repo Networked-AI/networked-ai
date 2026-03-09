@@ -50,6 +50,7 @@ import { Browser } from '@capacitor/browser';
 import { environment } from 'src/environments/environment';
 import { BaseApiService } from '@/services/base-api.service';
 import { FormsModule } from '@angular/forms';
+import { UserRecommendations } from '@/components/common/user-recommendations';
 
 type ProfileTabs = 'hosted-events' | 'attended-events' | 'upcoming-events' | 'user-posts' | 'user-achievement';
 
@@ -90,7 +91,8 @@ interface TabConfig {
     ScrollHandlerDirective,
     IonSkeletonText,
     FormsModule,
-    ShowMoreComponent
+    ShowMoreComponent,
+    UserRecommendations
   ]
 })
 export class Profile implements OnDestroy {

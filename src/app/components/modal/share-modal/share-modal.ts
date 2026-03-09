@@ -97,7 +97,7 @@ export class ShareModal implements OnInit {
   totalPages = signal<number>(0);
   sendEntireNetwork = signal<boolean>(false);
   eventSlug = signal<string | null>(null);
-
+  totalNetworkCount = signal(0);
   private searchSubject = new Subject<string>();
 
   // computed
@@ -107,6 +107,10 @@ export class ShareModal implements OnInit {
   });
 
   shareButtonLabel = computed(() => {
+    if (this.sendEntireNetwork()) {
+      const total = this.totalNetworkCount();
+      return `Share ${this.type} (${total > 0 ? total : 'Entire Network'})`;
+    }
     return `Share ${this.type}${this.selectedCount()}`;
   });
 
@@ -150,6 +154,7 @@ export class ShareModal implements OnInit {
         this.yourNetwork.set(users);
         this.currentPage.set(response.pagination?.currentPage || 1);
         this.totalPages.set(response.pagination?.totalPages || 0);
+        this.totalNetworkCount.set(response.pagination?.totalCount ?? 0);
         this.isLoading.set(false);
         this.cd.detectChanges();
       });
@@ -206,6 +211,7 @@ export class ShareModal implements OnInit {
 
       this.currentPage.set(response.pagination?.currentPage || 1);
       this.totalPages.set(response.pagination?.totalPages || 0);
+      this.totalNetworkCount.set(response.pagination?.totalCount ?? 0);
     } catch (error) {
       console.error('Error loading network connections:', error);
     } finally {
@@ -333,12 +339,17 @@ export class ShareModal implements OnInit {
           return;
         }
 
-        const payload = {
+        const payload: {
+          event_id: string;
+          type: string;
+          send_entire_network?: boolean;
+          peer_ids?: string[];
+        } = {
           event_id: this.id,
           type: 'Event',
-          send_entire_network: false,
-          peer_ids: selectedIds
+          send_entire_network: false
         };
+        sendEntireNetwork ? (payload.send_entire_network = true) : (payload.peer_ids = selectedIds);
 
         const response = await this.eventService.shareEvent(payload);
 
@@ -355,12 +366,17 @@ export class ShareModal implements OnInit {
 
         const planMessage = `Check out this Subscription plan: ${link}`;
 
-        const payload = {
+        const payload: {
+          type: string;
+          message: string;
+          send_entire_network?: boolean;
+          peer_ids?: string[];
+        } = {
           type: 'Text',
           message: planMessage,
-          send_entire_network: false,
-          peer_ids: [...selectedIds]
+          send_entire_network: false
         };
+        sendEntireNetwork ? (payload.send_entire_network = true) : (payload.peer_ids = selectedIds);
 
         await this.messagesService.shareInChat(payload);
         this.toasterService.showSuccess('Plan shared successfully');

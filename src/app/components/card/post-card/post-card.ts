@@ -8,9 +8,20 @@ import { FeedService } from '@/services/feed.service';
 import { NavigationService } from '@/services/navigation.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
-import { DatePipe, NgOptimizedImage } from '@angular/common';
+import { DatePipe, NgOptimizedImage, isPlatformBrowser } from '@angular/common';
 import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
-import { ChangeDetectionStrategy, Component, inject, input, output, signal, computed, effect, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  input,
+  output,
+  signal,
+  computed,
+  effect,
+  CUSTOM_ELEMENTS_SCHEMA,
+  PLATFORM_ID
+} from '@angular/core';
 import { FeedPost } from '@/interfaces/IFeed';
 import { Router } from '@angular/router';
 import { NetworkService } from '@/services/network.service';
@@ -66,7 +77,9 @@ export class PostCard {
     const postUserId = this.post().user_id;
     return currentUser?.id === postUserId;
   });
-
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
+  
   // Menu items for current user's posts (Edit/Delete only)
   currentUserMenuItems: MenuItem[] = [
     { label: 'Edit', icon: 'assets/svg/editIconBlack.svg', iconType: 'svg', action: 'edit' },
@@ -506,7 +519,7 @@ export class PostCard {
     } else {
       url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
     }
- 
-    await Browser.open({ url });
+
+    if (this.isBrowser) window.open(url, '_blank');
   }
 }

@@ -105,7 +105,7 @@
         }
       </div>
       @if (eventDisplayData().isCurrentUserAttendee) {
-        <div class="px-4 pt-2" (click)="openTicketsModal()">
+        <div class="px-4 pt-2 cursor-pointer" (click)="openTicketsModal()">
           <div
             class="flex items-center justify-between rounded-[12px] border border-[#DBDBDB] bg-linear-to-r from-[#fff7ee] to-[#fefaf3] pl-1.5 pr-3 py-1.5 shadow-[2px_16px_19px_0_rgba(0,0,0,0.09)]"
           >
@@ -120,6 +120,21 @@
               <div class="body-14M brand-03">My Ticket</div>
               <div class="pi pi-arrow-right text-[16px]! brand-03"></div>
             </div>
+          </div>
+        </div>
+      }
+
+      @if (showEventAnalytics()) {
+        <div class="px-4 pt-2 cursor-pointer" (click)="navigateToNetwork()">
+          <div
+            class="flex items-center justify-between rounded-[12px] border border-[#DBDBDB] bg-linear-to-r from-[#fff7ee] to-[#fefaf3] pl-1.5 pr-3 py-1.5 shadow-[2px_16px_19px_0_rgba(0,0,0,0.09)]"
+          >
+            <div class="flex items-center gap-2">
+              <img src="assets/svg/users-verify.svg" class="h-9 w-9" />
+              <div class="body-14R neutral-01">Network with people with similar interests!</div>
+            </div>
+
+            <i class="pi pi-arrow-right text-[15px]! brand-03"></i>
           </div>
         </div>
       }
