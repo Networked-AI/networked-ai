@@ -178,6 +178,18 @@ export class Event implements OnInit, OnDestroy {
     return items;
   });
 
+  showEventAnalytics = computed(() => {
+    const event = this.eventDisplayData();
+    if (!event) return false;
+    const hasPublicQuestions = event.questionnaire?.some(
+      (q: any) => q.is_public === true && ['SingleChoice', 'MultipleChoice', 'Rating'].includes(q.question_type)
+    );
+
+    const showToUser = event.isCurrentUserHost || event.isCurrentUserAttendee || event.isCurrentUserCoHost;
+
+    return hasPublicQuestions && showToUser;
+  });
+
   isShowTimer = computed(() => {
     const eventData = this.currentEventData();
     return eventData?.settings?.is_show_timer === true;
@@ -1025,5 +1037,9 @@ export class Event implements OnInit, OnDestroy {
 
   onImageError(event: any): void {
     onImageError(event);
+  }
+
+  navigateToNetwork() {
+    this.navigationService.navigateForward(`/event/questionnaire-response/${this.eventDisplayData().id}`);
   }
 }

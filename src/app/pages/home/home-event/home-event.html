@@ -158,6 +158,7 @@
       </div>
 
       <swiper-container
+        #recommendedSwiper
         speed="100"
         space-between="8"
         slides-per-view="1.5"
@@ -166,10 +167,16 @@
         slides-offset-before="16"
         [modules]="swiperModules"
         [breakpoints]="{ '768': { slidesPerView: 2.2 } }"
+        (swiperslidechangetransitionend)="onReachEnd($event, 'recommended')"
       >
         @for (event of recommendedEvents(); track event.id || event.title) {
           <swiper-slide>
             <event-card [event]="event" />
+          </swiper-slide>
+        }
+        @if (isLoadingMore() && hasMoreRecommended()) {
+          <swiper-slide>
+            <ng-container *ngTemplateOutlet="eventSkeletonSlide" />
           </swiper-slide>
         }
       </swiper-container>
@@ -300,6 +307,7 @@
       </div>
 
       <swiper-container
+        #myEventsSwiper
         speed="100"
         space-between="8"
         slides-per-view="1.5"
@@ -308,10 +316,16 @@
         slides-offset-before="16"
         [modules]="swiperModules"
         [breakpoints]="{ '768': { slidesPerView: 2.2 } }"
+        (swiperslidechangetransitionend)="onReachEnd($event, 'myEvents')"
       >
         @for (event of myEvents(); track event.id || event.title) {
           <swiper-slide>
             <event-card [event]="event" />
+          </swiper-slide>
+        }
+        @if (isLoadingMore() && hasMoreMyEvents()) {
+          <swiper-slide>
+            <ng-container *ngTemplateOutlet="eventSkeletonSlide" />
           </swiper-slide>
         }
       </swiper-container>
@@ -362,6 +376,7 @@
 
       <!-- <div> -->
       <swiper-container
+        #publicSwiper
         speed="100"
         space-between="8"
         slides-per-view="1.5"
@@ -370,13 +385,30 @@
         slides-offset-before="16"
         [modules]="swiperModules"
         [breakpoints]="{ '768': { slidesPerView: 2.2 } }"
+        (swiperslidechangetransitionend)="onReachEnd($event, 'public')"
       >
         @for (event of publicEvents(); track event.id || event.title) {
           <swiper-slide>
             <event-card [event]="event" />
           </swiper-slide>
         }
+        @if (isLoadingMore() && hasMorePublic()) {
+          <swiper-slide>
+            <ng-container *ngTemplateOutlet="eventSkeletonSlide" />
+          </swiper-slide>
+        }
       </swiper-container>
     }
   }
 </div>
+
+<ng-template #eventSkeletonSlide>
+  <div class="rounded-xl overflow-hidden border border-surface-200">
+    <ion-skeleton-text animated class="w-full h-48 rounded-t-xl" />
+    <div class="p-4 flex flex-col gap-2">
+      <ion-skeleton-text animated class="w-3/4 h-5 rounded" />
+      <ion-skeleton-text animated class="w-1/2 h-4 rounded" />
+      <ion-skeleton-text animated class="w-2/3 h-4 rounded" />
+    </div>
+  </div>
+</ng-template>
