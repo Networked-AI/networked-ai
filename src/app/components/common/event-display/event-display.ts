@@ -48,6 +48,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   onEventChatClick = input<() => void>();
   showActionButtons = input(false);
   hideDateSelector = input(false);
+  hideMediaSlider = input(false);
 
   // variables
   private platformId = inject(PLATFORM_ID);

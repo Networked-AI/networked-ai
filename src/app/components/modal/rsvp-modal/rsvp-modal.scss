@@ -1,20 +1,95 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ─── Ticket border styles ─── */
 .ticket-early-bird {
   border: 1px solid var(--early-bird);
 }
-
 .ticket-standard {
   border: 1px solid var(--neutral-05);
 }
-
 .ticket-sponsor {
   border: 1px solid var(--sponsor);
 }
-
-.ticket-free {  
+.ticket-free {
   border: 1px solid var(--brand-05);
 }
 
 .bg-early-bird {
   background: var(--early-bird);
   color: var(--neutral-07);
+}
+
+/* ─── Layout defaults ─── */
+.rsvp-layout-stacked,
+.rsvp-layout-always {
+  display: block;
+}
+
+.rsvp-layout-mid,
+.rsvp-layout-hidden {
+  display: none;
+}
+
+.rsvp-header-stacked {
+  display: block;
+}
+
+/* ─── Tablet: 768px – 1280px ─── */
+@media (min-width: 768px) and (max-width: 1280px) {
+  .rsvp-header-stacked,
+  .rsvp-layout-stacked {
+    display: none !important;
+  }
+
+  .rsvp-layout-mid {
+    display: block;
+  }
+
+  .rsvp-mid-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    border-top: 1px solid var(--surface-200, #eee);
+  }
+
+  .rsvp-mid-main {
+    padding: 16px;
+    border-right: 1px solid var(--surface-200, #eee);
+  }
+
+  .rsvp-mid-side {
+    position: sticky;
+    top: 0;
+    align-self: start;
+  }
+
+  .rsvp-side-card {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 12px;
+    background: var(--neutral-07, #fff);
+  }
+
+  .rsvp-side-media {
+    border-radius: 12px;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .rsvp-side-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+.rsvp-side-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }

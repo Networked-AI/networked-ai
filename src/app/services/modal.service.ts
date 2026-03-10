@@ -7,7 +7,7 @@ import { MenuItem } from '@/components/modal/menu-modal';
 import { CreateEvent } from '@/pages/event/create-event';
 import { RsvpModal } from '@/components/modal/rsvp-modal';
 import { MenuModal } from '@/components/modal/menu-modal';
-import { DOCUMENT, inject, Injectable, Signal } from '@angular/core';
+import { DOCUMENT, inject, Injectable, PLATFORM_ID, Signal } from '@angular/core';
 import { TitleModal } from '@/components/modal/title-modal';
 import { TicketsModal } from '@/components/modal/tickets-modal';
 import { LoadingModal } from '@/components/modal/loading-modal';
@@ -59,6 +59,7 @@ import { ChatRoom } from '@/interfaces/IChat';
 import { AddToCalendarModal } from '@/components/modal/add-to-calendar-modal';
 import { UserSubscriptionPlans } from '@/pages/subscription-plans/user-subscription-plans';
 import { ScanResultModal } from '@/components/modal/scan-result-modal';
+import { isPlatformBrowser } from '@angular/common';
 import { PlanData } from '@/interfaces/ISubscripton';
 import { GuestFormModal } from '@/components/modal/guest-form-modal/guest-form-modal';
 
@@ -70,6 +71,9 @@ export class ModalService {
   navCtrl = inject(NavController);
   private document = inject(DOCUMENT);
 
+  private platformId = inject(PLATFORM_ID);
+  private isBrowser = isPlatformBrowser(this.platformId);
+  isTabletOrDesktop = this.isBrowser && window.innerWidth >= 768 && window.innerWidth <= 1280;
   /** References to all login modals when open (e.g. so signup can close them with success data). */
   private loginModalRefs: HTMLIonModalElement[] = [];
 
@@ -824,13 +828,14 @@ export class ModalService {
     plans?: any[],
     date?: string,
     location?: string,
-    participants?: Array<{ user_id?: string; user?: { id?: string }; role?: string }>
+    participants?: Array<{ user_id?: string; user?: { id?: string }; role?: string }>,
+    imageUrl?: string
   ): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
-      handle: true,
-      breakpoints: [0, 1],
-      initialBreakpoint: 1,
+      handle: !this.isTabletOrDesktop,
+      breakpoints: this.isTabletOrDesktop ? undefined : [0, 1],
+      initialBreakpoint: this.isTabletOrDesktop ? undefined : 1,
       cssClass: 'modal-60-percent-height',
       component: RsvpModal,
       componentProps: {
@@ -849,7 +854,8 @@ export class ModalService {
         plans,
         date,
         location,
-        participants: participants ?? []
+        participants: participants ?? [],
+        imageUrl: imageUrl ?? ''
       }
     });
     await modal.present();
@@ -857,17 +863,24 @@ export class ModalService {
     return data || null;
   }
 
-  async openQuestionnairePreviewModal(questions: any[], isPreviewMode: boolean = false): Promise<any> {
+  async openQuestionnairePreviewModal(
+    questions: any[],
+    isPreviewMode: boolean = false,
+    eventInfo?: { eventTitle: string; date: string; location: string; hostName: string; imageUrl?: string }
+  ): Promise<any> {
+    const isTabletModal = this.isTabletOrDesktop && !!eventInfo;
+
     const modal = await this.modalCtrl.create({
       mode: 'ios',
-      handle: true,
-      breakpoints: [0, 1],
-      initialBreakpoint: 1,
+      handle: !isTabletModal,
+      breakpoints: isTabletModal ? undefined : [0, 1],
+      initialBreakpoint: isTabletModal ? undefined : 1,
       cssClass: 'modal-60-percent-height',
       component: QuestionnairePreviewModal,
       componentProps: {
         questions,
-        isPreviewMode
+        isPreviewMode,
+        eventInfo: eventInfo ?? null
       }
     });
     await modal.present();
@@ -885,13 +898,14 @@ export class ModalService {
     additionalFees?: string | number | null,
     hostName?: string,
     isGuestMode?: boolean,
-    participants?: Array<{ user_id?: string; user?: { id?: string }; role?: string }>
+    participants?: Array<{ user_id?: string; user?: { id?: string }; role?: string }>,
+    imageUrl?: string
   ): Promise<any> {
     const modal = await this.modalCtrl.create({
       mode: 'ios',
-      handle: true,
-      breakpoints: [0, 1],
-      initialBreakpoint: 1,
+      handle: !this.isTabletOrDesktop,
+      breakpoints: this.isTabletOrDesktop ? undefined : [0, 1],
+      initialBreakpoint: this.isTabletOrDesktop ? undefined : 1,
       cssClass: 'modal-60-percent-height',
       component: RsvpDetailsModal,
       componentProps: {
@@ -904,7 +918,8 @@ export class ModalService {
         additionalFees,
         hostName,
         isGuestMode: isGuestMode ?? false,
-        participants
+        participants,
+        imageUrl: imageUrl ?? ''
       }
     });
 

@@ -1,0 +1,84 @@
+@if (mode() === 'primary') {
+  <div class="event-media-block event-primary-media image-container" [class.event-media-block--compact]="compact()">
+    <div class="bg-blur-image relative w-full h-full">
+      <img
+        fill
+        priority
+        [alt]="title() || 'Event image'"
+        class="object-cover"
+        (error)="onImageError($event)"
+        [ngSrc]="getImageUrl(thumbnailUrl() || imageUrl())"
+      />
+    </div>
+    <div class="min-h-[inherit] h-[315px] relative w-full">
+      <img
+        fill
+        priority
+        [alt]="title() || 'Event image'"
+        class="object-contain"
+        (error)="onImageError($event)"
+        [ngSrc]="getImageUrl(imageUrl() || thumbnailUrl())"
+      />
+    </div>
+    <div class="bg-image-bottom"></div>
+    @if (countdownFormatted()) {
+      <div class="countdown-timer">
+        <span [innerHTML]="countdownFormatted()"></span>
+      </div>
+    }
+  </div>
+} @else if (mode() === 'swiper') {
+  <div class="event-media-block event-media-swiper relative rounded-[16px] overflow-hidden" [class.event-media-block--compact]="compact()">
+    <swiper-container
+      speed="120"
+      pagination="true"
+      navigation="true"
+      space-between="0"
+      slides-per-view="1"
+      allow-touch-move="true"
+      pagination-type="bullets"
+      [modules]="swiperModules"
+      pagination-clickable="true"
+      class="event-swiper"
+      [class.timer-active]="!!countdownFormatted()"
+    >
+      @if ((displayMedias() || []).length > 0) {
+        @for (media of displayMedias() || []; track media.id || $index) {
+          <swiper-slide>
+            @if (media.type === 'Video') {
+              <video [src]="media.url" class="w-full h-[420px] object-contain bg-black" controls></video>
+            } @else {
+              <div class="event-media-hero image-container">
+                <div class="bg-blur-image relative w-full h-full">
+                  <img
+                    fill
+                    priority
+                    [alt]="title() + ' image ' + ($index + 1)"
+                    class="object-cover"
+                    (error)="onImageError($event)"
+                    [ngSrc]="getImageUrl(media.url || '')"
+                  />
+                </div>
+                <div class="min-h-[inherit] h-[360px] relative w-full">
+                  <img
+                    fill
+                    priority
+                    [alt]="title() + ' image ' + ($index + 1)"
+                    class="object-contain"
+                    (error)="onImageError($event)"
+                    [ngSrc]="getImageUrl(media.url || '')"
+                  />
+                </div>
+              </div>
+            }
+          </swiper-slide>
+        }
+      }
+    </swiper-container>
+    @if (countdownFormatted()) {
+      <div class="countdown-timer">
+        <span [innerHTML]="countdownFormatted()"></span>
+      </div>
+    }
+  </div>
+}

@@ -1,207 +1,250 @@
 <ion-header mode="md">
   <ion-toolbar mode="md">
     <div class="p-4 flex items-center justify-between">
-      <div class="heading-h3 neutral-01 line-clamp-1 w-full">{{ eventTitle }}</div>
-      <i class="pi pi-times cursor-pointer text-xl" (click)="close()"></i>
-    </div>
-
-    <!-- Hide questionnaire & promo in guest mode -->
-    @if (!isGuestMode && (!isSubscriberExclusive || hasSubscribed)) {
-      <div class="px-6 flex flex-col gap-3 pb-2">
-        <!-- Questionnaire Requirement -->
-        @if (hasQuestionnaire()) {
-          <div class="flex items-center gap-3 bg-gray-200 rounded-lg p-2">
-            <div class="bg-accent-red rounded-lg p-1">
-              <ion-icon src="assets/svg/questionnaire.svg" alt="questionnaire" class="w-[18px] h-[18px]" />
-            </div>
-            <span class="body-14M neutral-01">A short questionnaire is required to complete RSVP.</span>
+      <div class="rsvp-side-title">
+        <div class="heading-h3 neutral-01 line-clamp-1 w-full">{{ eventTitle }}</div>
+        @if (hostName) {
+          <div class="body-14R neutral-03">
+            Hosted by <span class="text-primary body-14M ">{{ hostName }}</span>
           </div>
         }
-
-        <!-- Promo Code Section -->
-        @if (hasPromoCodes()) {
-          <promo-code-section
-            [promoCodes]="promo_codes"
-            [tickets]="ticketsData()"
-            [promoCode]="promoCode()"
-            [appliedPromoCode]="appliedPromoCode()"
-            [discountAmount]="discountAmount()"
-            [promoValidation]="promoValidation()"
-            (promoStateChange)="onPromoStateChange($event)"
-          />
-        }
+      </div>
+      <i class="pi pi-times cursor-pointer text-xl" (click)="close()"></i>
+    </div>
+    <!-- Stacked only: questionnaire + promo in header — hidden on tablet -->
+    @if (!isGuestMode && (!isSubscriberExclusive || hasSubscribed)) {
+      <div class="rsvp-header-stacked px-6 flex flex-col gap-3 pb-2">
+        <ng-container *ngTemplateOutlet="questionnaireBanner"></ng-container>
+        <ng-container *ngTemplateOutlet="promoCodeInput"></ng-container>
       </div>
     }
   </ion-toolbar>
 </ion-header>
 
-<ion-content mode="md">
-  <div class="px-4">
-    <div class="px-4 py-4 flex flex-col gap-4">
-      @if (isSubscriberExclusive && !hasSubscribed) {
-        <!-- Subscriber Exclusive Message -->
-        <div class="flex flex-col items-center justify-center gap-4 py-8">
-          <div class="flex flex-col items-center gap-3">
-            <ion-icon src="assets/svg/crown-white.svg" alt="crown" class="w-[48px] h-[48px] text-neutral-03"></ion-icon>
-            <div class="body-16M neutral-01 text-center">You have not subscribed</div>
-            <div class="body-14R neutral-03 text-center max-w-md">
-              This event is exclusively for subscribers. Please subscribe to access this event.
-            </div>
+<ng-template #questionnaireBanner>
+  @if (!isSubscriberExclusive || hasSubscribed) {
+    @if (hasQuestionnaire()) {
+      <div class="flex items-center gap-3 bg-gray-200 rounded-lg p-2">
+        <div class="bg-accent-red rounded-lg p-1">
+          <ion-icon src="assets/svg/questionnaire.svg" alt="questionnaire" class="w-[18px] h-[18px]" />
+        </div>
+        <span class="body-14M neutral-01">A short questionnaire is required to complete RSVP.</span>
+      </div>
+    }
+  }
+</ng-template>
+
+<ng-template #promoCodeInput>
+  @if (!isSubscriberExclusive || hasSubscribed) {
+    @if (hasPromoCodes()) {
+      <promo-code-section
+        [promoCodes]="promo_codes"
+        [tickets]="ticketsData()"
+        [promoCode]="promoCode()"
+        [appliedPromoCode]="appliedPromoCode()"
+        [discountAmount]="discountAmount()"
+        [promoValidation]="promoValidation()"
+        (promoStateChange)="onPromoStateChange($event)"
+      />
+    }
+  }
+</ng-template>
+
+<ng-template #ticketList>
+  @for (ticket of ticketsData(); track ticket.id) {
+    <div
+      class="flex flex-col rounded-lg overflow-hidden mb-4"
+      [class.ticket-early-bird]="ticket.ticket_type === 'Early Bird'"
+      [class.ticket-standard]="ticket.ticket_type === 'Standard'"
+      [class.ticket-free]="ticket.ticket_type === 'Free'"
+      [class.ticket-sponsor]="ticket.ticket_type === 'Sponsor'"
+      [class.cursor-pointer]="isGuestMode && getTicketStatus(ticket) === 'available'"
+      [class.ring-2]="isGuestMode && selectedTicket()?.id === ticket.id"
+      [class.ring-[#f5bc61]]="isGuestMode && selectedTicket()?.id === ticket.id"
+      [class.opacity-50]="isGuestMode && getTicketStatus(ticket) !== 'available'"
+      (click)="isGuestMode ? selectTicket(ticket) : null"
+    >
+      @if (ticket.ticket_type === 'Early Bird') {
+        <div class="relative w-full">
+          <div class="h-[32px] flex items-center bg-early-bird">
+            <ion-icon src="assets/svg/ticket/early-bird-icon.svg" class="h-[20px] w-[20px] pl-5 pr-2"></ion-icon>
+            <span>Early Bird</span>
           </div>
         </div>
-      } @else {
-        @for (ticket of ticketsData(); track ticket.id) {
-          <div
-            class="flex flex-col rounded-lg overflow-hidden mb-4"
-            [class.ticket-early-bird]="ticket.ticket_type === 'Early Bird'"
-            [class.ticket-standard]="ticket.ticket_type === 'Standard'"
-            [class.ticket-free]="ticket.ticket_type === 'Free'"
-            [class.ticket-sponsor]="ticket.ticket_type === 'Sponsor'"
-            [class.cursor-pointer]="isGuestMode && getTicketStatus(ticket) === 'available'"
-            [class.ring-2]="isGuestMode && selectedTicket()?.id === ticket.id"
-            [class.ring-[#f5bc61]]="isGuestMode && selectedTicket()?.id === ticket.id"
-            [class.opacity-50]="isGuestMode && getTicketStatus(ticket) !== 'available'"
-            (click)="isGuestMode ? selectTicket(ticket) : null"
-          >
-            <!-- Ticket Type Banner -->
-            @if (ticket.ticket_type === 'Early Bird') {
-              <div class="relative w-full">
-                <div class="h-[32px] flex items-center bg-early-bird">
-                  <ion-icon src="assets/svg/ticket/early-bird-icon.svg" class="h-[20px] w-[20px] pl-5 pr-2"></ion-icon>
-                  <span>Early Bird</span>
-                </div>
-              </div>
-            }
-
-            <div class="p-4 flex flex-col gap-1">
-              <!-- Header: Name, Price, Status -->
-              <div class="flex items-start justify-between gap-4">
-                <div class="flex flex-col flex-1">
-                  <div class="flex items-center gap-2">
-                    <div class="body-16SB neutral-01">{{ ticket.name }}</div>
-                    @if (ticket.ticket_type === 'Sponsor') {
-                      <ion-icon src="assets/svg/crown-sponsor.svg" class="w-[20px] h-[20px]" />
-                    }
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <!-- Hide free subscriber price in guest mode -->
-                    @if (!isGuestMode && isTicketFreeForSubscriber(ticket) && getFreeTicketCount(ticket) > 0) {
-                      <div class="body-16SB neutral-03 line-through">${{ ticket.price.toFixed(2) }}</div>
-                      <div class="body-16SB text-blue-500">Free x{{ getFreeTicketCount(ticket) }}</div>
-                    } @else {
-                      <div class="body-16SB neutral-02">${{ ticket.price.toFixed(2) }}</div>
-                    }
-                  </div>
-                  @if (getTicketStatus(ticket) === 'available' && ticket.available_quantity !== undefined && ticket.available_quantity <= 30) {
-                    <div class="text-sm font-semibold accent-red">{{ ticket.available_quantity }} tickets left</div>
-                  }
-                </div>
-
-                <div class="flex items-center gap-3">
-                  @if (isGuestMode) {
-                    @if (getTicketStatus(ticket) === 'available') {
-                      <p-checkbox
-                        [binary]="true"
-                        [ngModel]="selectedTicket()?.id === ticket.id"
-                        (ngModelChange)="selectTicket(ticket, $event)"
-                      ></p-checkbox>
-                    } @else {
-                      @if (getTicketStatus(ticket) === 'upcoming') {
-                        <div [class]="'px-2 py-1 rounded-lg body-12M flex items-center gap-1 ' + getStatusBadgeClass(getTicketStatus(ticket))">
-                          <i class="pi pi-clock text-xs" [class]="getStatusIconClass(getTicketStatus(ticket))"></i>
-                          <span [class]="getStatusIconClass(getTicketStatus(ticket))">{{ getStatusText(ticket) }}</span>
-                        </div>
-                      } @else {
-                        <div [class]="'px-2 py-1 rounded-lg body-12M flex items-center gap-1 ' + getStatusBadgeClass(getTicketStatus(ticket))">
-                          <span [class]="getStatusIconClass(getTicketStatus(ticket))">{{ getStatusText(ticket) }}</span>
-                        </div>
-                      }
-                    }
-                  } @else {
-                    <!-- Normal mode: +/- controls -->
-                    @if (getTicketStatus(ticket) === 'available') {
-                      <div class="flex items-center">
-                        <app-button
-                          [label]="'−'"
-                          (click)="decrementQuantity(ticket)"
-                          [disabled]="!canDecrement(ticket)"
-                          variant="outlined"
-                          color="secondary"
-                          width="30px"
-                          height="30px"
-                        />
-                        <app-button [label]="ticket.selectedQuantity?.toString() ?? '0'" variant="text" color="contrast" width="30px" height="30px" />
-                        <app-button
-                          [label]="'+'"
-                          (click)="incrementQuantity(ticket)"
-                          [disabled]="!canIncrement(ticket)"
-                          variant="outlined"
-                          color="secondary"
-                          width="30px"
-                          height="30px"
-                        />
-                      </div>
-                    } @else {
-                      @if (getTicketStatus(ticket) === 'upcoming') {
-                        <div [class]="'px-2 py-1 rounded-lg body-12M flex items-center gap-1 ' + getStatusBadgeClass(getTicketStatus(ticket))">
-                          <i class="pi pi-clock text-xs" [class]="getStatusIconClass(getTicketStatus(ticket))"></i>
-                          <span [class]="getStatusIconClass(getTicketStatus(ticket))">{{ getStatusText(ticket) }}</span>
-                        </div>
-                      } @else {
-                        <div [class]="'px-2 py-1 rounded-lg body-12M flex items-center gap-1 ' + getStatusBadgeClass(getTicketStatus(ticket))">
-                          <span [class]="getStatusIconClass(getTicketStatus(ticket))">{{ getStatusText(ticket) }}</span>
-                        </div>
-                      }
-                    }
-                  }
-                </div>
-              </div>
-
-              @if (ticket.description) {
-                <show-more [content]="ticket.description || ''" [maxLength]="220" contentClass="body-14R neutral-03" />
+      }
+      <div class="p-4 flex flex-col gap-1">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex flex-col flex-1">
+            <div class="flex items-center gap-2">
+              <div class="body-16SB neutral-01">{{ ticket.name }}</div>
+              @if (ticket.ticket_type === 'Sponsor') {
+                <ion-icon src="assets/svg/crown-sponsor.svg" class="w-[20px] h-[20px]" />
               }
             </div>
+            <div class="flex items-center gap-2">
+              <!-- Hide free subscriber price in guest mode -->
+              @if (!isGuestMode && isTicketFreeForSubscriber(ticket) && getFreeTicketCount(ticket) > 0) {
+                <div class="body-16SB neutral-03 line-through">${{ ticket.price.toFixed(2) }}</div>
+                <div class="body-16SB text-blue-500">Free x{{ getFreeTicketCount(ticket) }}</div>
+              } @else {
+                <div class="body-16SB neutral-02">${{ ticket.price.toFixed(2) }}</div>
+              }
+            </div>
+            @if (getTicketStatus(ticket) === 'available' && ticket.available_quantity !== undefined && ticket.available_quantity <= 30) {
+              <div class="text-sm font-semibold accent-red">{{ ticket.available_quantity }} tickets left</div>
+            }
           </div>
+          <div class="flex items-center gap-3">
+            @if (isGuestMode) {
+              @if (getTicketStatus(ticket) === 'available') {
+                <p-checkbox
+                  [binary]="true"
+                  [ngModel]="selectedTicket()?.id === ticket.id"
+                  (ngModelChange)="selectTicket(ticket, $event)"
+                ></p-checkbox>
+              } @else {
+                @if (getTicketStatus(ticket) === 'upcoming') {
+                  <div [class]="'px-2 py-1 rounded-lg body-12M flex items-center gap-1 ' + getStatusBadgeClass(getTicketStatus(ticket))">
+                    <i class="pi pi-clock text-xs" [class]="getStatusIconClass(getTicketStatus(ticket))"></i>
+                    <span [class]="getStatusIconClass(getTicketStatus(ticket))">{{ getStatusText(ticket) }}</span>
+                  </div>
+                } @else {
+                  <div [class]="'px-2 py-1 rounded-lg body-12M flex items-center gap-1 ' + getStatusBadgeClass(getTicketStatus(ticket))">
+                    <span [class]="getStatusIconClass(getTicketStatus(ticket))">{{ getStatusText(ticket) }}</span>
+                  </div>
+                }
+              }
+            } @else {
+              <!-- Normal mode: +/- controls -->
+              @if (getTicketStatus(ticket) === 'available') {
+                <div class="flex items-center">
+                  <app-button
+                    [label]="'−'"
+                    (click)="decrementQuantity(ticket)"
+                    [disabled]="!canDecrement(ticket)"
+                    variant="outlined"
+                    color="secondary"
+                    width="30px"
+                    height="30px"
+                  />
+                  <app-button [label]="ticket.selectedQuantity?.toString() ?? '0'" variant="text" color="contrast" width="30px" height="30px" />
+                  <app-button
+                    [label]="'+'"
+                    (click)="incrementQuantity(ticket)"
+                    [disabled]="!canIncrement(ticket)"
+                    variant="outlined"
+                    color="secondary"
+                    width="30px"
+                    height="30px"
+                  />
+                </div>
+              } @else {
+                @if (getTicketStatus(ticket) === 'upcoming') {
+                  <div [class]="'px-2 py-1 rounded-lg body-12M flex items-center gap-1 ' + getStatusBadgeClass(getTicketStatus(ticket))">
+                    <i class="pi pi-clock text-xs" [class]="getStatusIconClass(getTicketStatus(ticket))"></i>
+                    <span [class]="getStatusIconClass(getTicketStatus(ticket))">{{ getStatusText(ticket) }}</span>
+                  </div>
+                } @else {
+                  <div [class]="'px-2 py-1 rounded-lg body-12M flex items-center gap-1 ' + getStatusBadgeClass(getTicketStatus(ticket))">
+                    <span [class]="getStatusIconClass(getTicketStatus(ticket))">{{ getStatusText(ticket) }}</span>
+                  </div>
+                }
+              }
+            }
+          </div>
+        </div>
+        @if (ticket.description) {
+          <show-more [content]="ticket.description || ''" [maxLength]="220" contentClass="body-14R neutral-03" />
         }
+      </div>
+    </div>
+  }
+</ng-template>
 
-        <!-- Hide subscription banner in guest mode -->
-        @if (!isGuestMode && hasSubscription()) {
-          <div class="flex items-center gap-3 border border-blue-500 rounded-lg p-2">
-            <div class="bg-blue-500 rounded-lg p-2">
-              <ion-icon src="assets/svg/crown-white.svg" alt="questionnaire" class="w-[18px] h-[18px]" />
-            </div>
-            <div>
-              <div class="body-14M neutral-01">RSVP Now for Free!</div>
-              <div class="body-12M neutral-03">Limited to 1 free ticket per subscriber</div>
-            </div>
+<ng-template #subscription>
+  @if (!isGuestMode && hasSubscription()) {
+    <div class="flex items-center gap-3 border border-blue-500 rounded-lg p-2">
+      <div class="bg-blue-500 rounded-lg p-2">
+        <ion-icon src="assets/svg/crown-white.svg" alt="questionnaire" class="w-[18px] h-[18px]" />
+      </div>
+      <div>
+        <div class="body-14M neutral-01">RSVP Now for Free!</div>
+        <div class="body-12M neutral-03">Limited to 1 free ticket per subscriber</div>
+      </div>
+    </div>
+  }
+</ng-template>
+
+<ng-template #continueAction>
+  @if (isGuestMode) {
+    <app-button label="Confirm" (click)="dismissWithTicket()" [disabled]="!selectedTicket()" />
+  } @else {
+    <app-button [label]="formattedTotal() ? 'Continue - $' + formattedTotal() : 'Continue'" (click)="dismiss()" [disabled]="!hasSelectedTickets()" />
+    @if (!isLoggedIn()) {
+      <p class="body-14R neutral-03 text-center">
+        Already have an account?
+        <button type="button" class="text-primary body-14M font-medium cursor-pointer bg-transparent border-none p-0" (click)="onSignInClick()">
+          Sign in here
+        </button>
+      </p>
+    }
+  }
+</ng-template>
+
+<ion-content mode="md">
+  <div [class]="isGuestMode ? 'rsvp-layout-always' : 'rsvp-layout-stacked'">
+    <div class="px-8 py-4 flex flex-col gap-4">
+      <ng-container *ngTemplateOutlet="ticketList"></ng-container>
+      <ng-container *ngTemplateOutlet="subscription"></ng-container>
+    </div>
+  </div>
+
+  <div [class]="isGuestMode ? 'rsvp-layout-hidden' : 'rsvp-layout-mid'">
+    <div class="rsvp-mid-inner">
+      <!-- Left column -->
+      <div class="rsvp-mid-main">
+        <ng-container *ngTemplateOutlet="ticketList"></ng-container>
+        @if (hasPromoCodes()) {
+          <div class="flex flex-col gap-3">
+            <ng-container *ngTemplateOutlet="promoCodeInput"></ng-container>
           </div>
         }
-      }
+      </div>
+
+      <!-- Right column -->
+      <aside class="rsvp-mid-side">
+        <div class="rsvp-side-card">
+          @if (imageUrl) {
+            <div class="rsvp-side-media">
+              <app-event-media-block mode="primary" [imageUrl]="imageUrl" [thumbnailUrl]="imageUrl" [title]="eventTitle" [compact]="true" />
+            </div>
+          }
+          <div class="rsvp-side-details">
+            <div class="flex items-start gap-1.5">
+              <div class="pi pi-calendar neutral-03 text-[16px]! mt-0.5"></div>
+              <div class="body-14M line-clamp-1 w-full">{{ date }}</div>
+            </div>
+            <div class="flex items-start gap-1.5">
+              <div class="pi pi-map-marker neutral-03 text-[16px]! mt-0.5"></div>
+              <div class="body-14M line-clamp-1 w-full">{{ location }}</div>
+            </div>
+          </div>
+          @if (hasQuestionnaire()) {
+            <ng-container *ngTemplateOutlet="questionnaireBanner"></ng-container>
+          }
+          <ng-container *ngTemplateOutlet="subscription"></ng-container>
+          <ng-container *ngTemplateOutlet="continueAction"></ng-container>
+        </div>
+      </aside>
     </div>
   </div>
 </ion-content>
 
 @if (!(isSubscriberExclusive && !hasSubscribed)) {
-  <ion-footer mode="md">
+  <ion-footer mode="md" [class]="isGuestMode ? 'rsvp-layout-always' : 'rsvp-layout-stacked'">
     <ion-toolbar mode="md">
       <div class="p-4 flex flex-col gap-3">
-        @if (isGuestMode) {
-          <app-button label="Confirm" (click)="dismissWithTicket()" [disabled]="!selectedTicket()" />
-        } @else {
-          <app-button
-            [label]="formattedTotal() ? 'Continue - $' + formattedTotal() : 'Continue'"
-            (click)="dismiss()"
-            [disabled]="!hasSelectedTickets()"
-          />
-          @if (!isLoggedIn()) {
-            <p class="body-14R neutral-03 text-center">
-              Already have an account?
-              <button type="button" class="text-primary body-14M font-medium cursor-pointer bg-transparent border-none p-0" (click)="onSignInClick()">
-                Sign in here
-              </button>
-            </p>
-          }
-        }
+        <ng-container *ngTemplateOutlet="continueAction"></ng-container>
       </div>
     </ion-toolbar>
   </ion-footer>

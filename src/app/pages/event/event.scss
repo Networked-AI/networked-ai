@@ -1,13 +1,24 @@
 ion-header {
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.6) 0%,
-    rgba(0, 0, 0, 0.35) 35%,
-    rgba(0, 0, 0, 0.1) 75%,
-    rgba(0, 0, 0, 0) 100%
-  );
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
 
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.35) 35%, rgba(0, 0, 0, 0.1) 75%, rgba(0, 0, 0, 0) 100%);
   --ion-background-color: transparent;
+}
+
+.event-page-mid {
+  display: none;
+}
+
+.event-page-stacked {
+  display: block;
+}
+
+.event-page-stacked .event-primary-media {
+  margin-top: -65px;
 }
 
 .event-map {
@@ -88,4 +99,67 @@ ion-header {
   color: #d4af37;
   font-weight: 600;
   font-size: 16px;
+}
+
+/* Middle screens (tablet/iPad/laptop): match screenshot layout */
+@media (min-width: 768px) and (max-width: 1280px) {
+  ion-header {
+    display: none;
+  }
+
+  ion-footer {
+    display: none;
+  }
+
+  .event-page-stacked {
+    display: none;
+  }
+
+  .event-page-mid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* ✅ equal width */
+    gap: 24px;
+    width: 100%;
+    max-width: 1120px;
+    padding: 16px 16px 28px;
+    // margin-top: 40px;
+  }
+
+  .event-page-mid-main {
+    min-width: 0;
+  }
+
+  .event-page-mid-side {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .event-page-mid-card {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 26px rgba(0, 0, 0, 0.08);
+    margin-bottom: 10px;
+  }
+}
+
+.event-swiper {
+  --swiper-navigation-size: 18px;
+  --swiper-navigation-color: white;
+}
+
+.event-swiper::part(button-prev),
+.event-swiper::part(button-next) {
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  padding: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.event-swiper.timer-active::part(pagination) {
+  bottom: 50px;
+  z-index: 10;
 }

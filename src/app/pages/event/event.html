@@ -26,84 +26,10 @@
   </ion-refresher>
 
   @if (isLoading()) {
-    <!-- Loading State - Skeleton -->
-    <div class="w-full max-w-[672px] mx-auto bg-neutral-0">
-      <!-- Image Skeleton -->
-      <div class="relative w-full h-[361px] bg-neutral-06">
-        <ion-skeleton-text animated class="w-full h-full"></ion-skeleton-text>
-      </div>
-
-      <!-- Content Skeleton -->
-      <div class="flex flex-col gap-8 pt-4 px-4">
-        <!-- Chips Skeleton -->
-        <div class="flex items-center gap-2">
-          <ion-skeleton-text animated class="w-24 h-6 rounded-full"></ion-skeleton-text>
-          <ion-skeleton-text animated class="w-20 h-6 rounded-full"></ion-skeleton-text>
-        </div>
-
-        <!-- Title Skeleton -->
-        <div class="flex flex-col gap-2">
-          <ion-skeleton-text animated class="w-3/4 h-6 rounded"></ion-skeleton-text>
-          <ion-skeleton-text animated class="w-1/2 h-4 rounded"></ion-skeleton-text>
-        </div>
-
-        <!-- Details Skeleton -->
-        <div class="flex flex-col gap-3">
-          @for (i of [1, 2, 3]; track i) {
-            <div class="flex items-start gap-1.5">
-              <ion-skeleton-text animated class="w-4 h-4 rounded mt-0.5"></ion-skeleton-text>
-              <div class="flex items-center justify-between gap-4 w-full">
-                <ion-skeleton-text animated class="w-24 h-4 rounded"></ion-skeleton-text>
-                <ion-skeleton-text animated class="w-32 h-4 rounded"></ion-skeleton-text>
-              </div>
-            </div>
-          }
-        </div>
-
-        <!-- Description Skeleton -->
-        <div class="flex flex-col gap-2">
-          <ion-skeleton-text animated class="w-full h-4 rounded"></ion-skeleton-text>
-          <ion-skeleton-text animated class="w-full h-4 rounded"></ion-skeleton-text>
-          <ion-skeleton-text animated class="w-5/6 h-4 rounded"></ion-skeleton-text>
-        </div>
-
-        <!-- Map Skeleton -->
-        <div class="w-full rounded-[16px] overflow-hidden" style="height: 300px">
-          <ion-skeleton-text animated class="w-full h-full"></ion-skeleton-text>
-        </div>
-      </div>
-    </div>
+    <event-page-skeleton />
   } @else if (event()) {
     <!-- Event Content -->
-    <div class="w-full max-w-[672px] mx-auto bg-neutral-0">
-      <div class="-mt-[65px] image-container">
-        <div class="bg-blur-image relative w-full h-full">
-          <img
-            fill
-            priority
-            [alt]="eventDisplayData().title || 'Event image'"
-            class="object-cover"
-            (error)="onImageError($event)"
-            [ngSrc]="getImageUrl(eventDisplayData().thumbnail_url || '')"
-          />
-        </div>
-        <div class="min-h-[inherit] h-[315px] relative w-full">
-          <img
-            fill
-            priority
-            [alt]="eventDisplayData().title || 'Event image'"
-            class="object-contain"
-            (error)="onImageError($event)"
-            [ngSrc]="getImageUrl(eventDisplayData().image_url || eventDisplayData().thumbnail_url || '')"
-          />
-        </div>
-        <div class="bg-image-bottom"></div>
-        @if (isShowTimer() && countdownTimer()) {
-          <div class="countdown-timer">
-            <span [innerHTML]="formatTimerDisplay(countdownTimer()!.formatted, countdownTimer()!.isLessThan24Hours)"></span>
-          </div>
-        }
-      </div>
+    <ng-template #eventTicketsBanner>
       @if (eventDisplayData().isCurrentUserAttendee) {
         <div class="px-4 pt-2 cursor-pointer" (click)="openTicketsModal()">
           <div
@@ -138,6 +64,18 @@
           </div>
         </div>
       }
+    </ng-template>
+
+    <!-- Default (mobile + large desktop): keep existing stacked layout -->
+    <div class="event-page-stacked w-full max-w-[672px] mx-auto">
+      <app-event-media-block
+        mode="primary"
+        [imageUrl]="eventDisplayData().image_url || eventDisplayData().thumbnail_url || ''"
+        [thumbnailUrl]="eventDisplayData().thumbnail_url || ''"
+        [title]="eventDisplayData().title || 'Event image'"
+        [countdownFormatted]="countdownFormattedHtml()"
+      />
+      <ng-container *ngTemplateOutlet="eventTicketsBanner"></ng-container>
       <event-display
         [eventData]="eventDisplayData()"
         [selectedDate]="selectedDate()"
@@ -150,49 +88,100 @@
         [onEventChatClick]="openEventChat.bind(this)"
       />
     </div>
+
+    <!-- Middle screens (tablet / iPad / laptop): two-column layout -->
+    <div class="event-page-mid mx-auto">
+      <div class="event-page-mid-main">
+        <div class="flex justify-between items-center p-4 pt-safe">
+          <ion-icon src="/assets/svg/back-arrow-black.svg" class="h-[18px] w-[18px]" (click)="goBack()"></ion-icon>
+          @if (event()) {
+            <div class="flex items-center gap-4">
+              <ion-icon src="/assets/svg/share-black.svg" class="h-[18px] w-[18px]" (click)="shareEvent()"></ion-icon>
+              <div class="w-[20px] h-[20px] flex items-center justify-center cursor-pointer" (click)="likeEvent()">
+                @if (isEventLiked()) {
+                  <div class="pi pi-heart-fill text-[20px]! accent-red"></div>
+                } @else {
+                  <ion-icon src="/assets/svg/like-black.svg" class="h-[20px] w-[20px]"></ion-icon>
+                }
+              </div>
+              <ion-icon src="/assets/svg/dots-vertical-black.svg" class="h-[18px] w-[18px]" (click)="menu.toggle($event)"></ion-icon>
+            </div>
+          }
+        </div>
+        <event-display
+          [eventData]="eventDisplayData()"
+          [selectedDate]="selectedDate()"
+          [onDateChange]="onDateChange.bind(this)"
+          [onUserListClick]="openUserList.bind(this)"
+          [showPreviewBanner]="false"
+          [showHostPromo]="true"
+          [showActionButtons]="true"
+          [onManageEventClick]="openMenu.bind(this)"
+          [onEventChatClick]="openEventChat.bind(this)"
+          [hideMediaSlider]="true"
+        />
+      </div>
+      <aside class="event-page-mid-side">
+        <div>
+          <div class="event-page-mid-card">
+            <app-event-media-block
+              mode="swiper"
+              [displayMedias]="eventDisplayData().displayMedias || []"
+              [title]="eventDisplayData().title || 'Event image'"
+              [countdownFormatted]="countdownFormattedHtml()"
+            />
+          </div>
+          <ng-container *ngTemplateOutlet="eventTicketsBanner"></ng-container>
+          <ng-container *ngTemplateOutlet="eventActions"></ng-container>
+        </div>
+      </aside>
+    </div>
   } @else {
     <app-empty-state [title]="'No Events Found'" [message]="''" [showClearButton]="false" />
   }
 </ion-content>
 <ion-footer class="ion-padding-horizontal" mode="md">
   <ion-toolbar class="ion-no-padding" mode="md" [style.--background]="'transparent'">
-    @if (!isLoading() && event()) {
-      @if (!isEventCompleted()) {
-        @if (!eventDisplayData().isCurrentUserHost && !eventDisplayData().isCurrentUserAttendee && !eventDisplayData().isCurrentUserCoHost) {
-          <div class="pb-4 max-w-[672px] mx-auto">
-            @if (eventDisplayData().is_subscriber_exclusive && !eventDisplayData().has_subscribed) {
-              <app-button label="Subscribe Now" icon="/assets/svg/crown-black.svg" height="40px" (click)="navigateToSubscriptionPlans()" />
-            } @else if (eventDisplayData().isRsvpApprovalRequired) {
-              @if (eventDisplayData().isCurrentUserRequestApproved) {
+    <ng-container *ngTemplateOutlet="eventActions"></ng-container>
+    <ng-template #eventActions>
+      @if (!isLoading() && event()) {
+        @if (!isEventCompleted()) {
+          @if (!eventDisplayData().isCurrentUserHost && !eventDisplayData().isCurrentUserAttendee && !eventDisplayData().isCurrentUserCoHost) {
+            <div class="pb-4 max-w-[672px] mx-auto event-footer-actions">
+              @if (eventDisplayData().is_subscriber_exclusive && !eventDisplayData().has_subscribed) {
+                <app-button label="Subscribe Now" icon="/assets/svg/crown-black.svg" height="40px" (click)="navigateToSubscriptionPlans()" />
+              } @else if (eventDisplayData().isRsvpApprovalRequired) {
+                @if (eventDisplayData().isCurrentUserRequestApproved) {
+                  <app-button
+                    [label]="eventDisplayData().rsvpButtonLabel || ''"
+                    height="40px"
+                    [customColor]="eventDisplayData().has_subscribed ? '#2B5BDE' : ''"
+                    (click)="openRsvpModal()"
+                  />
+                } @else if (eventDisplayData().isCurrentUserRequestRejected) {
+                  <app-button label="RSVP Request Rejected" height="40px" [disabled]="true" />
+                } @else {
+                  <app-button
+                    [label]="eventDisplayData().hasCurrentUserRsvpRequest ? 'Requested' : 'Send RSVP Request'"
+                    height="40px"
+                    [disabled]="eventDisplayData().isCurrentUserRequestPending || isSendingRsvpRequest()"
+                    [isLoading]="isSendingRsvpRequest()"
+                    (click)="sendRsvpRequest()"
+                  />
+                }
+              } @else {
                 <app-button
                   [label]="eventDisplayData().rsvpButtonLabel || ''"
                   height="40px"
                   [customColor]="eventDisplayData().has_subscribed ? '#2B5BDE' : ''"
                   (click)="openRsvpModal()"
-                />
-              } @else if (eventDisplayData().isCurrentUserRequestRejected) {
-                <app-button label="RSVP Request Rejected" height="40px" [disabled]="true" />
-              } @else {
-                <app-button
-                  [label]="eventDisplayData().hasCurrentUserRsvpRequest ? 'Requested' : 'Send RSVP Request'"
-                  height="40px"
-                  [disabled]="eventDisplayData().isCurrentUserRequestPending || isSendingRsvpRequest()"
-                  [isLoading]="isSendingRsvpRequest()"
-                  (click)="sendRsvpRequest()"
+                  [icon]="eventDisplayData().has_subscribed ? '/assets/svg/crown-white.svg' : ''"
                 />
               }
-            } @else {
-              <app-button
-                [label]="eventDisplayData().rsvpButtonLabel || ''"
-                height="40px"
-                [customColor]="eventDisplayData().has_subscribed ? '#2B5BDE' : ''"
-                (click)="openRsvpModal()"
-                [icon]="eventDisplayData().has_subscribed ? '/assets/svg/crown-white.svg' : ''"
-              />
-            }
-          </div>
+            </div>
+          }
         }
       }
-    }
+    </ng-template>
   </ion-toolbar>
 </ion-footer>
