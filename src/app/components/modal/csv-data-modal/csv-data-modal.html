@@ -34,11 +34,7 @@
       />
     </div>
   } @else {
-    <cdk-virtual-scroll-viewport
-      [itemSize]="20"
-      [style.height]="selectedCount() > 0 ? 'calc(100vh - 430px)' : 'calc(100vh - 250px)'"
-      class="virtual-scroll-viewport px-4 py-4"
-    >
+    <cdk-virtual-scroll-viewport [itemSize]="20" class="virtual-scroll-viewport px-4 py-4">
       <div
         *cdkVirtualFor="let guest of filteredGuests(); let i = index"
         class="border rounded-2xl p-3 flex items-start gap-3 cursor-pointer relative m-3"
@@ -76,26 +72,28 @@
   <ion-footer mode="md">
     <ion-toolbar mode="md">
       <div class="p-4 flex flex-col gap-2">
-        <app-button
-          [label]="'Send SMS to ' + selectedCount() + ' ' + (selectedCount() === 1 ? 'guest' : 'guests')"
-          color="primary"
-          class="w-full"
-          [isLoading]="isSubmitting() === 'sms'"
-          [disabled]="!!isSubmitting()"
-          (click)="onSendSms()"
-        />
+        <div class="flex gap-2">
+          <app-button
+            label="Send SMS"
+            color="secondary"
+            class="w-full"
+            [isLoading]="isSubmitting() === 'sms'"
+            [disabled]="!!isSubmitting()"
+            (click)="onSendSms()"
+          />
+
+          <app-button
+            label="Send Email"
+            color="secondary"
+            class="w-full"
+            [isLoading]="isSubmitting() === 'email'"
+            [disabled]="!!isSubmitting()"
+            (click)="onSendEmail()"
+          />
+        </div>
 
         <app-button
-          [label]="'Send Email to ' + selectedCount() + ' ' + (selectedCount() === 1 ? 'guest' : 'guests')"
-          color="secondary"
-          class="w-full"
-          [isLoading]="isSubmitting() === 'email'"
-          [disabled]="!!isSubmitting()"
-          (click)="onSendEmail()"
-        />
-
-        <app-button
-          [label]="'Send Email & SMS to ' + selectedCount() + ' ' + (selectedCount() === 1 ? 'guest' : 'guests')"
+          label="Send Email & SMS"
           color="primary"
           class="w-full"
           [isLoading]="isSubmitting() === 'both'"

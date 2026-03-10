@@ -685,15 +685,30 @@ export class ShareModal implements OnInit {
   private extractGuests(rows: any[]): ICsvGuest[] {
     return rows
       .map((row) => {
+        const name = String(row.Name || row.name || '').trim();
+        const email = String(row.Email || row.email || '').trim();
         const phone = this.normalizePhone(row.PhoneNumber || row.phone || '');
-
-        return {
-          name: row.Name || row.name || '',
-          email: row.Email || row.email || '',
-          phone
-        };
+  
+        return { name, email, phone };
       })
-      .filter((g) => g.name && this.isValidEmail(g.email) && this.isValidPhone(g.phone));
+      .filter((g) => {
+        if (!g.name && !g.email && !g.phone) return false;
+  
+        if (g.email && !this.isValidEmail(g.email)) {
+          g.email = '';
+        }
+  
+        if (g.phone && !this.isValidPhone(g.phone)) {
+          g.phone = '';
+        }
+  
+        if (!g.name && (g.email || g.phone)) {
+          g.name = 'User';
+        }
+  
+        // keep row if at least one field remains
+        return g.name || g.email || g.phone;
+      });
   }
 
   async onCsvFileSelected(event: Event): Promise<void> {

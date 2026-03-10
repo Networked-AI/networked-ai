@@ -1130,6 +1130,7 @@ export class ModalService {
       breakpoints: [0, 1],
       initialBreakpoint: 1,
       component: CsvDataModal,
+      backdropDismiss: false,
       cssClass: 'modal-90-percent-height',
       componentProps: { guests, id, type, contentLink }
     });
