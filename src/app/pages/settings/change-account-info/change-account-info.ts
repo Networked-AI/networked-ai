@@ -102,6 +102,10 @@ export class ChangeAccountInfo implements OnInit {
       this.type.set(typeParam);
     }
 
+    // Get navigation state
+    const navigation = this.router.currentNavigation();
+    const state: any = navigation?.extras?.state;
+
     // Get current user data and set current value based on type
     const currentUser = await this.userService.getCurrentUser();
     const valueMap: Record<AccountInfoType, string | null | undefined> = {
@@ -118,6 +122,13 @@ export class ChangeAccountInfo implements OnInit {
     }
 
     this.initializeForm();
+
+    // ✅ Patch password if passed from navigation
+    if (this.isPassword() && state?.password) {
+      this.form().patchValue({
+        currentValue: state.password
+      });
+    }
   }
 
   private initializeForm(): void {

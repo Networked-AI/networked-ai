@@ -403,12 +403,31 @@
 </div>
 
 <ng-template #eventSkeletonSlide>
-  <div class="rounded-xl overflow-hidden border border-surface-200">
-    <ion-skeleton-text animated class="w-full h-48 rounded-t-xl" />
-    <div class="p-4 flex flex-col gap-2">
-      <ion-skeleton-text animated class="w-3/4 h-5 rounded" />
-      <ion-skeleton-text animated class="w-1/2 h-4 rounded" />
-      <ion-skeleton-text animated class="w-2/3 h-4 rounded" />
+  <div class="rounded-[16px] overflow-hidden border border-surface-200">
+    <!-- image skeleton -->
+    <div class="relative w-full h-[360px] lg:h-[440px] overflow-hidden">
+      <ion-skeleton-text animated class="absolute inset-0 w-full h-full"></ion-skeleton-text>
+
+      <!-- top left views -->
+      <div class="absolute top-2 left-2">
+        <ion-skeleton-text animated class="w-16 h-6 rounded-full"></ion-skeleton-text>
+      </div>
+
+      <!-- top right icons -->
+      <div class="absolute top-2 right-2 flex gap-2">
+        <ion-skeleton-text animated class="w-8 h-8 rounded-full"></ion-skeleton-text>
+        <ion-skeleton-text animated class="w-8 h-8 rounded-full"></ion-skeleton-text>
+        <ion-skeleton-text animated class="w-8 h-8 rounded-full"></ion-skeleton-text>
+      </div>
+
+      <!-- bottom glass card -->
+      <div class="absolute bottom-0 left-0 right-0 p-2">
+        <div class="p-4 flex flex-col gap-2">
+          <ion-skeleton-text animated class="w-3/4 h-5 rounded" />
+          <ion-skeleton-text animated class="w-1/2 h-4 rounded" />
+          <ion-skeleton-text animated class="w-2/3 h-4 rounded" />
+        </div>
+      </div>
     </div>
   </div>
 </ng-template>
