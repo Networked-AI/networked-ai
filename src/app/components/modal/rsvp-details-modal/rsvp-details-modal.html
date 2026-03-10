@@ -1,15 +1,20 @@
 <ion-header mode="md">
   <ion-toolbar mode="md">
-    <div class="p-4 flex items-center justify-between">
-      <div class="rsvp-side-title">
-        <div class="heading-h3 neutral-01 line-clamp-1 w-full">{{ eventTitle }}</div>
+    <div class="p-4 flex items-start justify-between gap-2">
+      <div class="rsvp-side-title min-w-0 flex-1">
+        <div class="heading-h3 neutral-01 line-clamp-1">
+          {{ eventTitle }}
+        </div>
+    
         @if (hostName) {
           <div class="body-14R neutral-03">
-            Hosted by <span class="text-primary body-14M">{{ hostName }}</span>
+            Hosted by
+            <span class="text-primary body-14M">{{ hostName }}</span>
           </div>
         }
       </div>
-      <i class="pi pi-times cursor-pointer text-xl text-neutral-01" (click)="close()"></i>
+    
+      <i class="pi pi-times cursor-pointer text-xl shrink-0" (click)="close()"></i>
     </div>
     @if (hasPromoCodes() && !isTabletLayout()) {
       <div class="px-4 flex flex-col gap-3 pb-1">

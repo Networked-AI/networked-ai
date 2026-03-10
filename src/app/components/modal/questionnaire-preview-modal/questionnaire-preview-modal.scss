@@ -18,8 +18,8 @@
   display: block;
 }
 
-/* ─── Tablet: 768px – 1280px (only when eventInfo present) ─── */
-@media (min-width: 768px) and (max-width: 1280px) {
+/* ─── Tablet: 768px  (only when eventInfo present) ─── */
+@media (min-width: 768px) {
   .q-footer-has-event {
     display: none !important;
   }

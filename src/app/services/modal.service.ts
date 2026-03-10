@@ -73,7 +73,7 @@ export class ModalService {
 
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
-  isTabletOrDesktop = this.isBrowser && window.innerWidth >= 768 && window.innerWidth <= 1280;
+  isTabletOrDesktop = this.isBrowser && window.innerWidth >= 768;
   /** References to all login modals when open (e.g. so signup can close them with success data). */
   private loginModalRefs: HTMLIonModalElement[] = [];
 
@@ -836,7 +836,7 @@ export class ModalService {
       handle: !this.isTabletOrDesktop,
       breakpoints: this.isTabletOrDesktop ? undefined : [0, 1],
       initialBreakpoint: this.isTabletOrDesktop ? undefined : 1,
-      cssClass: 'modal-60-percent-height',
+      cssClass: this.isTabletOrDesktop ? 'modal-desktop' : 'modal-60-percent-height',
       component: RsvpModal,
       componentProps: {
         tickets,
@@ -875,7 +875,7 @@ export class ModalService {
       handle: !isTabletModal,
       breakpoints: isTabletModal ? undefined : [0, 1],
       initialBreakpoint: isTabletModal ? undefined : 1,
-      cssClass: 'modal-60-percent-height',
+      cssClass: isTabletModal ? 'modal-desktop' : 'modal-60-percent-height',
       component: QuestionnairePreviewModal,
       componentProps: {
         questions,
@@ -906,7 +906,7 @@ export class ModalService {
       handle: !this.isTabletOrDesktop,
       breakpoints: this.isTabletOrDesktop ? undefined : [0, 1],
       initialBreakpoint: this.isTabletOrDesktop ? undefined : 1,
-      cssClass: 'modal-60-percent-height',
+      cssClass: this.isTabletOrDesktop ? 'modal-desktop' : 'modal-60-percent-height',
       component: RsvpDetailsModal,
       componentProps: {
         eventTitle,

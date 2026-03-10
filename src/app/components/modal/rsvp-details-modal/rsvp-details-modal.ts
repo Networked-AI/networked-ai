@@ -217,7 +217,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
 
   async ngOnInit(): Promise<void> {
     if (isPlatformBrowser(this.platformId)) {
-      this.isTabletLayout.set(window.innerWidth >= 768 && window.innerWidth <= 1280);
+      this.isTabletLayout.set(window.innerWidth >= 768);
     }
     this.rsvp.setFeeConfig({ hostPaysFees: this.hostPaysFees, additionalFees: this.additionalFees });
     this.rsvp.setCurrentUserId(this.authService.currentUser()?.id ?? null);

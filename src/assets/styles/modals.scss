@@ -28,15 +28,12 @@
     --height: 60% !important;
     --max-width: 672px;
     --border-radius: 32px;
-    // align-items: flex-end;
+    align-items: flex-end;
   }
-  
-  @media (min-width: 768px) and (max-width: 1280px) {
-    .modal-60-percent-height {
-      --height: 60% !important;
-      --max-width: 672px;
-      --border-radius: 32px;
 
-      align-items: flex-center;
-    }
-  }
+.modal-desktop {
+    --height: 70%;
+    --width: 70%;
+  --border-radius: 32px;
+  align-items: flex-center;
+}
