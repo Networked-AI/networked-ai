@@ -423,7 +423,9 @@ export class Event implements OnInit, OnDestroy {
               cancelButtonLabel: 'Later'
             });
             if (result?.role === 'confirm') {
-              this.navigationService.navigateForward('/settings/change-account-info/password');
+              this.navigationService.navigateForward('/settings/change-account-info/password', false, {
+                password
+              });
             }
           }
         }
