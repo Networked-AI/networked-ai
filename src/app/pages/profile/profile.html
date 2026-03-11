@@ -109,9 +109,9 @@
     @if (userNotFound() && userName()) {
       <app-empty-state [title]="'No User Found'" [message]="''" [icon]="'/assets/svg/noUserIcon.svg'" [showClearButton]="false" />
     } @else if (isLoggedIn() || userName()) {
-      <div class="w-full px-4 max-w-[672px] mx-auto">
+      <div class="w-full max-w-[672px] mx-auto">
         <div class="flex flex-col items-start gap-6 bg-neutral-07">
-          <div class="flex flex-col items-start gap-4 bg-neutral-07 w-full">
+          <div class="px-4 flex flex-col items-start gap-4 bg-neutral-07 w-full">
             <div class="flex items-center w-full">
               <!-- Profile image -->
               <div class="w-[72px] min-w-[72px] h-[72px] rounded-full overflow-hidden relative cursor-pointer" (click)="onProfileImageClick()">
@@ -165,34 +165,38 @@
                   </div>
                 }
               </div>
-              <div>
-                <!-- Location -->
-                @if (currentUser()?.address) {
-                  <div class="flex items-center gap-2 body-14R neutral-03">
-                    <ion-icon src="/assets/svg/location-icon.svg" class="text-[16px]"></ion-icon>
-                    <span>{{ currentUser()?.address }}</span>
-                  </div>
-                }
 
-                <!-- Title -->
-                @if (currentUser()?.company_name) {
-                  <div class="flex items-center gap-2 body-14R neutral-03">
-                    <ion-icon src="/assets/svg/briefcase.svg" class="text-[16px]"></ion-icon>
-                    <span>{{ currentUser()?.company_name }}</span>
-                  </div>
-                }
-              </div>
+              <!-- Location -->
+              @if (currentUser()?.address) {
+                <div class="flex items-center gap-2 body-14R neutral-03">
+                  <ion-icon src="/assets/svg/location-icon.svg" class="text-[16px]"></ion-icon>
+                  <span>{{ currentUser()?.address }}</span>
+                </div>
+              }
+
+              <!-- Title -->
+              @if (currentUser()?.company_name) {
+                <div class="flex items-center gap-2 body-14R neutral-03">
+                  <ion-icon src="/assets/svg/briefcase.svg" class="text-[16px]"></ion-icon>
+                  <span>{{ currentUser()?.company_name }}</span>
+                </div>
+              }
 
               <!-- description -->
-              <show-more [content]="userDescription()" [maxLength]="220" contentClass="body-14R neutral-01 whitespace-pre-line" />
+              @if (userDescription()?.trim()) {
+                <show-more [content]="userDescription()?.trim()" [maxLength]="220" contentClass="body-14R neutral-01 whitespace-pre-line" />
+              }
             </div>
+
             <!-- Links -->
-            <profile-link [currentUser]="currentUser()" class="w-full" />
+            @if (!isViewingOtherProfile() || (isViewingOtherProfile() && isConnected())) {
+              <profile-link [currentUser]="currentUser()" class="w-full" />
+            }
           </div>
 
           @if (isViewingOtherProfile()) {
             <!-- Action Buttons for Other User -->
-            <div class="w-full flex items-center gap-3">
+            <div class="w-full flex items-center gap-3 px-4">
               <!-- Primary Action Button (Message/Add/Accept/Pending) -->
               @if (getPrimaryActionButton(); as primaryAction) {
                 <app-button
@@ -242,7 +246,7 @@
 
           @if (!isViewingOtherProfile()) {
             <!-- Action Buttons -->
-            <div class="w-full flex flex-col gap-3">
+            <div class="w-full flex flex-col gap-3 px-4">
               <!-- Top Row: Edit Profile, Share Profile, and Business Card (if has social data) -->
               <div class="flex items-center gap-3">
                 <app-button
@@ -274,19 +278,21 @@
             </div>
 
             <!-- Networking Score Card -->
-            <div class="w-full">
+            <div class="w-full px-4">
               <networking-score-card [score]="currentUser()?.total_gamification_points || 0" />
             </div>
 
             @if (shouldShowCreateCard()) {
-              <div class="w-full">
+              <div class="w-full px-4">
                 <business-card [user]="currentUser()" />
               </div>
             }
           }
 
           <div class="bg-neutral-07 w-full">
-            <div class="w-full flex items-center min-h-[48px]">
+            <user-recommendations />
+
+            <div class="px-4 w-full flex items-center min-h-[48px]">
               @for (slide of slides; track slide.value) {
                 <div class="flex-1 flex items-center justify-center cursor-pointer" (click)="changeTab(slide.value)">
                   <ion-icon [src]="currentSlide() === slide.value ? slide.iconActive : slide.icon" class="text-[20px]" />
@@ -294,45 +300,47 @@
               }
             </div>
 
-            <!-- profile swiper -->
-            <swiper-container
-              #profileSwiper
-              speed="100"
-              scrollbar="true"
-              space-between="0"
-              auto-height="true"
-              slides-per-view="1"
-              scrollbar-hide="false"
-              allow-touch-move="true"
-              [modules]="swiperModules"
-              scrollbar-draggable="true"
-              (swiperslidechange)="onSlideChange($event)"
-            >
-              <!-- hosted events slide -->
-              <swiper-slide>
-                <profile-hosted-events [userId]="currentUser()?.id || null" />
-              </swiper-slide>
+            <!-- Swiper -->
+            <div class="px-4">
+              <swiper-container
+                #profileSwiper
+                speed="100"
+                scrollbar="true"
+                space-between="0"
+                auto-height="true"
+                slides-per-view="1"
+                scrollbar-hide="false"
+                allow-touch-move="true"
+                [modules]="swiperModules"
+                scrollbar-draggable="true"
+                (swiperslidechange)="onSlideChange($event)"
+              >
+                <!-- hosted events slide -->
+                <swiper-slide>
+                  <profile-hosted-events [userId]="currentUser()?.id || null" />
+                </swiper-slide>
 
-              <!-- attended events slide -->
-              <swiper-slide>
-                <profile-attended-events [userId]="currentUser()?.id || null" />
-              </swiper-slide>
+                <!-- attended events slide -->
+                <swiper-slide>
+                  <profile-attended-events [userId]="currentUser()?.id || null" />
+                </swiper-slide>
 
-              <!-- upcomming events slide -->
-              <swiper-slide>
-                <profile-upcoming-events [userId]="currentUser()?.id || null" />
-              </swiper-slide>
+                <!-- upcomming events slide -->
+                <swiper-slide>
+                  <profile-upcoming-events [userId]="currentUser()?.id || null" />
+                </swiper-slide>
 
-              <!-- profile posts slide -->
-              <swiper-slide>
-                <profile-posts [userId]="currentUser()?.id || null" />
-              </swiper-slide>
+                <!-- profile posts slide -->
+                <swiper-slide>
+                  <profile-posts [userId]="currentUser()?.id || null" />
+                </swiper-slide>
 
-              <!-- profile gamification achivement -->
-              <swiper-slide>
-                <profile-achievement [user]="user()" />
-              </swiper-slide>
-            </swiper-container>
+                <!-- profile gamification achivement -->
+                <swiper-slide>
+                  <profile-achievement [user]="user()" />
+                </swiper-slide>
+              </swiper-container>
+            </div>
           </div>
         </div>
       </div>

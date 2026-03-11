@@ -1063,21 +1063,20 @@ export class EventService extends BaseApiService {
 
       // Store public events if is_public is true
       if (params.from_home && params.is_public) {
-        this.publicEvents.set(events);
+        this.publicEvents.set(params.append ? [...this.publicEvents(), ...events] : events);
       }
-
+      
       if (params.from_home && params.is_upcoming_event) {
-        this.upcomingEvents.set(events);
+        this.upcomingEvents.set(params.append ? [...this.upcomingEvents(), ...events] : events);
       }
-
+      
       if (params.from_home && params.is_recommended) {
-        this.recommendedEvents.set(events);
+        this.recommendedEvents.set(params.append ? [...this.recommendedEvents(), ...events] : events);
       }
-
+      
       if (params.from_home && params.is_my_events) {
-        this.myEvents.set(events);
+        this.myEvents.set(params.append ? [...this.myEvents(), ...events] : events);
       }
-
       return response;
     } catch (error) {
       console.error('Error fetching events:', error);

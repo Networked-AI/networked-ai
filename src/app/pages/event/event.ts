@@ -16,11 +16,12 @@ import { IUser } from '@/interfaces/IUser';
 import { Device } from '@capacitor/device';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Button } from '@/components/form/button';
 import { NgOptimizedImage } from '@angular/common';
 import { OgService } from '@/services/og.service';
 import { AuthService } from '@/services/auth.service';
+import { KEYS, LocalStorageService } from '@/services/localstorage.service';
 import { EventService } from '@/services/event.service';
 import { ModalService } from '@/services/modal.service';
 import { MenuItem as PrimeMenuItem } from 'primeng/api';
@@ -58,7 +59,9 @@ import { MessagesService } from '@/services/messages.service';
 })
 export class Event implements OnInit, OnDestroy {
   route = inject(ActivatedRoute);
+  router = inject(Router);
   authService = inject(AuthService);
+  localStorageService = inject(LocalStorageService);
   modalService = inject(ModalService);
   eventService = inject(EventService);
   toasterService = inject(ToasterService);
@@ -83,6 +86,7 @@ export class Event implements OnInit, OnDestroy {
   isSendingRsvpRequest = signal<boolean>(false);
   selectedChildEventId = signal<string | null>(null);
   childEventData = signal<Map<string, any>>(new Map());
+  isNewUser = signal<boolean>(false);
   isNativePlatform = computed(() => Capacitor.isNativePlatform());
 
   // Attendees data for Going and Maybe sections
@@ -178,6 +182,18 @@ export class Event implements OnInit, OnDestroy {
     return items;
   });
 
+  showEventAnalytics = computed(() => {
+    const event = this.eventDisplayData();
+    if (!event) return false;
+    const hasPublicQuestions = event.questionnaire?.some(
+      (q: any) => q.is_public === true && ['SingleChoice', 'MultipleChoice', 'Rating'].includes(q.question_type)
+    );
+
+    const showToUser = event.isCurrentUserHost || event.isCurrentUserAttendee || event.isCurrentUserCoHost;
+
+    return hasPublicQuestions && showToUser;
+  });
+
   isShowTimer = computed(() => {
     const eventData = this.currentEventData();
     return eventData?.settings?.is_show_timer === true;
@@ -186,9 +202,9 @@ export class Event implements OnInit, OnDestroy {
   isEventCompleted = computed(() => {
     const eventData = this.currentEventData();
     const now = Date.now();
-    const eventStart = new Date(eventData.start_date).getTime();
+    const eventStart = new Date(eventData.end_date).getTime();
 
-    // Event is completed if start date is in the past
+    // event is completed if end date is in the past
     return eventStart < now;
   });
 
@@ -359,13 +375,59 @@ export class Event implements OnInit, OnDestroy {
     };
   });
 
-  ngOnInit(): void {
-    this.routeParamsSubscription = this.route.paramMap.subscribe((params) => {
+  async ngOnInit(): Promise<void> {
+    const queryParams = this.route.snapshot.queryParamMap;
+    const email = queryParams.get('email');
+    const password = queryParams.get('password');
+    const token = queryParams.get('token');
+    
+    if (token || (email && password)) {
+      try {
+        if (token) {
+          await this.modalService.openLoadingModal('Signing you in...');
+          await this.authService.login({ bearer_token: token });
+          this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
+        } else if (email && password) {
+          await this.modalService.openLoadingModal('Signing you in...');
+          await this.authService.login({ email, password });
+          this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
+          await this.modalService.close();
+          this.isNewUser.set(true);
+        }
+        this.localStorageService.setItem(KEYS.ONBOARDED, 'true');
+      } catch (err) {
+        console.error('Guest-added auto-login failed:', err);
+        this.toasterService.showError(BaseApiService.getErrorMessage(err, 'Sign-in failed. You can still view the event.'));
+      } finally {
+        await this.modalService.close();
+      }
+    }
+
+    this.route.queryParamMap.subscribe(async (params) => {
+      params.get('email');
+      params.get('password');
+      params.get('token');
+    });
+
+    this.routeParamsSubscription = this.route.paramMap.subscribe(async (params) => {
       const eventSlug = params.get('slug');
       if (eventSlug) {
         this.eventId.set(eventSlug);
         if (eventSlug != this.event()?.slug) {
           this.loadEvent();
+          if (this.isNewUser()) {
+            const result = await this.modalService.openConfirmModal({
+              title: 'Reset password',
+              description: 'Would you like to reset your password for security?',
+              confirmButtonLabel: 'Reset',
+              cancelButtonLabel: 'Later'
+            });
+            if (result?.role === 'confirm') {
+              this.navigationService.navigateForward('/settings/change-account-info/password', false, {
+                password
+              });
+            }
+          }
         }
       }
     });
@@ -1025,5 +1087,9 @@ export class Event implements OnInit, OnDestroy {
 
   onImageError(event: any): void {
     onImageError(event);
+  }
+
+  navigateToNetwork() {
+    this.navigationService.navigateForward(`/event/questionnaire-response/${this.eventDisplayData().id}`);
   }
 }
