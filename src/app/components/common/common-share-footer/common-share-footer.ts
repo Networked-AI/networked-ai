@@ -8,8 +8,9 @@ import { IonIcon } from '@ionic/angular/standalone';
   templateUrl: './common-share-footer.html'
 })
 export class CommonShareFooter {
+  type = input<string>();
   image_url = input<string>();
-  
+
   onContact = output<void>();
   onCopyLink = output<void>();
   onShareTo = output<void>();
@@ -19,4 +20,6 @@ export class CommonShareFooter {
   onX = output<void>();
   onThread = output<void>();
   onDownloadImage = output<void>();
+  onUploadCsv = output<void>();
+  onDownloadSampleFile = output<void>();
 }
