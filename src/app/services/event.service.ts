@@ -36,6 +36,7 @@ import {
   IAddGuestResponse,
   IMarkAsPaidResponse
 } from '@/interfaces/IEventAttendee';
+import { ICsvBroadcastResponse } from '@/interfaces/IFeed';
 
 @Injectable({ providedIn: 'root' })
 export class EventService extends BaseApiService {
@@ -1065,15 +1066,15 @@ export class EventService extends BaseApiService {
       if (params.from_home && params.is_public) {
         this.publicEvents.set(params.append ? [...this.publicEvents(), ...events] : events);
       }
-      
+
       if (params.from_home && params.is_upcoming_event) {
         this.upcomingEvents.set(params.append ? [...this.upcomingEvents(), ...events] : events);
       }
-      
+
       if (params.from_home && params.is_recommended) {
         this.recommendedEvents.set(params.append ? [...this.recommendedEvents(), ...events] : events);
       }
-      
+
       if (params.from_home && params.is_my_events) {
         this.myEvents.set(params.append ? [...this.myEvents(), ...events] : events);
       }
@@ -1557,9 +1558,9 @@ export class EventService extends BaseApiService {
     event_id: string;
     type: 'sms' | 'email' | 'both';
     recipients: { email: string | null; phone: string | null }[];
-  }): Promise<any> {
+  }): Promise<ICsvBroadcastResponse> {
     try {
-      const response = await this.post<any>('/events/share-csv-broadcast', payload);
+      const response = await this.post<ICsvBroadcastResponse>('/events/share-csv-broadcast', payload);
       return response;
     } catch (error) {
       console.error('Error sharing event CSV broadcast:', error);

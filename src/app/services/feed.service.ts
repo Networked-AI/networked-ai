@@ -13,7 +13,8 @@ import {
   CommentResponse,
   FeedShareResponse,
   ReportReasonsResponse,
-  ReportResponse
+  ReportResponse,
+  ICsvBroadcastResponse
 } from '@/interfaces/IFeed';
 import { AuthService } from '@/services/auth.service';
 
@@ -635,9 +636,9 @@ export class FeedService extends BaseApiService {
     feed_id: string;
     type: 'sms' | 'email' | 'both';
     recipients: { email: string | null; phone: string | null }[];
-  }): Promise<any> {
+  }): Promise<ICsvBroadcastResponse> {
     try {
-      const response = await this.post<any>('/feeds/share-csv-broadcast', payload);
+      const response = await this.post<ICsvBroadcastResponse>('/feeds/share-csv-broadcast', payload);
       return response;
     } catch (error) {
       console.error('Error sharing feed CSV broadcast:', error);
