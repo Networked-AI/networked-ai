@@ -214,3 +214,15 @@ export interface ReportResponse {
     content: Report;
   };
 }
+
+export interface ICsvBroadcastResponse {
+  success: boolean;
+  message: string;
+  data: ICsvBroadcastData;
+}
+
+export interface ICsvBroadcastData {
+  sms_sent: boolean;
+  email_sent: boolean;
+  recipients_count: number;
+}

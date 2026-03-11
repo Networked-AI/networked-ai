@@ -81,6 +81,7 @@
         </div>
       } @else {
         <common-share-footer
+          [type]="type"
           [image_url]="image_url"
           (onDownloadImage)="downloadImage()"
           (onContact)="onContact()"
@@ -91,6 +92,15 @@
           (onWhatsapp)="onWhatsapp()"
           (onX)="onShareToX()"
           (onThread)="onShareToThreads()"
+          (onUploadCsv)="fileInput.click()"
+          (onDownloadSampleFile)="downloadSampleFile()"
+        />
+        <input
+          #fileInput
+          type="file"
+          (change)="onCsvFileSelected($event)"
+          accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+          hidden
         />
       }
     </div>

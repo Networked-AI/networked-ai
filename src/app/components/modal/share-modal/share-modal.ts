@@ -1,3 +1,4 @@
+import * as XLSX from 'xlsx';
 import { Checkbox } from 'primeng/checkbox';
 import { isPlatformBrowser, NgOptimizedImage } from '@angular/common';
 import { Button } from '@/components/form/button';
@@ -28,7 +29,8 @@ import {
   DestroyRef,
   ChangeDetectorRef,
   effect,
-  PLATFORM_ID
+  PLATFORM_ID,
+  DOCUMENT
 } from '@angular/core';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, from, catchError, of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -42,6 +44,11 @@ import { environment } from 'src/environments/environment';
 import { MessagesService } from '@/services/messages.service';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
+export interface ICsvGuest {
+  name: string;
+  email: string;
+  phone: string;
+}
 
 @Component({
   selector: 'share-modal',
@@ -75,6 +82,7 @@ export class ShareModal implements OnInit {
   private cd = inject(ChangeDetectorRef);
   private eventService = inject(EventService);
   private messagesService = inject(MessagesService);
+  private document = inject(DOCUMENT);
 
   // platform
   private platformId = inject(PLATFORM_ID);
@@ -97,6 +105,7 @@ export class ShareModal implements OnInit {
   totalPages = signal<number>(0);
   sendEntireNetwork = signal<boolean>(false);
   eventSlug = signal<string | null>(null);
+  csvGuests = signal<ICsvGuest[]>([]);
   totalNetworkCount = signal(0);
   private searchSubject = new Subject<string>();
 
@@ -424,15 +433,15 @@ export class ShareModal implements OnInit {
     try {
       const response = await fetch(this.image_url, { mode: 'cors' });
       if (!response.ok) throw new Error('Image fetch failed');
-  
+
       const blob = await response.blob();
-  
+
       const extension = blob.type.split('/')[1] || 'png';
       const fileName = `image-${Date.now()}.${extension}`;
-  
+
       const base64Data = await this.blobToBase64(blob);
       const dataUrl = `data:${blob.type};base64,${base64Data}`;
-  
+
       if (Capacitor.getPlatform() === 'web') {
         const link = document.createElement('a');
         link.href = dataUrl;
@@ -440,23 +449,21 @@ export class ShareModal implements OnInit {
         link.click();
         return;
       }
-  
+
       const savedFile = await Filesystem.writeFile({
         path: fileName,
         data: base64Data,
         directory: Directory.Documents
       });
-  
+
       if (Capacitor.getPlatform() === 'ios') {
         await Share.share({
           title: 'Download image',
           url: savedFile.uri
         });
-      }
-      else {
+      } else {
         this.toasterService.showSuccess('Image saved successfully!');
       }
-  
     } catch (err) {
       console.error('Download failed', err);
       this.toasterService?.showError?.('Failed to download image');
@@ -673,5 +680,169 @@ export class ShareModal implements OnInit {
     const text = encodeURIComponent(link);
     const threadsUrl = `https://threads.net/intent/post?text=${text}`;
     if (this.isBrowser) window.open(threadsUrl, '_blank');
+  }
+
+  isValidEmail(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  normalizePhone(phone: any): string {
+    phone = String(phone || '');
+    phone = phone.replace(/\s+/g, '').replace(/[^\d+]/g, '');
+    if (phone && !phone.startsWith('+')) {
+      phone = '+' + phone;
+    }
+    return phone;
+  }
+
+  isValidPhone(phone: string): boolean {
+    return /^\+[0-9]{10,15}$/.test(phone);
+  }
+
+  private extractGuests(rows: any[]): ICsvGuest[] {
+    return rows
+      .map((row) => {
+        const name = String(row.Name || row.name || '').trim();
+        const email = String(row.Email || row.email || '').trim();
+        const phone = this.normalizePhone(row.PhoneNumber || row.phone || '');
+
+        return { name, email, phone };
+      })
+      .filter((g) => {
+        if (!g.name && !g.email && !g.phone) return false;
+
+        if (g.email && !this.isValidEmail(g.email)) {
+          g.email = '';
+        }
+
+        if (g.phone && !this.isValidPhone(g.phone)) {
+          g.phone = '';
+        }
+
+        if (!g.name && (g.email || g.phone)) {
+          g.name = 'User';
+        }
+
+        if (g.name && !g.email && !g.phone) {
+          return false;
+        }
+
+        return g.email || g.phone;
+      });
+  }
+
+  async onCsvFileSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    input.value = '';
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+    await this.modalService.openLoadingModal('Processing contacts...');
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      let rows: any[] = [];
+
+      // CSV
+      if (fileExt === 'csv') {
+        const text = e.target?.result as string;
+
+        const lines = text
+          .split('\n')
+          .map((l) => l.trim())
+          .filter((l) => l);
+
+        const [headerLine, ...dataRows] = lines;
+
+        const headers = headerLine.split(',').map((h) => h.trim().toLowerCase().replace(/\s+/g, ''));
+
+        const nameIdx = headers.indexOf('name');
+        const emailIdx = headers.indexOf('email');
+        const phoneIdx = headers.indexOf('phonenumber');
+
+        rows = dataRows.map((row) => {
+          const cols = row.split(',').map((c) => c.trim());
+
+          return {
+            name: nameIdx !== -1 ? cols[nameIdx] : '',
+            email: emailIdx !== -1 ? cols[emailIdx] : '',
+            phone: phoneIdx !== -1 ? cols[phoneIdx] : ''
+          };
+        });
+      }
+
+      // XLSX
+      else {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+        rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      }
+
+      const guests = this.extractGuests(rows);
+
+      if (!guests.length) {
+        this.toasterService.showError('No valid contacts found in file.');
+        await this.modalService.close();
+        return;
+      }
+
+      this.csvGuests.set(guests);
+      this.handleCsvGuests(guests);
+    };
+
+    fileExt === 'csv' ? reader.readAsText(file) : reader.readAsArrayBuffer(file);
+  }
+
+  private async handleCsvGuests(guests: ICsvGuest[]): Promise<void> {
+    try {
+      await this.modalService.openCsvDataModal(guests, this.id!, this.type, this.getContentLink());
+      await this.modalService.close();
+    } catch (error) {
+      console.error(error);
+      this.toasterService.showError('Failed to process CSV contacts.');
+    }
+  }
+
+  async downloadSampleFile() {
+    try {
+      const fileName = 'sample.xlsx';
+      const fileUrl = 'assets/sample.xlsx';
+
+      // WEB
+      if (Capacitor.getPlatform() === 'web') {
+        const link = this.document.createElement('a');
+        link.href = fileUrl;
+        link.download = fileName;
+        link.click();
+        return;
+      }
+
+      // MOBILE (iOS / Android)
+      const response = await fetch(fileUrl);
+      const blob = await response.blob();
+
+      const base64 = await this.blobToBase64(blob);
+
+      const savedFile = await Filesystem.writeFile({
+        path: fileName,
+        data: base64,
+        directory: Directory.Documents
+      });
+
+      if (Capacitor.getPlatform() === 'ios') {
+        await Share.share({
+          title: 'Sample File',
+          url: savedFile.uri
+        });
+      } else {
+        this.toasterService.showSuccess('File downloaded successfully!');
+      }
+    } catch (error) {
+      console.error(error);
+      this.toasterService.showError('Failed to download file');
+    }
   }
 }
