@@ -64,6 +64,7 @@ export class CsvDataModal {
   ngOnInit(): void {
     const initial = Array.isArray(this.guests) ? this.guests : [];
     this.allGuests.set(initial);
+    this.toggleSelectAll();
   }
 
   toggleGuest(index: number): void {
