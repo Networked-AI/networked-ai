@@ -630,4 +630,18 @@ export class FeedService extends BaseApiService {
     this.networkedFeeds.update((curr) => this.removeById(curr, feedId));
     this.myPosts.update((curr) => this.removeById(curr, feedId));
   }
+
+  async shareFeedCsvBroadcast(payload: {
+    feed_id: string;
+    type: 'sms' | 'email' | 'both';
+    recipients: { email: string | null; phone: string | null }[];
+  }): Promise<any> {
+    try {
+      const response = await this.post<any>('/feeds/share-csv-broadcast', payload);
+      return response;
+    } catch (error) {
+      console.error('Error sharing feed CSV broadcast:', error);
+      throw error;
+    }
+  }
 }

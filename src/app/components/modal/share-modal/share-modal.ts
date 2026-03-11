@@ -679,7 +679,7 @@ export class ShareModal implements OnInit {
   }
 
   isValidPhone(phone: string): boolean {
-    return /^\+[0-9]{7,15}$/.test(phone);
+    return /^\+[0-9]{10,15}$/.test(phone);
   }
 
   private extractGuests(rows: any[]): ICsvGuest[] {
@@ -688,26 +688,29 @@ export class ShareModal implements OnInit {
         const name = String(row.Name || row.name || '').trim();
         const email = String(row.Email || row.email || '').trim();
         const phone = this.normalizePhone(row.PhoneNumber || row.phone || '');
-  
+
         return { name, email, phone };
       })
       .filter((g) => {
         if (!g.name && !g.email && !g.phone) return false;
-  
+
         if (g.email && !this.isValidEmail(g.email)) {
           g.email = '';
         }
-  
+
         if (g.phone && !this.isValidPhone(g.phone)) {
           g.phone = '';
         }
-  
+
         if (!g.name && (g.email || g.phone)) {
           g.name = 'User';
         }
-  
-        // keep row if at least one field remains
-        return g.name || g.email || g.phone;
+
+        if (g.name && !g.email && !g.phone) {
+          return false;
+        }
+
+        return g.email || g.phone;
       });
   }
 

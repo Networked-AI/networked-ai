@@ -991,8 +991,8 @@ export class EventService extends BaseApiService {
       is_recommended?: boolean;
       from_home?: boolean;
     } = {
-        from_home: false
-      }
+      from_home: false
+    }
   ): Promise<EventsResponse> {
     try {
       let httpParams = new HttpParams();
@@ -1275,8 +1275,8 @@ export class EventService extends BaseApiService {
 
       return response;
     } catch (error: any) {
-        const errorJson = JSON.parse(error.error);
-        throw new Error(errorJson.message);
+      const errorJson = JSON.parse(error.error);
+      throw new Error(errorJson.message);
     }
   }
 
@@ -1286,11 +1286,11 @@ export class EventService extends BaseApiService {
       const response = await this.get<any>(`/events/question-analysis/csv`, {
         params: httpParams,
         responseType: 'text'
-      });  
+      });
       return response;
     } catch (error: any) {
-        const errorJson = JSON.parse(error.error);
-        throw new Error(errorJson.message);
+      const errorJson = JSON.parse(error.error);
+      throw new Error(errorJson.message);
     }
   }
 
@@ -1550,6 +1550,20 @@ export class EventService extends BaseApiService {
       return response;
     } catch (error) {
       console.error('Error marking as paid:', error);
+      throw error;
+    }
+  }
+
+  async shareEventCsvBroadcast(payload: {
+    event_id: string;
+    type: 'sms' | 'email' | 'both';
+    recipients: { email: string | null; phone: string | null }[];
+  }): Promise<any> {
+    try {
+      const response = await this.post<any>('/events/share-csv-broadcast', payload);
+      return response;
+    } catch (error) {
+      console.error('Error sharing event CSV broadcast:', error);
       throw error;
     }
   }

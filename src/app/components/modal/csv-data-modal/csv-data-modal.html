@@ -5,7 +5,7 @@
       <i class="pi pi-times cursor-pointer" (click)="close()"></i>
     </div>
     <div class="px-4 py-3">
-      <searchbar [searchQuery]="searchQuery()" placeholder="Search contact" (searchChange)="onSearchChange($event)" (clear)="onSearchClear()" />
+      <searchbar [searchQuery]="searchQuery()" placeholder="Search contact" (searchChange)="searchQuery.set($event)" (clear)="searchQuery.set('')" />
     </div>
     <div class="px-4 pb-2 flex items-center justify-between border-b border-surface-300">
       <div class="body-14R neutral-02">{{ filteredGuests().length }} contact{{ filteredGuests().length === 1 ? '' : 's' }} found</div>
@@ -30,7 +30,7 @@
         [title]="'No Contacts Found'"
         [message]="searchQuery() ? 'Try searching for a different keyword.' : 'No contacts available.'"
         [showClearButton]="!!searchQuery()"
-        (clear)="onSearchChange('')"
+        (clear)="searchQuery.set('')"
       />
     </div>
   } @else {
@@ -79,7 +79,7 @@
             class="w-full"
             [isLoading]="isSubmitting() === 'sms'"
             [disabled]="!!isSubmitting()"
-            (click)="onSendSms()"
+            (click)="onSend('sms')"
           />
 
           <app-button
@@ -88,7 +88,7 @@
             class="w-full"
             [isLoading]="isSubmitting() === 'email'"
             [disabled]="!!isSubmitting()"
-            (click)="onSendEmail()"
+            (click)="onSend('email')"
           />
         </div>
 
@@ -98,7 +98,7 @@
           class="w-full"
           [isLoading]="isSubmitting() === 'both'"
           [disabled]="!!isSubmitting()"
-          (click)="onSendEmailAndSms()"
+          (click)="onSend('both')"
         />
       </div>
     </ion-toolbar>

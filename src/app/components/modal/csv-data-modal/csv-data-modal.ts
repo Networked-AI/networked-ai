@@ -1,16 +1,18 @@
 import { FormsModule } from '@angular/forms';
-import { CheckboxModule } from 'primeng/checkbox';
 import { Button } from '@/components/form/button';
+import { CheckboxModule } from 'primeng/checkbox';
+import { FeedService } from '@/services/feed.service';
+import { ModalService } from '@/services/modal.service';
+import { ScrollingModule } from '@angular/cdk/scrolling';
+import { EventService } from '@/services/event.service';
+import { HapticService } from '@/services/haptic.service';
 import { Searchbar } from '@/components/common/searchbar';
 import { ToasterService } from '@/services/toaster.service';
 import { ModalController } from '@ionic/angular/standalone';
 import { EmptyState } from '@/components/common/empty-state';
-import { isPlatformBrowser } from '@angular/common';
-import { ScrollingModule } from '@angular/cdk/scrolling';
-import { Input, Component, ChangeDetectionStrategy, inject, signal, computed, PLATFORM_ID } from '@angular/core';
 import { IonHeader, IonFooter, IonToolbar, IonContent } from '@ionic/angular/standalone';
-import { ModalService } from '@/services/modal.service';
-import { HapticService } from '@/services/haptic.service';
+import { Input, Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+import { BaseApiService } from '@/services/base-api.service';
 
 export interface ICsvGuestItem {
   name: string;
@@ -26,20 +28,22 @@ export interface ICsvGuestItem {
   imports: [Button, IonHeader, IonToolbar, IonContent, IonFooter, Searchbar, EmptyState, FormsModule, CheckboxModule, ScrollingModule]
 })
 export class CsvDataModal {
-  @Input() guests: ICsvGuestItem[] = [];
   @Input() id: string = '';
-  @Input() type: 'Event' | 'Post' | 'Plan' = 'Event';
   @Input() contentLink: string = '';
+  @Input() guests: ICsvGuestItem[] = [];
+  @Input() type: 'Event' | 'Post' | 'Plan' = 'Event';
 
-  private toasterService = inject(ToasterService);
-  private modalCtrl = inject(ModalController);
-  private modalService = inject(ModalService);
+  feedService = inject(FeedService);
+  eventService = inject(EventService);
+  modalCtrl = inject(ModalController);
+  modalService = inject(ModalService);
   hapticService = inject(HapticService);
+  toasterService = inject(ToasterService);
 
-  isSubmitting = signal<'sms' | 'email' | 'both' | null>(null);
+  searchQuery = signal('');
   allGuests = signal<ICsvGuestItem[]>([]);
   selectedGuests = signal<Set<number>>(new Set<number>());
-  searchQuery = signal('');
+  isSubmitting = signal<'sms' | 'email' | 'both' | null>(null);
 
   selectedCount = computed(() => this.getSelectedGuestList().length);
 
@@ -62,13 +66,6 @@ export class CsvDataModal {
     this.allGuests.set(initial);
   }
 
-  onSearchChange(value: string) {
-    this.searchQuery.set(value);
-  }
-  onSearchClear() {
-    this.searchQuery.set('');
-  }
-
   toggleGuest(index: number): void {
     const current = new Set(this.selectedGuests());
     current.has(index) ? current.delete(index) : current.add(index);
@@ -88,13 +85,12 @@ export class CsvDataModal {
     await this.modalService.close();
   }
 
-  private getSelectedGuestList(): ICsvGuestItem[] {
-    const guests = this.allGuests();
+  getSelectedGuestList(): ICsvGuestItem[] {
     const selected = this.selectedGuests();
-    return guests.filter((_, i) => selected.has(i));
+    return this.allGuests().filter((_, i) => selected.has(i));
   }
 
-  private ensureSelection(): ICsvGuestItem[] | null {
+  ensureSelection(): ICsvGuestItem[] | null {
     const selected = this.getSelectedGuestList();
     if (!selected.length) {
       this.toasterService.showError('Please select at least one contact.');
@@ -103,54 +99,54 @@ export class CsvDataModal {
     return selected;
   }
 
-  private sendSms(guests: ICsvGuestItem[]): void {
-    const phones = guests.map((g) => g.phone?.trim()).filter((p): p is string => !!p);
-    if (!phones.length) {
-      this.toasterService.showError('No phone numbers found for the selected contacts.');
-    }
-  }
-
-  private sendEmail(guests: ICsvGuestItem[]): void {
-    const emails = guests.map((g) => g.email?.trim()).filter((e): e is string => !!e);
-    if (!emails.length) {
-      this.toasterService.showError('No email addresses found for the selected contacts.');
-    }
-  }
-
-  async onSendSms(): Promise<void> {
+  async onSend(type: 'sms' | 'email' | 'both'): Promise<void> {
     const selected = this.ensureSelection();
     if (!selected || this.isSubmitting()) return;
+
     try {
-      this.isSubmitting.set('sms');
-      this.sendSms(selected);
-      this.close();
+      this.isSubmitting.set(type);
+      await this.shareCsvBroadcast(type, selected);
     } finally {
       this.isSubmitting.set(null);
     }
   }
 
-  async onSendEmail(): Promise<void> {
-    const selected = this.ensureSelection();
-    if (!selected || this.isSubmitting()) return;
-    try {
-      this.isSubmitting.set('email');
-      this.sendEmail(selected);
-      this.close();
-    } finally {
-      this.isSubmitting.set(null);
-    }
+  buildRecipients(guests: ICsvGuestItem[]) {
+    return guests.map(({ email, phone }) => ({
+      email: email?.trim() || null,
+      phone: phone?.trim() || null
+    }));
   }
 
-  async onSendEmailAndSms(): Promise<void> {
-    const selected = this.ensureSelection();
-    if (!selected || this.isSubmitting()) return;
+  async shareCsvBroadcast(type: 'sms' | 'email' | 'both', guests: ICsvGuestItem[]) {
+    const recipients = this.buildRecipients(guests);
+
     try {
-      this.isSubmitting.set('both');
-      this.sendSms(selected);
-      this.sendEmail(selected);
+      const payload = { type, recipients };
+
+      if (this.type === 'Event') {
+        await this.eventService.shareEventCsvBroadcast({
+          ...payload,
+          event_id: this.id
+        });
+      } else if (this.type === 'Post') {
+        await this.feedService.shareFeedCsvBroadcast({
+          ...payload,
+          feed_id: this.id
+        });
+      }
+
+      const messageMap = {
+        sms: 'SMS broadcast sent successfully.',
+        email: 'Email broadcast sent successfully.',
+        both: 'Email & SMS broadcast sent successfully.'
+      };
+
+      this.toasterService.showSuccess(messageMap[type]);
       this.close();
-    } finally {
-      this.isSubmitting.set(null);
+    } catch (error) {
+      const message = BaseApiService.getErrorMessage(error, 'Failed to send broadcast.');
+      this.toasterService.showError(message);
     }
   }
 }
