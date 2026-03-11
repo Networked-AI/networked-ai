@@ -386,7 +386,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
             this.currentUser.set(user);
             this.populateFormsWithUserData();
             this.guestStep.set('verified');
-            this.isActuallyNewUser.set(false);
+            this.isActuallyNewUser.set(loginResult.isNewUser ?? false);
 
             if (this.totalPrice() > 0) {
               await this.fetchPaymentIntent();

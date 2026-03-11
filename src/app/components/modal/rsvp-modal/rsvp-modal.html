@@ -18,8 +18,10 @@
     </div>
     <!-- Stacked only: questionnaire + promo in header — hidden on tablet -->
     @if (!isGuestMode && (!isSubscriberExclusive || hasSubscribed)) {
-      <div class="rsvp-header-stacked px-6 flex flex-col gap-3 pb-2">
-        <ng-container *ngTemplateOutlet="questionnaireBanner"></ng-container>
+      <div class="rsvp-header-stacked px-6 pb-2">
+        <div class="pb-3">
+          <ng-container *ngTemplateOutlet="questionnaireBanner"></ng-container>
+        </div>
         <ng-container *ngTemplateOutlet="promoCodeInput"></ng-container>
       </div>
     }
