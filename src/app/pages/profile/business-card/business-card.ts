@@ -175,7 +175,7 @@ export class BusinessCardPage implements OnInit {
         icon: 'call-outline',
         label: user.mobile.trim(),
         value: user.mobile.trim(),
-        href: `tel:${user.mobile.trim()}`
+        href: `sms:${user.mobile.trim()}`
       });
     }
 

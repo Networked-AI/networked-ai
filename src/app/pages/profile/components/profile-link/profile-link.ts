@@ -72,7 +72,7 @@ export class ProfileLink {
         type: 'phone',
         icon: 'call-outline',
         value: mobileValue,
-        href: `tel:${mobileValue}`
+        href: `sms:${mobileValue}`
       });
     }
 
