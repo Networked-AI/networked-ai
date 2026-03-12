@@ -19,6 +19,7 @@ interface SocialLink {
 export class ProfileLink {
   isExpanded = signal(false);
   currentUser = input<IAuthUser | null>(null);
+  showMobile = input<boolean>(true);
 
   private readonly socialConfigs = [
     { type: 'website', icon: 'globe-outline', key: 'website' },
@@ -65,7 +66,7 @@ export class ProfileLink {
 
     const links: SocialLink[] = [];
 
-    if (user.mobile?.trim()) {
+    if (user.mobile?.trim() && this.showMobile()) {
       const mobileValue = user.mobile.trim();
       links.push({
         type: 'phone',

@@ -126,6 +126,24 @@ export class BusinessCardPage implements OnInit {
     return user.address;
   });
 
+  isViewingOtherProfile = computed(() => {
+    const loggedInUser = this.authService.currentUser();
+    const viewedUser = this.user();
+    return viewedUser?.id && viewedUser?.id !== loggedInUser?.id;
+  });
+
+  showLocation = computed(() => {
+    return !this.isViewingOtherProfile() || (this.isViewingOtherProfile() && !this.user()?.settings?.hide_location);
+  });
+
+  showEmail = computed(() => {
+    return !this.isViewingOtherProfile() || (this.isViewingOtherProfile() && !this.user()?.settings?.hide_email);
+  });
+
+  showMobile = computed(() => {
+    return !this.isViewingOtherProfile() || (this.isViewingOtherProfile() && !this.user()?.settings?.hide_mobile);
+  });
+
   profileLink = computed(() => {
     const user = this.user();
     if (!user?.username) return '';
@@ -140,7 +158,7 @@ export class BusinessCardPage implements OnInit {
     const links: SocialLink[] = [];
 
     // Email
-    if (user.email?.trim()) {
+    if (user.email?.trim() && this.showEmail()) {
       links.push({
         type: 'email',
         icon: 'mail-outline',
@@ -151,7 +169,7 @@ export class BusinessCardPage implements OnInit {
     }
 
     // Phone
-    if (user.mobile?.trim()) {
+    if (user.mobile?.trim() && this.showMobile()) {
       links.push({
         type: 'phone',
         icon: 'call-outline',
