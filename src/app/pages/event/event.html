@@ -147,7 +147,7 @@
       @if (!isLoading() && event()) {
         @if (!isEventCompleted()) {
           @if (!eventDisplayData().isCurrentUserHost && !eventDisplayData().isCurrentUserAttendee && !eventDisplayData().isCurrentUserCoHost) {
-            <div class="pb-4 max-w-[672px] mx-auto event-footer-actions">
+            <div class="pb-4 event-footer-actions">
               @if (eventDisplayData().is_subscriber_exclusive && !eventDisplayData().has_subscribed) {
                 <app-button label="Subscribe Now" icon="/assets/svg/crown-black.svg" height="40px" (click)="navigateToSubscriptionPlans()" />
               } @else if (eventDisplayData().isRsvpApprovalRequired) {
