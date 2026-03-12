@@ -167,7 +167,7 @@
               </div>
 
               <!-- Location -->
-              @if (currentUser()?.address) {
+              @if (currentUser()?.address && showLocation()) {
                 <div class="flex items-center gap-2 body-14R neutral-03">
                   <ion-icon src="/assets/svg/location-icon.svg" class="text-[16px]"></ion-icon>
                   <span>{{ currentUser()?.address }}</span>
@@ -190,7 +190,7 @@
 
             <!-- Links -->
             @if (!isViewingOtherProfile() || (isViewingOtherProfile() && isConnected())) {
-              <profile-link [currentUser]="currentUser()" class="w-full" />
+              <profile-link [currentUser]="currentUser()" class="w-full" [showMobile]="showMobile()" />
             }
           </div>
 

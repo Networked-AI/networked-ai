@@ -34,6 +34,6 @@ export class RsvpConfirmModal {
 
   finishProfileSetup(): void {
     this.done();
-    this.navigationService.navigateForward('/profile/setup', true);
+    this.navigationService.navigateForward('/profile/setup');
   }
 }

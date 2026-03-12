@@ -120,7 +120,7 @@ export class EventCard {
   eventOrganization = computed(() => {
     const event = this.currentEvent();
     const hostName = event?.participants?.find((p: any) => (p.role || '').toLowerCase() === 'host')?.user?.name;
-    return hostName || event?.organization || 'Networked AI';
+    return hostName || event?.organization || 'Get Networked';
   });
 
   viewEvent() {

@@ -34,7 +34,7 @@ export class AuthEmptyState {
       case 'network':
         return 'Grow Your Network';
       case 'messages':
-        return 'Message on Networked AI';
+        return 'Message on Get Networked';
       case 'profile':
         return 'Get Started';
       default:
@@ -45,13 +45,13 @@ export class AuthEmptyState {
   get description(): string {
     switch (this.type()) {
       case 'network':
-        return 'Add new friends & expand your network with Networked AI.';
+        return 'Add new friends & expand your network with Get Networked.';
       case 'messages':
         return 'Chat with your network and receive messages on event updates.';
       case 'profile':
-        return 'Create an account to start hosting events and expand your network with Networked AI.';
+        return 'Create an account to start hosting events and expand your network with Get Networked.';
       default:
-        return 'Create an account to start hosting events and expand your network with Networked AI.';
+        return 'Create an account to start hosting events and expand your network with Get Networked.';
     }
   }
 

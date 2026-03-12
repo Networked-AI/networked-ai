@@ -6,108 +6,119 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content mode="md">
-  <div class="px-4">
-    <!-- Preview Mode Banner -->
-    @if (isPreviewMode) {
-      <div class="flex items-center gap-2 mb-4 p-3 bg-neutral-07 rounded">
-        <div class="pi pi-info-circle text-neutral-04"></div>
-        <span class="body-14R neutral-04">This is how your questionnaire will appear to the public.</span>
-      </div>
-    } @else {
-      <div class="flex flex-col mb-8">
-        <p class="body-14R neutral-02">Please fill out this short questionnaire from the event host to complete your RSVP.</p>
-        @if (hasPrivateQuestions()) {
-          <div class="flex items-center gap-2">
-            <div class="pi pi-eye-slash neutral-04 body-14R"></div>
-            <span class="body-14R neutral-04">Only the host will see this information</span>
-          </div>
-        }
-      </div>
-    }
+<ng-template #submitAction>
+  <app-button [label]="isPreviewMode ? 'Close' : 'Submit and Proceed'" (click)="dismiss()" />
+</ng-template>
 
-    <!-- Segment Button for PreEvent/PostEvent -->
-    @if (hasBothPhases()) {
-      <div class="mb-4">
-        <segment-button [value]="selectedPhase()" [items]="segmentItems()" (valueChange)="onPhaseChange($event)" />
-      </div>
-    }
-
-    <!-- Section Title -->
-    <div class="mb-4">
-      <h3 class="heading-h3 neutral-01">
-        @if (selectedPhase() === 'PreEvent') {
-          Pre Event Questionnaire
-        } @else {
-          Post Event Questionnaire
-        }
-      </h3>
+<ng-template #eventInfoCard>
+  @if (eventInfo?.imageUrl) {
+    <div class="questionnaire-side-media">
+      <app-event-media-block
+        mode="primary"
+        [imageUrl]="eventInfo!.imageUrl!"
+        [thumbnailUrl]="eventInfo!.imageUrl!"
+        [title]="eventInfo!.eventTitle"
+        [compact]="true"
+      />
     </div>
+  }
+  <div class="questionnaire-side-details">
+    @if (eventInfo?.date) {
+      <div class="body-14M neutral-02 flex items-center gap-2"><span class="pi pi-calendar neutral-03"></span>{{ eventInfo!.date }}</div>
+    }
+    @if (eventInfo?.location) {
+      <div class="body-14M neutral-02 flex items-center gap-2"><span class="pi pi-map-marker neutral-03"></span>{{ eventInfo!.location }}</div>
+    }
+  </div>
+</ng-template>
 
-    <form [formGroup]="form" class="space-y-6">
-      @for (question of displayedQuestions(); let i = $index; track i) {
-        <div class="flex flex-col gap-3">
-          <!-- Question Label - Show for all question types -->
-          <div class="flex items-start justify-between text-surface-900 mb-1">
-            <label class="neutral-02 body-14M">
-              {{ question.question }}
-            </label>
-            <div class="flex items-center gap-2">
-              @if (!(question.is_required !== undefined ? question.is_required : question.required)) {
-                <span class="neutral-04 body-14R">Optional</span>
-              }
-              @if (question.is_public === false || question.visibility === 'private') {
-                <div class="pi pi-eye-slash neutral-04 body-14R"></div>
-              }
-            </div>
+<ng-template #formContent>
+  <!-- Intro banner -->
+  @if (isPreviewMode) {
+    <div class="flex items-center gap-2 mb-4 p-3 bg-neutral-07 rounded">
+      <div class="pi pi-info-circle text-neutral-04"></div>
+      <span class="body-14R neutral-04">This is how your questionnaire will appear to the public.</span>
+    </div>
+  } @else {
+    <div class="flex flex-col mb-8">
+      <p class="body-14R neutral-02">Please fill out this short questionnaire from the event host to complete your RSVP.</p>
+      @if (hasPrivateQuestions()) {
+        <div class="flex items-center gap-2">
+          <div class="pi pi-eye-slash neutral-04 body-14R"></div>
+          <span class="body-14R neutral-04">Only the host will see this information</span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Phase switcher -->
+  @if (hasBothPhases()) {
+    <div class="mb-4">
+      <segment-button [value]="selectedPhase()" [items]="segmentItems()" (valueChange)="onPhaseChange($event)" />
+    </div>
+  }
+  <div class="mb-4">
+    <h3 class="heading-h3 neutral-01">
+      @if (selectedPhase() === 'PreEvent') {
+        Pre Event Questionnaire
+      } @else {
+        Post Event Questionnaire
+      }
+    </h3>
+  </div>
+
+  <form [formGroup]="form" class="space-y-6">
+    @for (question of displayedQuestions(); let i = $index; track i) {
+      <div class="flex flex-col gap-3">
+        <div class="flex items-start justify-between text-surface-900 mb-1">
+          <label class="neutral-02 body-14M">{{ question.question }}</label>
+          <div class="flex items-center gap-2">
+            @if (!(question.is_required !== undefined ? question.is_required : question.required)) {
+              <span class="neutral-04 body-14R">Optional</span>
+            }
+            @if (question.is_public === false || question.visibility === 'private') {
+              <div class="pi pi-eye-slash neutral-04 body-14R"></div>
+            }
           </div>
+        </div>
 
-          <!-- Text Input -->
-          @if ((question.question_type || question.type) === 'Text') {
-            <text-input
-              [controlName]="'question_' + i"
-              [label]="''"
-              [showLabel]="false"
-              [placeholder]="'Enter your answer'"
-              [required]="(question.is_required !== undefined ? question.is_required : question.required) || false"
-            />
-          }
-
-          <!-- Phone Input -->
-          @if ((question.question_type || question.type) === 'PhoneNumber') {
-            <mobile-input
-              [controlName]="'question_' + i"
-              [label]="''"
-              [required]="(question.is_required !== undefined ? question.is_required : question.required) || false"
-            />
-          }
-
-          <!-- Number Input -->
-          @if ((question.question_type || question.type) === 'Number') {
-            <number-input
-              [controlName]="'question_' + i"
-              [label]="''"
-              [showLabel]="false"
-              [placeholder]="'Enter a number'"
-              [required]="(question.is_required !== undefined ? question.is_required : question.required) ?? false"
-              [min]="question.min"
-              [max]="question.max"
-            />
-          }
-
-          <!-- Single Choice (Radio Buttons) -->
-          @if ((question.question_type || question.type) === 'SingleChoice' && question.options) {
-            <div class="flex flex-col">
-              @for (option of question.options; let oi = $index; track oi) {
-                <div class="flex items-center gap-3 py-1">
-                  <p-radioButton [inputId]="'radio_' + i + '_' + oi" [name]="'question_' + i" [value]="option" formControlName="question_{{ i }}" />
-                  <label [for]="'radio_' + i + '_' + oi" class="body-14M neutral-01 flex-1 cursor-pointer">
-                    {{ typeof option === 'object' && option.option ? option.option : option }}
-                  </label>
-                </div>
-              }
-            </div>
-            <!-- Validation Error for Single Choice -->
+        @if ((question.question_type || question.type) === 'Text') {
+          <text-input
+            [controlName]="'question_' + i"
+            [label]="''"
+            [showLabel]="false"
+            [placeholder]="'Enter your answer'"
+            [required]="(question.is_required !== undefined ? question.is_required : question.required) || false"
+          />
+        }
+        @if ((question.question_type || question.type) === 'PhoneNumber') {
+          <mobile-input
+            [controlName]="'question_' + i"
+            [label]="''"
+            [required]="(question.is_required !== undefined ? question.is_required : question.required) || false"
+          />
+        }
+        @if ((question.question_type || question.type) === 'Number') {
+          <number-input
+            [controlName]="'question_' + i"
+            [label]="''"
+            [showLabel]="false"
+            [placeholder]="'Enter a number'"
+            [required]="(question.is_required !== undefined ? question.is_required : question.required) ?? false"
+            [min]="question.min"
+            [max]="question.max"
+          />
+        }
+        @if ((question.question_type || question.type) === 'SingleChoice' && question.options) {
+          <div class="flex flex-col">
+            @for (option of question.options; let oi = $index; track oi) {
+              <div class="flex items-center gap-3 py-1">
+                <p-radioButton [inputId]="'radio_' + i + '_' + oi" [name]="'question_' + i" [value]="option" formControlName="question_{{ i }}" />
+                <label [for]="'radio_' + i + '_' + oi" class="body-14M neutral-01 flex-1 cursor-pointer">{{
+                  typeof option === 'object' && option.option ? option.option : option
+                }}</label>
+              </div>
+            }
             @if (
               getQuestionControl(i)?.invalid &&
               getQuestionControl(i)?.touched &&
@@ -115,60 +126,87 @@
             ) {
               <div class="accent-red body-12M">Please select an option.</div>
             }
-          }
-
-          <!-- Multiple Choice (Checkboxes) -->
-          @if ((question.question_type || question.type) === 'MultipleChoice' && question.options) {
-            <div formArrayName="question_{{ i }}" class="flex flex-col">
-              @for (option of question.options; let oi = $index; track oi) {
-                <div class="flex items-center gap-3 py-1">
-                  <p-checkbox [inputId]="'checkbox_' + i + '_' + oi" [formControlName]="oi" [binary]="true" />
-                  <label [for]="'checkbox_' + i + '_' + oi" class="body-14M neutral-01 flex-1 cursor-pointer">
-                    {{ typeof option === 'object' && option.option ? option.option : option }}
-                  </label>
-                </div>
-              }
-              @if (getQuestionControl(i)?.invalid && getQuestionControl(i)?.touched) {
-                <div class="accent-red body-12M">Please select at least one option.</div>
-              }
-            </div>
-          }
-
-          <!-- Rating (1-10 Scale) -->
-          @if ((question.question_type || question.type) === 'Rating') {
-            <div class="flex gap-2">
-              @for (rating of getRatingScale(question); track rating) {
-                <div
-                  class="w-10 h-10 rounded-full border-1 flex items-center justify-center body-12M transition-colors cursor-pointer"
-                  [class.border-surface-300]="!isRatingSelected(i, rating)"
-                  [class.text-neutral-01]="!isRatingSelected(i, rating)"
-                  [class.border-primary]="isRatingSelected(i, rating)"
-                  [class.bg-primary]="isRatingSelected(i, rating)"
-                  [class.text-white]="isRatingSelected(i, rating)"
-                  (click)="selectRating(i, rating)"
-                >
-                  {{ rating }}
-                </div>
-              }
-            </div>
-            <!-- Validation Error for Rating -->
+          </div>
+        }
+        @if ((question.question_type || question.type) === 'MultipleChoice' && question.options) {
+          <div formArrayName="question_{{ i }}" class="flex flex-col">
+            @for (option of question.options; let oi = $index; track oi) {
+              <div class="flex items-center gap-3 py-1">
+                <p-checkbox [inputId]="'cb_' + i + '_' + oi" [formControlName]="oi" [binary]="true" />
+                <label [for]="'cb_' + i + '_' + oi" class="body-14M neutral-01 flex-1 cursor-pointer">{{
+                  typeof option === 'object' && option.option ? option.option : option
+                }}</label>
+              </div>
+            }
+            @if (getQuestionControl(i)?.invalid && getQuestionControl(i)?.touched) {
+              <div class="accent-red body-12M">Please select at least one option.</div>
+            }
+          </div>
+        }
+        @if ((question.question_type || question.type) === 'Rating') {
+          <div class="flex gap-2">
+            @for (rating of getRatingScale(question); track rating) {
+              <div
+                class="w-10 h-10 rounded-full border-1 flex items-center justify-center body-12M transition-colors cursor-pointer"
+                [class.border-surface-300]="!isRatingSelected(i, rating)"
+                [class.text-neutral-01]="!isRatingSelected(i, rating)"
+                [class.border-primary]="isRatingSelected(i, rating)"
+                [class.bg-primary]="isRatingSelected(i, rating)"
+                [class.text-white]="isRatingSelected(i, rating)"
+                (click)="selectRating(i, rating)"
+              >
+                {{ rating }}
+              </div>
+            }
             @if (
               getQuestionControl(i)?.invalid &&
               getQuestionControl(i)?.touched &&
               (question.is_required !== undefined ? question.is_required : question.required)
             ) {
-              <div class="accent-red body-12M">Please select a rating.</div>
+              <div class="accent-red body-12M w-full">Please select a rating.</div>
             }
-          }
-        </div>
-      }
-    </form>
+          </div>
+        }
+      </div>
+    }
+  </form>
+</ng-template>
+
+<!-- Single ion-content hosts both layouts -->
+<ion-content mode="md">
+  <!-- STACKED layout (mobile / no eventInfo) -->
+  <div [class]="eventInfo ? 'q-layout-stacked' : 'q-layout-always'">
+    <div class="px-4 py-4">
+      <ng-container *ngTemplateOutlet="formContent"></ng-container>
+    </div>
   </div>
+
+  <!-- MID layout (tablet, only when eventInfo present) — plain div, NOT ion-content -->
+  @if (eventInfo) {
+    <div class="q-layout-mid">
+      <div class="q-mid-inner">
+        <!-- Left column: form -->
+        <div class="q-mid-main">
+          <ng-container *ngTemplateOutlet="formContent"></ng-container>
+        </div>
+
+        <!-- Right column: sticky event card + CTA -->
+        <aside class="q-mid-side">
+          <div class="q-side-card">
+            <ng-container *ngTemplateOutlet="eventInfoCard"></ng-container>
+            <ng-container *ngTemplateOutlet="submitAction"></ng-container>
+          </div>
+        </aside>
+      </div>
+    </div>
+  }
 </ion-content>
-<ion-footer mode="md">
+
+<!-- Footer: stacked only (hidden on tablet when eventInfo present) -->
+<ion-footer mode="md" [class]="'q-footer' + (eventInfo ? ' q-footer-has-event' : '')">
   <ion-toolbar mode="md">
     <div class="p-4">
-      <app-button [label]="isPreviewMode ? 'Close' : 'Submit and Proceed'" (click)="dismiss()" />
+      <ng-container *ngTemplateOutlet="submitAction"></ng-container>
     </div>
   </ion-toolbar>
 </ion-footer>

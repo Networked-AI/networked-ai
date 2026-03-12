@@ -753,8 +753,8 @@ export class EventService extends BaseApiService {
     const isRepeatingEvent = options?.isRepeatingEvent ?? parentEvent?.settings?.is_repeating_event === true;
     const dateItems = options?.dateItems ?? (isRepeatingEvent ? this.createDateItems(parentEvent || eventData) : []);
 
-    let hostName = hosts[0]?.name || 'Networked AI';
-    if (!hostName || hostName === 'Networked AI') {
+    let hostName = hosts[0]?.name || 'Get Networked';
+    if (!hostName || hostName === 'Get Networked') {
       const host = Array.isArray(participants) ? participants.find((p: any) => (p.role || '').toLowerCase() === 'host') : null;
       hostName = host?.name || host?.user?.name || hostName;
     }

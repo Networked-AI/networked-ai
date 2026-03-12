@@ -4,7 +4,6 @@ import {
   IonToolbar,
   IonHeader,
   IonIcon,
-  IonSkeletonText,
   IonRefresher,
   IonRefresherContent,
   RefresherCustomEvent,
@@ -18,7 +17,7 @@ import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Button } from '@/components/form/button';
-import { NgOptimizedImage } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
 import { OgService } from '@/services/og.service';
 import { AuthService } from '@/services/auth.service';
 import { KEYS, LocalStorageService } from '@/services/localstorage.service';
@@ -30,8 +29,9 @@ import { environment } from 'src/environments/environment';
 import { EmptyState } from '@/components/common/empty-state';
 import { EventDisplay } from '@/components/common/event-display';
 import { NavigationService } from '@/services/navigation.service';
-import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { ManageEventService } from '@/services/manage-event.service';
+import { EventMediaBlockComponent } from '@/components/common/event-media-block';
+import { EventPageSkeleton } from '@/components/skeletons/event-page-skeleton/event-page-skeleton';
 import { OnInit, inject, signal, computed, Component, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
 import { BaseApiService } from '@/services/base-api.service';
 import { MessagesService } from '@/services/messages.service';
@@ -48,12 +48,13 @@ import { MessagesService } from '@/services/messages.service';
     IonHeader,
     IonContent,
     IonToolbar,
-    IonSkeletonText,
     IonRefresher,
     IonRefresherContent,
     MenuModule,
     EventDisplay,
-    NgOptimizedImage,
+    EventMediaBlockComponent,
+    EventPageSkeleton,
+    NgTemplateOutlet,
     EmptyState
   ]
 })
@@ -255,6 +256,12 @@ export class Event implements OnInit, OnDestroy {
     }
   }
 
+  countdownFormattedHtml = computed(() => {
+    const t = this.countdownTimer();
+    if (!this.isShowTimer() || !t) return null;
+    return this.formatTimerDisplay(t.formatted, t.isLessThan24Hours);
+  });
+
   isEventLiked = computed(() => {
     const eventData = this.currentEventData();
     return eventData?.is_like || false;
@@ -274,7 +281,7 @@ export class Event implements OnInit, OnDestroy {
         total_views: '0',
         isPublic: true,
         location: '',
-        hostName: 'Networked AI',
+        hostName: 'Get Networked',
         mapCenter: null,
         admission: 'Free',
         formattedDateTime: '',
@@ -380,7 +387,7 @@ export class Event implements OnInit, OnDestroy {
     const email = queryParams.get('email');
     const password = queryParams.get('password');
     const token = queryParams.get('token');
-    
+
     if (token || (email && password)) {
       try {
         if (token) {
@@ -719,12 +726,12 @@ export class Event implements OnInit, OnDestroy {
     const maxAttendeesPerUser = eventData?.settings?.max_attendees_per_user ?? 0;
     const date = displayData.formattedDateTime;
     const location = eventData?.address || '';
-    const hostName = eventData?.participants?.find((p: any) => p.role === 'Host')?.user?.name || 'Networked AI';
+    const hostName = eventData?.participants?.find((p: any) => p.role === 'Host')?.user?.name || 'Get Networked';
     const hasPlans = eventData?.has_plans || false;
     const hasSubscribed = eventData?.has_subscribed || false;
     const isSubscriberExclusive = eventData?.settings?.is_subscriber_exclusive ?? false;
     const plans = eventData?.plans || [];
-
+    const imageUrl = displayData?.image_url || displayData?.thumbnail_url;
     const result = await this.modalService.openRsvpModal(
       displayData.tickets || [],
       displayData.title || '',
@@ -741,7 +748,8 @@ export class Event implements OnInit, OnDestroy {
       plans,
       date,
       location,
-      eventData?.participants
+      eventData?.participants ?? [],
+      imageUrl
     );
     if (result) {
       const loadingModal = await this.modalService.openLoadingModal('Processing your RSVP...');
@@ -1080,15 +1088,6 @@ export class Event implements OnInit, OnDestroy {
       clearInterval(this.timerInterval);
     }
   }
-
-  getImageUrl(imageUrl = ''): string {
-    return getImageUrlOrDefault(imageUrl);
-  }
-
-  onImageError(event: any): void {
-    onImageError(event);
-  }
-
   navigateToNetwork() {
     this.navigationService.navigateForward(`/event/questionnaire-response/${this.eventDisplayData().id}`);
   }

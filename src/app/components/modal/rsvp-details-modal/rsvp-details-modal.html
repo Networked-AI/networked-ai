@@ -1,15 +1,22 @@
 <ion-header mode="md">
   <ion-toolbar mode="md">
-    <div class="p-4 flex items-center justify-between">
-      <div class="flex flex-col">
-        <div class="heading-h3 neutral-01 line-clamp-1 w-full">{{ eventTitle }}</div>
-        <div class="body-14R neutral-03 line-clamp-1 w-full">by {{ hostName }}</div>
+    <div class="p-4 flex items-start justify-between gap-2">
+      <div class="rsvp-side-title min-w-0 flex-1">
+        <div class="heading-h3 neutral-01 line-clamp-1">
+          {{ eventTitle }}
+        </div>
+    
+        @if (hostName) {
+          <div class="body-14R neutral-03">
+            Hosted by
+            <span class="text-primary body-14M">{{ hostName }}</span>
+          </div>
+        }
       </div>
-      <i class="pi pi-times cursor-pointer text-xl text-neutral-01" (click)="close()"></i>
+    
+      <i class="pi pi-times cursor-pointer text-xl shrink-0" (click)="close()"></i>
     </div>
-
-    <!-- Promo Code Section -->
-    @if (hasPromoCodes()) {
+    @if (hasPromoCodes() && !isTabletLayout()) {
       <div class="px-4 flex flex-col gap-3 pb-1">
         <promo-code-section
           [promoCodes]="rsvpData?.promo_codes ?? []"
@@ -25,205 +32,270 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content mode="md">
-  <div class="p-4">
-    <!-- Event Details -->
-    <div class="flex flex-col gap-2 mb-6">
-      <div class="flex items-start gap-10 w-full justify-between">
-        <div class="flex items-start gap-1.5 justify-between">
-          <div class="pi pi-calendar neutral-03 text-[16px]! mt-0.5"></div>
-          <div class="body-14M neutral-03 w-max">Date &amp; Time</div>
-        </div>
-        <div class="flex items-center justify-end w-full">
-          <div class="body-14M line-clamp-1 w-full">{{ date }}</div>
-        </div>
+<!-- ── Safe templates (no form controls) ── -->
+<ng-template #eventMeta>
+  <div class="flex flex-col gap-2 mb-6">
+    <div class="flex items-start gap-10 w-full justify-between">
+      <div class="flex items-start gap-1.5">
+        <div class="pi pi-calendar neutral-03 text-[16px]! mt-0.5"></div>
+        <div class="body-14M neutral-03 w-max">Date &amp; Time</div>
       </div>
-      
-      <!-- location -->
-      <div class="flex items-start gap-16 w-full justify-between">
-        <div class="flex items-start gap-1.5 justify-between">
-          <div class="pi pi-map-marker neutral-03 text-[16px]! mt-0.5"></div>
-          <div class="body-14M neutral-03">Location</div>
-        </div>
-        <div class="flex items-center justify-end w-full">
-          <div class="body-14M line-clamp-1 w-full">{{ location }}</div>
-        </div>
-      </div>
+      <div class="body-14M line-clamp-1 w-full text-right">{{ date }}</div>
     </div>
-
-    <form [formGroup]="form" class="flex flex-col gap-6">
-      <!-- Your Details Section -->
-      <div class="border border-surface-300 rounded-2xl p-4 flex flex-col gap-4">
-        <div class="body-16M neutral-01">Your Details</div>
-
-        <div class="flex gap-3">
-          <text-input [controlName]="'firstName'" [label]="'First Name'" [showLabel]="true" [required]="true" class="flex-1" />
-          <text-input [controlName]="'lastName'" [label]="'Last Name'" [showLabel]="true" [required]="true" class="flex-1" />
-        </div>
-
-        <email-input #emailInputRef [controlName]="'email'" [showVerifiedIcon]="true" [label]="'Email'" [required]="true" [checkIfTaken]="true" />
+    <div class="flex items-start gap-16 w-full justify-between">
+      <div class="flex items-start gap-1.5">
+        <div class="pi pi-map-marker neutral-03 text-[16px]! mt-0.5"></div>
+        <div class="body-14M neutral-03">Location</div>
       </div>
+      <div class="body-14M line-clamp-1 w-full text-right">{{ location }}</div>
+    </div>
+  </div>
+</ng-template>
 
-      <!-- Guest Information Section -->
-      @if (totalGuestCount() > 0) {
-        <div class="border border-surface-300 rounded-2xl p-4 flex flex-col gap-6">
-          <div class="flex items-center justify-between">
-            <div class="body-16M neutral-01">Guest Information</div>
-            <span class="body-14R neutral-04">Optional</span>
+<ng-template #rsvpDetailsCard>
+  <div class="border border-surface-300 rounded-2xl p-4 flex flex-col gap-3">
+    <div class="flex items-center border-b border-surface-300 pb-3 justify-between">
+      <div class="body-16M neutral-01">RSVP Details</div>
+      <ion-icon src="assets/svg/editIcon.svg" class="w-5 h-5 text-neutral-03 cursor-pointer" (click)="close()" />
+    </div>
+    @for (tier of rsvp.summary().tiers; track tier.ticketId) {
+      <div class="flex items-center justify-between">
+        <span class="body-14R neutral-02">{{ tier.ticketName }} x{{ tier.quantity }}</span>
+        <span class="body-14M neutral-01">${{ formatCurrency(tier.unitPriceDollars * tier.quantity) }}</span>
+      </div>
+      @if (tier.freeSubscriptionCount > 0) {
+        <div class="flex items-center justify-between text-blue-500">
+          <div class="flex items-center gap-1">
+            <i class="pi pi-crown text-xs"></i>
+            <span class="body-14R">
+              Subscriber Perk
+              @if (tier.freeSubscriptionCount > 1) {
+                x{{ tier.freeSubscriptionCount }}
+              }
+            </span>
           </div>
-
-          <div class="flex flex-col gap-6">
-            @for (guestForm of guestForms.controls; let i = $index; track i) {
-              <div [formGroup]="$any(guestForm)" class="border border-surface-300 rounded-lg p-2 flex flex-col gap-4">
-                <!-- Guest Label -->
-                <div class="body-14M neutral-02">Guest #{{ i + 1 }}</div>
-
-                <!-- Name Fields -->
-                <div class="flex gap-3">
-                  <text-input
-                    [controlName]="'guestFirstName'"
-                    [label]="''"
-                    [showLabel]="false"
-                    [placeholder]="'First Name'"
-                    [required]="true"
-                    class="flex-1"
-                  />
-                  <text-input
-                    [controlName]="'guestLastName'"
-                    [label]="''"
-                    [showLabel]="false"
-                    [placeholder]="'Last Name'"
-                    [required]="true"
-                    class="flex-1"
-                  />
-                </div>
-
-                <!-- Attendance Options -->
-                <div class="flex items-center justify-between gap-3">
-                  <div class="flex gap-3">
-                    <div
-                      type="button"
-                      class="py-2 px-4 rounded-[15px] border border-surface-300 cursor-pointer"
-                      [class.bg-neutral-01]="getGuestAttendance(i) === 'going'"
-                      [class.text-white]="getGuestAttendance(i) === 'going'"
-                      [class.text-neutral-01]="getGuestAttendance(i) !== 'going'"
-                      (click)="setGuestAttendance(i, 'going')"
-                    >
-                      Going
-                    </div>
-                    <div
-                      type="button"
-                      class="py-2 px-4 rounded-[15px] border border-surface-300 cursor-pointer"
-                      [class.bg-neutral-01]="getGuestAttendance(i) === 'maybe'"
-                      [class.text-white]="getGuestAttendance(i) === 'maybe'"
-                      [class.text-neutral-01]="getGuestAttendance(i) !== 'maybe'"
-                      (click)="setGuestAttendance(i, 'maybe')"
-                    >
-                      Maybe
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span class="body-14M neutral-01">Incognito</span>
-                    <toggle-input [controlName]="'isIncognito'" [initialValue]="false" />
-                  </div>
-                </div>
-              </div>
-            }
-          </div>
+          <span class="body-14M">-${{ formatCurrency(tier.freeSubscriptionCount * tier.unitPriceDollars) }}</span>
         </div>
       }
+    }
+    @if (discountAmount() >= 0.01) {
+      <div class="flex items-center justify-between">
+        <span class="body-14R neutral-02">{{ promoCodeDisplayName() }}</span>
+        <span class="body-14M accent-red">-${{ formatCurrency(discountAmount()) }}</span>
+      </div>
+    }
+    @if (hostFees() > 0) {
+      <div class="flex items-center justify-between">
+        <span class="body-14R neutral-02">Additional Fee</span>
+        <span class="body-14M neutral-01">${{ formatCurrency(hostFees()) }}</span>
+      </div>
+    }
+    @if (platformFee() > 0 && !hostPaysFees) {
+      <div class="flex items-center justify-between">
+        <span class="body-14R neutral-02">Platform Fee</span>
+        <span class="body-14M neutral-01">${{ formatCurrency(platformFee()) }}</span>
+      </div>
+    }
+    <div class="border-t border-surface-300 pt-3 flex items-center justify-between">
+      <span class="body-16M neutral-01">Total</span>
+      <span class="body-16M neutral-01">${{ formattedTotal() }}</span>
+    </div>
+  </div>
+</ng-template>
 
-      <!-- RSVP Details / Order Summary -->
-      <div class="border border-surface-300 rounded-2xl p-4 flex flex-col gap-3">
-        <div class="flex items-center border-b border-surface-300 pb-3 justify-between">
-          <div class="body-16M neutral-01">RSVP Details</div>
-          <ion-icon src="assets/svg/editIcon.svg" class="w-5 h-5 text-neutral-03 cursor-pointer" (click)="close()" />
+<ng-template #confirmButton>
+  <app-button
+    [label]="confirmButtonLabel()"
+    [isLoading]="isLoadingPayment() || isGuestVerifying() || isUpdatingUserDetails()"
+    [disabled]="isLoadingPayment() || isGuestVerifying() || isUpdatingUserDetails()"
+    (click)="dismiss()"
+  />
+</ng-template>
+
+<ng-template #eventSideCard>
+  @if (imageUrl) {
+    <div class="rsvp-details-side-media">
+      <app-event-media-block mode="primary" [imageUrl]="imageUrl" [thumbnailUrl]="imageUrl" [title]="eventTitle" [compact]="true" />
+    </div>
+  }
+  <div class="rsvp-details-side-details">
+    @if (date) {
+      <div class="body-14M neutral-02 flex items-center gap-2"><span class="pi pi-calendar neutral-03"></span>{{ date }}</div>
+    }
+    @if (location) {
+      <div class="body-14M neutral-02 flex items-center gap-2"><span class="pi pi-map-marker neutral-03"></span>{{ location }}</div>
+    }
+  </div>
+</ng-template>
+
+<ng-template #guestInfoSection>
+  @if (totalGuestCount() > 0) {
+    <div class="border border-surface-300 rounded-2xl p-4 flex flex-col gap-6">
+      <div class="flex items-center justify-between">
+        <div class="body-16M neutral-01">Guest Information</div>
+        <span class="body-14R neutral-04">Optional</span>
+      </div>
+      <div class="flex flex-col gap-6">
+        @for (guestForm of guestForms.controls; let i = $index; track i) {
+          <div [formGroup]="$any(guestForm)" class="border border-surface-300 rounded-lg p-2 flex flex-col gap-4">
+            <div class="body-14M neutral-02">Guest #{{ i + 1 }}</div>
+            <div class="flex gap-3">
+              <text-input
+                [controlName]="'guestFirstName'"
+                [label]="''"
+                [showLabel]="false"
+                [placeholder]="'First Name'"
+                [required]="true"
+                class="flex-1"
+              />
+              <text-input
+                [controlName]="'guestLastName'"
+                [label]="''"
+                [showLabel]="false"
+                [placeholder]="'Last Name'"
+                [required]="true"
+                class="flex-1"
+              />
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex gap-3">
+                <div
+                  type="button"
+                  class="py-2 px-4 rounded-[15px] border border-surface-300 cursor-pointer"
+                  [class.bg-neutral-01]="getGuestAttendance(i) === 'going'"
+                  [class.text-white]="getGuestAttendance(i) === 'going'"
+                  [class.text-neutral-01]="getGuestAttendance(i) !== 'going'"
+                  (click)="setGuestAttendance(i, 'going')"
+                >
+                  Going
+                </div>
+                <div
+                  type="button"
+                  class="py-2 px-4 rounded-[15px] border border-surface-300 cursor-pointer"
+                  [class.bg-neutral-01]="getGuestAttendance(i) === 'maybe'"
+                  [class.text-white]="getGuestAttendance(i) === 'maybe'"
+                  [class.text-neutral-01]="getGuestAttendance(i) !== 'maybe'"
+                  (click)="setGuestAttendance(i, 'maybe')"
+                >
+                  Maybe
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="body-14M neutral-01">Incognito</span>
+                <toggle-input [controlName]="'isIncognito'" [initialValue]="false" />
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</ng-template>
+
+<!-- ── Single ion-content ── -->
+<ion-content mode="md">
+  <form [formGroup]="form">
+    <!-- STACKED layout: mobile only -->
+    @if (!isTabletLayout()) {
+      <div class="p-4 flex flex-col gap-6">
+        <ng-container *ngTemplateOutlet="eventMeta"></ng-container>
+
+        <div class="border border-surface-300 rounded-2xl p-4 flex flex-col gap-4">
+          <div class="body-16M neutral-01">Your Details</div>
+          <div class="flex gap-3">
+            <text-input [controlName]="'firstName'" [label]="'First Name'" [showLabel]="true" [required]="true" class="flex-1" />
+            <text-input [controlName]="'lastName'" [label]="'Last Name'" [showLabel]="true" [required]="true" class="flex-1" />
+          </div>
+          <email-input #emailInputRef [controlName]="'email'" [showVerifiedIcon]="true" [label]="'Email'" [required]="true" [checkIfTaken]="true" />
         </div>
 
-        <!-- Ticket rows -->
-        @for (tier of rsvp.summary().tiers; track tier.ticketId) {
-          <div class="flex items-center justify-between">
-            <span class="body-14R neutral-02">{{ tier.ticketName }} x{{ tier.quantity }}</span>
-            <span class="body-14M neutral-01">${{ formatCurrency(tier.unitPriceDollars * tier.quantity) }}</span>
+        <ng-container *ngTemplateOutlet="guestInfoSection"></ng-container>
+        <ng-container *ngTemplateOutlet="rsvpDetailsCard"></ng-container>
+
+        @if (showPaymentSection()) {
+          <div class="border border-surface-300 rounded-2xl p-4 flex flex-col gap-4">
+            <div class="body-16M neutral-01">Payment Details</div>
+            <app-stripe-payment
+              #stripePayment
+              [summary]="summary()"
+              [amount]="totalPrice()"
+              [clientSecretInput]="clientSecret()"
+              [validateAllForms]="validateAllForms()"
+              (paymentError)="onPaymentError($event)"
+              (paymentSuccess)="onPaymentSuccess($event)"
+              (applePaySuccess)="finalizeRsvpAndClose()"
+              (paymentProcessing)="onPaymentProcessing($event)"
+            />
+          </div>
+        }
+      </div>
+    }
+
+    <!-- MID layout: tablet only -->
+    @if (isTabletLayout()) {
+      <div class="rsvp-details-mid-inner">
+        <!-- Left column -->
+        <div class="rsvp-details-mid-main flex flex-col gap-6">
+          <div class="border border-surface-300 rounded-2xl p-4 flex flex-col gap-4">
+            <div class="body-16M neutral-01">Your Details</div>
+            <div class="flex gap-3">
+              <text-input [controlName]="'firstName'" [label]="'First Name'" [showLabel]="true" [required]="true" class="flex-1" />
+              <text-input [controlName]="'lastName'" [label]="'Last Name'" [showLabel]="true" [required]="true" class="flex-1" />
+            </div>
+            <email-input #emailInputRef [controlName]="'email'" [showVerifiedIcon]="true" [label]="'Email'" [required]="true" [checkIfTaken]="true" />
           </div>
 
-          <!-- Subscription free ticket row -->
-          @if (tier.freeSubscriptionCount > 0) {
-            <div class="flex items-center justify-between text-blue-500">
-              <div class="flex items-center gap-1">
-                <i class="pi pi-crown text-xs"></i>
-                <span class="body-14R">
-                  Subscriber Perk
-                  @if (tier.freeSubscriptionCount > 1) {
-                    x{{ tier.freeSubscriptionCount }}
-                  }
-                </span>
-              </div>
-              <span class="body-14M"> -${{ formatCurrency(tier.freeSubscriptionCount * tier.unitPriceDollars) }} </span>
+          <ng-container *ngTemplateOutlet="guestInfoSection"></ng-container>
+
+          @if (showPaymentSection()) {
+            <div class="border border-surface-300 rounded-2xl p-4 flex flex-col gap-4">
+              <div class="body-16M neutral-01">Payment Details</div>
+              <app-stripe-payment
+                #stripePayment
+                [summary]="summary()"
+                [amount]="totalPrice()"
+                [clientSecretInput]="clientSecret()"
+                [validateAllForms]="validateAllForms()"
+                (paymentError)="onPaymentError($event)"
+                (paymentSuccess)="onPaymentSuccess($event)"
+                (applePaySuccess)="finalizeRsvpAndClose()"
+                (paymentProcessing)="onPaymentProcessing($event)"
+              />
             </div>
           }
-        }
-
-        <!-- Promo discount row -->
-        @if (discountAmount() >= 0.01) {
-          <div class="flex items-center justify-between">
-            <span class="body-14R neutral-02">{{ promoCodeDisplayName() }}</span>
-            <span class="body-14M accent-red">-${{ formatCurrency(discountAmount()) }}</span>
-          </div>
-        }
-
-        <!-- Host additional fee -->
-        @if (hostFees() > 0) {
-          <div class="flex items-center justify-between">
-            <span class="body-14R neutral-02">Additional Fee</span>
-            <span class="body-14M neutral-01">${{ formatCurrency(hostFees()) }}</span>
-          </div>
-        }
-
-        <!-- Platform fee — hidden when ticket is fully free -->
-        @if (platformFee() > 0 && !hostPaysFees) {
-          <div class="flex items-center justify-between">
-            <span class="body-14R neutral-02">Platform Fee</span>
-            <span class="body-14M neutral-01">${{ formatCurrency(platformFee()) }}</span>
-          </div>
-        }
-
-        <!-- Total -->
-        <div class="border-t border-surface-300 pt-3 flex items-center justify-between">
-          <span class="body-16M neutral-01">Total</span>
-          <span class="body-16M neutral-01">${{ formattedTotal() }}</span>
         </div>
+
+        <!-- Right column: sticky -->
+        <aside class="rsvp-details-mid-side">
+          <div class="rsvp-details-side-card">
+            <ng-container *ngTemplateOutlet="eventSideCard"></ng-container>
+            @if (hasPromoCodes()) {
+              <promo-code-section
+                [promoCodes]="rsvpData?.promo_codes ?? []"
+                [tickets]="rsvpData?.tickets ?? []"
+                [promoCode]="promoCode()"
+                [appliedPromoCode]="appliedPromoCode()"
+                [discountAmount]="discountAmount()"
+                [promoValidation]="promoValidation()"
+                (promoStateChange)="onPromoStateChange($event)"
+              />
+            }
+            <ng-container *ngTemplateOutlet="rsvpDetailsCard"></ng-container>
+            <ng-container *ngTemplateOutlet="confirmButton"></ng-container>
+          </div>
+        </aside>
       </div>
-
-      <!-- Payment Section -->
-      @if (showPaymentSection()) {
-        <div class="border border-surface-300 rounded-2xl p-4 flex flex-col gap-4">
-          <div class="body-16M neutral-01">Payment Details</div>
-          <app-stripe-payment
-            [summary]="summary()"
-            [amount]="totalPrice()"
-            [clientSecretInput]="clientSecret()"
-            [validateAllForms]="validateAllForms()"
-            (paymentError)="onPaymentError($event)"
-            (paymentSuccess)="onPaymentSuccess($event)"
-            (applePaySuccess)="finalizeRsvpAndClose()"
-            (paymentProcessing)="onPaymentProcessing($event)"
-          />
-        </div>
-      }
-    </form>
-  </div>
+    }
+  </form>
 </ion-content>
 
-<ion-footer mode="md">
-  <ion-toolbar mode="md">
-    <div class="p-4">
-      <app-button
-        [label]="confirmButtonLabel()"
-        [isLoading]="isLoadingPayment() || isGuestVerifying() || isUpdatingUserDetails()"
-        [disabled]="isLoadingPayment() || isGuestVerifying() || isUpdatingUserDetails()"
-        (click)="dismiss()"
-      />
-    </div>
-  </ion-toolbar>
-</ion-footer>
+<!-- Footer: mobile only -->
+@if (!isTabletLayout()) {
+  <ion-footer mode="md">
+    <ion-toolbar mode="md">
+      <div class="p-4">
+        <ng-container *ngTemplateOutlet="confirmButton"></ng-container>
+      </div>
+    </ion-toolbar>
+  </ion-footer>
+}

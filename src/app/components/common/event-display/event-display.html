@@ -59,13 +59,13 @@
           }
         </div>
         <!-- title & host -->
-        <div class="body-16SB neutral-01 break-words">
+        <div class="body-16SB neutral-01 wrap-break-word">
           {{ eventData().title || 'Event Title' }}
         </div>
         <div class="flex items-center gap-1 body-12 neutral-03">
           <span>Hosted by</span>
           <button type="button" class="body-12SB brand-02 flex items-center gap-1 max-w-full" (click)="onHostClick()">
-            <span class="truncate">{{ eventData().hostName || 'Networked AI' }}</span>
+            <span class="truncate">{{ eventData().hostName || 'Get Networked' }}</span>
             <i class="pi pi-arrow-up-right text-[12px]! shrink-0"></i>
           </button>
         </div>
@@ -138,7 +138,7 @@
       </div>
     }
 
-    @if (displayMediasForDisplay().length > 0) {
+    @if (!hideMediaSlider() && displayMediasForDisplay().length > 0) {
       <div class="flex flex-col gap-3 px-4">
         <!-- media slider -->
         <div class="relative rounded-[16px] overflow-hidden">

@@ -44,7 +44,7 @@ export class TicketsModal {
   host = computed(() => {
     const event = this.event();
     const hostName = event?.participants?.find((p: any) => (p.role || '').toLowerCase() === 'host')?.user;
-    return hostName || 'Networked AI';
+    return hostName || 'Get Networked';
   });
 
   userTickets = computed(() => {

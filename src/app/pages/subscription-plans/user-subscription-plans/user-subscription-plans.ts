@@ -441,7 +441,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
         day: '',
         address: event.address || '',
         time: '',
-        organization: 'Networked AI',
+        organization: 'Get Networked',
         image_url: event.image_url || ''
       };
     }
@@ -468,7 +468,7 @@ export class UserSubscriptionPlans implements OnInit, OnDestroy {
       day,
       address: event.address || '',
       time: timeStr,
-      organization: 'Networked AI',
+      organization: 'Get Networked',
       image_url: event.image_url || ''
     };
   }

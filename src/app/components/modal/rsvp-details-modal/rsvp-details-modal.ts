@@ -1,5 +1,17 @@
+import {
+  Input,
+  signal,
+  inject,
+  Component,
+  OnInit,
+  ChangeDetectionStrategy,
+  computed,
+  effect,
+  ViewChild,
+  viewChild,
+  PLATFORM_ID
+} from '@angular/core';
 import { IUser } from '@/interfaces/IUser';
-import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { AuthService } from '@/services/auth.service';
 import { UserService } from '@/services/user.service';
@@ -12,12 +24,13 @@ import { ToggleInput } from '@/components/form/toggle-input';
 import { BaseApiService } from '@/services/base-api.service';
 import { PromoCodeSectionStateChange } from '@/interfaces/event';
 import { StripePaymentComponent } from '@/components/common/stripe-payment';
+import { EventMediaBlockComponent } from '@/components/common/event-media-block';
+import { CommonModule, NgTemplateOutlet, isPlatformBrowser } from '@angular/common';
 import { createRsvpState, RsvpPromoState, RsvpTicketInput } from '@/utils/rsvp-state';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } from '@angular/forms';
 import { PromoCodeSectionComponent } from '@/components/common/promo-code-section/promo-code-section';
 import { StripePaymentSuccessEvent, StripePaymentErrorEvent, StripeService } from '@/services/stripe.service';
 import { IonHeader, IonFooter, IonToolbar, IonIcon, ModalController, IonContent } from '@ionic/angular/standalone';
-import { Input, signal, inject, Component, OnInit, ChangeDetectionStrategy, computed, effect, ViewChild, viewChild } from '@angular/core';
 
 export interface RsvpDetailsData {
   tickets: any[];
@@ -55,9 +68,11 @@ export interface RsvpDetailsData {
     EmailInput,
     ToggleInput,
     CommonModule,
+    NgTemplateOutlet,
     ReactiveFormsModule,
     StripePaymentComponent,
-    PromoCodeSectionComponent
+    PromoCodeSectionComponent,
+    EventMediaBlockComponent
   ]
 })
 export class RsvpDetailsModal extends BaseApiService implements OnInit {
@@ -72,6 +87,11 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   @Input() hostName: string = '';
   @Input() isGuestMode: boolean = false;
   @Input() participants: Array<{ user_id?: string; user?: { id?: string }; role?: string }> = [];
+  @Input() imageUrl: string = '';
+  // Replace the existing emailInputRef viewChild line and add isTabletLayout:
+  private platformId = inject(PLATFORM_ID);
+  isTabletLayout = signal(false);
+
   modalCtrl = inject(ModalController);
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
@@ -196,6 +216,9 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
+    if (isPlatformBrowser(this.platformId)) {
+      this.isTabletLayout.set(window.innerWidth >= 768);
+    }
     this.rsvp.setFeeConfig({ hostPaysFees: this.hostPaysFees, additionalFees: this.additionalFees });
     this.rsvp.setCurrentUserId(this.authService.currentUser()?.id ?? null);
 
@@ -347,7 +370,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
         const confirmResult = await this.modalService.openConfirmModal({
           iconName: 'pi-user',
           iconPosition: 'center',
-          iconBgColor:'linear-gradient(138.06deg, #F5BC61 8.51%, #C89034 48.28%, #9E660A 85.69%)',
+          iconBgColor: 'linear-gradient(138.06deg, #F5BC61 8.51%, #C89034 48.28%, #9E660A 85.69%)',
           title: 'Account already exists',
           description: 'An account with this email already exists. Do you want to login instead?',
           cancelButtonLabel: 'Cancel',
@@ -363,7 +386,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
             this.currentUser.set(user);
             this.populateFormsWithUserData();
             this.guestStep.set('verified');
-            this.isActuallyNewUser.set(false);
+            this.isActuallyNewUser.set(loginResult.isNewUser ?? false);
 
             if (this.totalPrice() > 0) {
               await this.fetchPaymentIntent();
