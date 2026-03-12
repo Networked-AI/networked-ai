@@ -36,6 +36,7 @@ import {
   IAddGuestResponse,
   IMarkAsPaidResponse
 } from '@/interfaces/IEventAttendee';
+import { ICsvBroadcastResponse } from '@/interfaces/IFeed';
 
 @Injectable({ providedIn: 'root' })
 export class EventService extends BaseApiService {
@@ -752,8 +753,8 @@ export class EventService extends BaseApiService {
     const isRepeatingEvent = options?.isRepeatingEvent ?? parentEvent?.settings?.is_repeating_event === true;
     const dateItems = options?.dateItems ?? (isRepeatingEvent ? this.createDateItems(parentEvent || eventData) : []);
 
-    let hostName = hosts[0]?.name || 'Networked AI';
-    if (!hostName || hostName === 'Networked AI') {
+    let hostName = hosts[0]?.name || 'Get Networked';
+    if (!hostName || hostName === 'Get Networked') {
       const host = Array.isArray(participants) ? participants.find((p: any) => (p.role || '').toLowerCase() === 'host') : null;
       hostName = host?.name || host?.user?.name || hostName;
     }
@@ -991,8 +992,8 @@ export class EventService extends BaseApiService {
       is_recommended?: boolean;
       from_home?: boolean;
     } = {
-        from_home: false
-      }
+      from_home: false
+    }
   ): Promise<EventsResponse> {
     try {
       let httpParams = new HttpParams();
@@ -1065,15 +1066,15 @@ export class EventService extends BaseApiService {
       if (params.from_home && params.is_public) {
         this.publicEvents.set(params.append ? [...this.publicEvents(), ...events] : events);
       }
-      
+
       if (params.from_home && params.is_upcoming_event) {
         this.upcomingEvents.set(params.append ? [...this.upcomingEvents(), ...events] : events);
       }
-      
+
       if (params.from_home && params.is_recommended) {
         this.recommendedEvents.set(params.append ? [...this.recommendedEvents(), ...events] : events);
       }
-      
+
       if (params.from_home && params.is_my_events) {
         this.myEvents.set(params.append ? [...this.myEvents(), ...events] : events);
       }
@@ -1274,8 +1275,8 @@ export class EventService extends BaseApiService {
 
       return response;
     } catch (error: any) {
-        const errorJson = JSON.parse(error.error);
-        throw new Error(errorJson.message);
+      const errorJson = JSON.parse(error.error);
+      throw new Error(errorJson.message);
     }
   }
 
@@ -1285,11 +1286,11 @@ export class EventService extends BaseApiService {
       const response = await this.get<any>(`/events/question-analysis/csv`, {
         params: httpParams,
         responseType: 'text'
-      });  
+      });
       return response;
     } catch (error: any) {
-        const errorJson = JSON.parse(error.error);
-        throw new Error(errorJson.message);
+      const errorJson = JSON.parse(error.error);
+      throw new Error(errorJson.message);
     }
   }
 
@@ -1549,6 +1550,20 @@ export class EventService extends BaseApiService {
       return response;
     } catch (error) {
       console.error('Error marking as paid:', error);
+      throw error;
+    }
+  }
+
+  async shareEventCsvBroadcast(payload: {
+    event_id: string;
+    type: 'sms' | 'email' | 'both';
+    recipients: { email: string | null; phone: string | null }[];
+  }): Promise<ICsvBroadcastResponse> {
+    try {
+      const response = await this.post<ICsvBroadcastResponse>('/events/share-csv-broadcast', payload);
+      return response;
+    } catch (error) {
+      console.error('Error sharing event CSV broadcast:', error);
       throw error;
     }
   }

@@ -16,6 +16,7 @@ import { environment } from 'src/environments/environment';
 import { CommonShareFooter } from '@/components/common/common-share-footer';
 import { MessagesService } from '@/services/messages.service';
 import { ModalService } from '@/services/modal.service';
+import { AuthService } from '@/services/auth.service';
 
 @Component({
   selector: 'share-profile-modal',
@@ -27,6 +28,7 @@ import { ModalService } from '@/services/modal.service';
 export class ShareProfileModal {
   @ViewChild('downloadableSection', { static: false, read: ElementRef }) downloadableSection?: ElementRef<HTMLDivElement>;
   // services
+  authService = inject(AuthService);
   private document = inject(DOCUMENT);
   private modalCtrl = inject(ModalController);
   private toasterService = inject(ToasterService);
@@ -54,6 +56,16 @@ export class ShareProfileModal {
       return `${parts[0]}, ${parts[1]}`;
     }
     return user.address;
+  });
+
+  isViewingOtherProfile = computed(() => {
+    const loggedInUser = this.authService.currentUser();
+    const viewedUser = this.user;
+    return viewedUser?.id && viewedUser?.id !== loggedInUser?.id;
+  });
+
+  showLocation = computed(() => {
+    return !this.isViewingOtherProfile() || (this.isViewingOtherProfile() && !this.user?.settings?.hide_location);
   });
 
   profileLink = computed(() => {

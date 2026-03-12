@@ -137,6 +137,14 @@ export class Profile implements OnDestroy {
     return viewedUser?.id && viewedUser?.id !== loggedInUser?.id;
   });
 
+  showLocation = computed(() => {
+    return !this.isViewingOtherProfile() || (this.isViewingOtherProfile() && !this.currentUser()?.settings?.hide_location);
+  });
+
+  showMobile = computed(() => {
+    return !this.isViewingOtherProfile() || (this.isViewingOtherProfile() && !this.currentUser()?.settings?.hide_mobile);
+  });
+
   // Connection status computed properties
   connectionStatus = computed(() => {
     const user = this.currentUser();

@@ -30,7 +30,7 @@ export class OgService {
     this.meta.updateTag({ property: 'og:image', content: config.image });
     this.meta.updateTag({ property: 'og:url', content: url });
     this.meta.updateTag({ property: 'og:type', content: config.type || 'website' });
-    this.meta.updateTag({ property: 'og:site_name', content: 'Networked AI' });
+    this.meta.updateTag({ property: 'og:site_name', content: 'Get Networked' });
   }
 
   setOgTagInEvent(eventData: IEvent) {
@@ -90,7 +90,7 @@ export class OgService {
     const count = users.length;
     const memberPart =
       count === 0
-        ? 'Join this group on Networked AI.'
+        ? 'Join this group on Get Networked.'
         : count === 1
           ? `${users[0]?.name || 'Someone'} is a member. Join now!`
           : count === 2

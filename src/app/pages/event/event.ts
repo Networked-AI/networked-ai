@@ -281,7 +281,7 @@ export class Event implements OnInit, OnDestroy {
         total_views: '0',
         isPublic: true,
         location: '',
-        hostName: 'Networked AI',
+        hostName: 'Get Networked',
         mapCenter: null,
         admission: 'Free',
         formattedDateTime: '',
@@ -726,7 +726,7 @@ export class Event implements OnInit, OnDestroy {
     const maxAttendeesPerUser = eventData?.settings?.max_attendees_per_user ?? 0;
     const date = displayData.formattedDateTime;
     const location = eventData?.address || '';
-    const hostName = eventData?.participants?.find((p: any) => p.role === 'Host')?.user?.name || 'Networked AI';
+    const hostName = eventData?.participants?.find((p: any) => p.role === 'Host')?.user?.name || 'Get Networked';
     const hasPlans = eventData?.has_plans || false;
     const hasSubscribed = eventData?.has_subscribed || false;
     const isSubscriberExclusive = eventData?.settings?.is_subscriber_exclusive ?? false;

@@ -13,7 +13,8 @@ import {
   CommentResponse,
   FeedShareResponse,
   ReportReasonsResponse,
-  ReportResponse
+  ReportResponse,
+  ICsvBroadcastResponse
 } from '@/interfaces/IFeed';
 import { AuthService } from '@/services/auth.service';
 
@@ -629,5 +630,19 @@ export class FeedService extends BaseApiService {
     this.publicFeeds.update((curr) => this.removeById(curr, feedId));
     this.networkedFeeds.update((curr) => this.removeById(curr, feedId));
     this.myPosts.update((curr) => this.removeById(curr, feedId));
+  }
+
+  async shareFeedCsvBroadcast(payload: {
+    feed_id: string;
+    type: 'sms' | 'email' | 'both';
+    recipients: { email: string | null; phone: string | null }[];
+  }): Promise<ICsvBroadcastResponse> {
+    try {
+      const response = await this.post<ICsvBroadcastResponse>('/feeds/share-csv-broadcast', payload);
+      return response;
+    } catch (error) {
+      console.error('Error sharing feed CSV broadcast:', error);
+      throw error;
+    }
   }
 }

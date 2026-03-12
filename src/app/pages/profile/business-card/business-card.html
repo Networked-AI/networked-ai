@@ -60,7 +60,7 @@
                 </div>
 
                 <!-- Location -->
-                @if (location()) {
+                @if (location() && showLocation()) {
                   <div class="text-center mb-1">
                     <div class="flex items-center justify-center gap-1">
                       <ion-icon name="location-outline" class="text-[14px] neutral-03"></ion-icon>
@@ -122,9 +122,11 @@
 <ion-footer mode="md">
   <ion-toolbar mode="md">
     @if (!isLoading()) {
-      <div class="w-full px-4 py-4 max-w-[672px] mx-auto">
-        @if (isViewingOthersCard()) {
-          <!-- Add Network + Add to Contacts -->
+      <div class="w-full px-4 py-4 max-w-[672px] mx-auto flex flex-col gap-2">
+        <div class="flex gap-3">
+          <app-button color="secondary" label="Download" iconName="pi-download" (click)="onDownload()" class="flex-1" />
+        </div>
+        @if (isViewingOtherProfile()) {
           <div class="flex gap-3">
             <app-button
               class="flex-1"
@@ -136,7 +138,7 @@
               [disabled]="networkButtonConfig().disabled"
               (click)="handleNetworkAction()"
             />
-            @if (isNativePlatform() && user()?.mobile) {
+            @if (isNativePlatform() && user()?.mobile && showMobile()) {
               <app-button
                 class="flex-1"
                 color="secondary"
@@ -146,26 +148,19 @@
               />
             }
           </div>
-        } @else {
-          <!-- Own card: Download + Share -->
-          <div class="flex gap-3">
-            <app-button color="secondary" label="Download" iconName="pi-download" (click)="onDownload()" class="flex-1" />
-          </div>
         }
       </div>
 
-      @if (!isViewingOthersCard()) {
-        <common-share-footer
-          (onContact)="onContact()"
-          (onCopyLink)="onCopyLink()"
-          (onShareTo)="onShareTo()"
-          (onChat)="onChat()"
-          (onEmail)="onEmail()"
-          (onWhatsapp)="onWhatsapp()"
-          (onX)="onShareToX()"
-          (onThread)="onShareToThreads()"
-        />
-      }
+      <common-share-footer
+        (onContact)="onContact()"
+        (onCopyLink)="onCopyLink()"
+        (onShareTo)="onShareTo()"
+        (onChat)="onChat()"
+        (onEmail)="onEmail()"
+        (onWhatsapp)="onWhatsapp()"
+        (onX)="onShareToX()"
+        (onThread)="onShareToThreads()"
+      />
     }
   </ion-toolbar>
 </ion-footer>

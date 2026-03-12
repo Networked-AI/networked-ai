@@ -62,6 +62,7 @@ import { ScanResultModal } from '@/components/modal/scan-result-modal';
 import { isPlatformBrowser } from '@angular/common';
 import { PlanData } from '@/interfaces/ISubscripton';
 import { GuestFormModal } from '@/components/modal/guest-form-modal/guest-form-modal';
+import { CsvDataModal } from '@/components/modal/csv-data-modal/csv-data-modal';
 
 @Injectable({ providedIn: 'root' })
 export class ModalService {
@@ -1130,6 +1131,29 @@ export class ModalService {
 
     const { data } = await modal.onWillDismiss();
     return data || null;
+  }
+
+  async openCsvDataModal(
+    guests: Array<{ name: string; email: string; phone: string }>,
+    id: string,
+    type: 'Event' | 'Post' | 'Plan',
+    contentLink: string
+  ): Promise<boolean | null> {
+    const modal = await this.modalCtrl.create({
+      mode: 'ios',
+      handle: true,
+      breakpoints: [0, 1],
+      initialBreakpoint: 1,
+      component: CsvDataModal,
+      backdropDismiss: false,
+      cssClass: 'modal-90-percent-height',
+      componentProps: { guests, id, type, contentLink }
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onWillDismiss();
+    return true;
   }
 
   async openAddToCalendarModal(eventData: any): Promise<any | null> {

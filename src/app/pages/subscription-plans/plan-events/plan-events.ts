@@ -666,6 +666,6 @@ export class PlanEvents implements OnInit, OnDestroy {
 
   private getOrganization(event: IEvent): string {
     const hostParticipant = event.participants?.find((p: any) => p.role === 'Host');
-    return hostParticipant?.user?.name || 'Networked AI';
+    return hostParticipant?.user?.name || 'Get Networked';
   }
 }
