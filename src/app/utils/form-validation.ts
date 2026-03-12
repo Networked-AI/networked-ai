@@ -8,11 +8,26 @@ import { FormGroup, AbstractControl } from '@angular/forms';
  *
  * @param form - The FormGroup to validate
  * @param fieldNames - Array of form control names to validate
+ * @param optionalFields - Fields that are optional: skip if empty, validate format if filled
  * @returns Promise that resolves to true if all fields are valid, false otherwise
  */
-export async function validateFields(form: FormGroup, fieldNames: string[]): Promise<boolean> {
-  // Mark all fields as touched and trigger async validators
-  fieldNames.forEach((field) => {
+export async function validateFields(
+  form: FormGroup,
+  fieldNames: string[],
+  optionalFields: string[] = []
+): Promise<boolean> {
+  // Separate fields into required and optional-but-filled
+  const optionalSet = new Set(optionalFields);
+  const fieldsToProcess = fieldNames.filter((field) => {
+    if (!optionalSet.has(field)) return true; // always process required fields
+
+    const control = form.get(field);
+    const value = control?.value;
+    return !!value?.trim?.() || (!!value && typeof value !== 'string'); // skip if empty
+  });
+
+  // Mark fields as touched and trigger async validators
+  fieldsToProcess.forEach((field) => {
     const control = form.get(field);
     if (control && !control.disabled) {
       if (control instanceof FormGroup) {
@@ -31,10 +46,10 @@ export async function validateFields(form: FormGroup, fieldNames: string[]): Pro
   });
 
   // Wait for async validators to complete
-  await waitForAsyncValidators(form, fieldNames);
+  await waitForAsyncValidators(form, fieldsToProcess);
 
-  // Check if all fields are valid
-  return fieldNames.every((field) => {
+  // Check if all processed fields are valid
+  return fieldsToProcess.every((field) => {
     const control = form.get(field);
     if (!control) return false;
 
