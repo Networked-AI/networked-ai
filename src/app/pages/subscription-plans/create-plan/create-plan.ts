@@ -378,7 +378,7 @@ export class CreatePlan implements OnInit {
 
   private getOrganization(event: IEvent): string {
     const hostParticipant = event.participants?.find((p) => p.role === 'Host');
-    return hostParticipant?.user?.name || 'Networked AI';
+    return hostParticipant?.user?.name || 'Get Networked';
   }
 
   private async fetchEvents(page: number): Promise<any> {

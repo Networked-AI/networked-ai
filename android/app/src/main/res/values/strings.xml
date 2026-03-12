@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Networked AI</string>
-    <string name="title_activity_main">Networked AI</string>
+    <string name="app_name">Get Networked</string>
+    <string name="title_activity_main">Get Networked</string>
     <string name="package_name">app.networked.ai</string>
     <string name="custom_url_scheme">app.networked.ai</string>
 

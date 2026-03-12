@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appName: 'Networked AI',
+  appName: 'Get Networked',
   webDir: 'dist/browser',
   appId: 'app.networked.ai',
   android: {
