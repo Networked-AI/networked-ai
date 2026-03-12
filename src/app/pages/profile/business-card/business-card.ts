@@ -169,12 +169,18 @@ export class BusinessCardPage implements OnInit {
 
     // Phone
     if (user.mobile?.trim() && this.showMobile()) {
+      const mobile = user.mobile.trim();
+      const currentName = this.authService.currentUser()?.name?.trim();
+      const messageText = currentName
+        ? `Hi! This is ${currentName}. Looking forward to staying in touch.`
+        : "Hi! Looking forward to staying in touch.";
+      const defaultMessage = encodeURIComponent(messageText);
       links.push({
         type: 'phone',
         icon: 'call-outline',
-        label: user.mobile.trim(),
-        value: user.mobile.trim(),
-        href: `sms:${user.mobile.trim()}`
+        label: mobile,
+        value: mobile,
+        href: `sms:${mobile}?body=${defaultMessage}`
       });
     }
 

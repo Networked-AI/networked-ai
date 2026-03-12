@@ -1,6 +1,7 @@
 import { IonIcon } from '@ionic/angular/standalone';
-import { signal, Component, ChangeDetectionStrategy, computed, input } from '@angular/core';
+import { signal, Component, ChangeDetectionStrategy, computed, input, inject } from '@angular/core';
 import { IAuthUser } from '@/interfaces/IAuth';
+import { AuthService } from '@/services/auth.service';
 
 interface SocialLink {
   type: 'website' | 'facebook' | 'twitter' | 'instagram' | 'snapchat' | 'linkedin' | 'phone';
@@ -17,6 +18,7 @@ interface SocialLink {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ProfileLink {
+  private authService = inject(AuthService);
   isExpanded = signal(false);
   currentUser = input<IAuthUser | null>(null);
   showMobile = input<boolean>(true);
@@ -68,11 +70,16 @@ export class ProfileLink {
 
     if (user.mobile?.trim() && this.showMobile()) {
       const mobileValue = user.mobile.trim();
+      const currentName = this.authService.currentUser()?.name?.trim();
+      const messageText = currentName
+        ? `Hi! This is ${currentName}. Looking forward to staying in touch.`
+        : "Hi! Looking forward to staying in touch.";
+      const defaultMessage = encodeURIComponent(messageText);
       links.push({
         type: 'phone',
         icon: 'call-outline',
         value: mobileValue,
-        href: `sms:${mobileValue}`
+        href: `sms:${mobileValue}?body=${defaultMessage}`
       });
     }
 
