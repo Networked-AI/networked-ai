@@ -65,7 +65,6 @@ export class BusinessCardPage implements OnInit {
   isDownloading = signal(false);
   isAddingToNetwork = signal(false);
   isAcceptingRequest = signal(false);
-  isViewingOthersCard = signal(false);
   connectionStatus = signal<ConnectionStatus | null>(null);
 
   isAddedToNetwork = computed(() => this.connectionStatus() === ConnectionStatus.CONNECTED);
@@ -231,12 +230,11 @@ export class BusinessCardPage implements OnInit {
 
       if (state?.user) {
         this.user.set(state.user);
+        this.connectionStatus.set((this.user() as any)?.connection_status ?? null);
       } else {
         const currentUser = this.authService.currentUser();
         if (currentUser) this.user.set(currentUser);
       }
-
-      this.isViewingOthersCard.set(false);
     }
   }
 
@@ -257,8 +255,6 @@ export class BusinessCardPage implements OnInit {
       const user = await this.userService.getUser(username);
       this.user.set(user);
 
-      const isOwnCard = this.isSameAsCurrentUser(user);
-      this.isViewingOthersCard.set(!isOwnCard);
       this.connectionStatus.set((user as any)?.connection_status ?? null);
     } catch (error) {
       console.error('Error loading user for business card:', error);
@@ -517,10 +513,8 @@ export class BusinessCardPage implements OnInit {
     const isLoggedIn = await this.ensureLoggedIn();
     if (!isLoggedIn) return;
 
-    // ✅ After login, re-check if the viewed user is now the logged-in user
     if (!wasLoggedIn) {
       if (this.isSameAsCurrentUser(this.user())) {
-        this.isViewingOthersCard.set(false);
         return;
       }
 
