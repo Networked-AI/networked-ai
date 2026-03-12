@@ -1,5 +1,4 @@
 import { SelectModule } from 'primeng/select';
-import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ModalService } from '@/services/modal.service';
@@ -9,10 +8,12 @@ import { validateFields } from '@/utils/form-validation';
 import { ToasterService } from '@/services/toaster.service';
 import { NumberInput } from '@/components/form/number-input';
 import { MobileInput } from '@/components/form/mobile-input';
+import { CommonModule, NgTemplateOutlet } from '@angular/common';
 import { SegmentButton, SegmentButtonItem } from '@/components/common/segment-button';
 import { IonHeader, IonFooter, IonToolbar, ModalController, IonContent } from '@ionic/angular/standalone';
 import { Input, signal, inject, Component, OnInit, ChangeDetectionStrategy, computed, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, AbstractControl } from '@angular/forms';
+import { EventMediaBlockComponent } from '@/components/common/event-media-block';
 
 interface QuestionnaireQuestionWithPhase {
   question: string;
@@ -49,13 +50,16 @@ interface QuestionnaireQuestionWithPhase {
     SelectModule,
     CheckboxModule,
     RadioButtonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    NgTemplateOutlet,
+    EventMediaBlockComponent
   ]
 })
 export class QuestionnairePreviewModal implements OnInit {
   // inputs
   @Input() isPreviewMode = false;
   @Input() questions: QuestionnaireQuestionWithPhase[] = [];
+  @Input() eventInfo: { eventTitle: string; date: string; location: string; hostName: string; imageUrl?: string } | null = null;
 
   // services
   private fb = inject(FormBuilder);

@@ -113,7 +113,8 @@ export class CsvDataModal {
   }
 
   buildRecipients(guests: ICsvGuestItem[]) {
-    return guests.map(({ email, phone }) => ({
+    return guests.map(({ name, email, phone }) => ({
+      name: name?.trim() || null,
       email: email?.trim() || null,
       phone: phone?.trim() || null
     }));

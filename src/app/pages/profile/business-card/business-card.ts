@@ -65,7 +65,6 @@ export class BusinessCardPage implements OnInit {
   isDownloading = signal(false);
   isAddingToNetwork = signal(false);
   isAcceptingRequest = signal(false);
-  isViewingOthersCard = signal(false);
   connectionStatus = signal<ConnectionStatus | null>(null);
 
   isAddedToNetwork = computed(() => this.connectionStatus() === ConnectionStatus.CONNECTED);
@@ -126,6 +125,24 @@ export class BusinessCardPage implements OnInit {
     return user.address;
   });
 
+  isViewingOtherProfile = computed(() => {
+    const loggedInUser = this.authService.currentUser();
+    const viewedUser = this.user();
+    return viewedUser?.id && viewedUser?.id !== loggedInUser?.id;
+  });
+
+  showLocation = computed(() => {
+    return !this.isViewingOtherProfile() || (this.isViewingOtherProfile() && !this.user()?.settings?.hide_location);
+  });
+
+  showEmail = computed(() => {
+    return !this.isViewingOtherProfile() || (this.isViewingOtherProfile() && !this.user()?.settings?.hide_email);
+  });
+
+  showMobile = computed(() => {
+    return !this.isViewingOtherProfile() || (this.isViewingOtherProfile() && !this.user()?.settings?.hide_mobile);
+  });
+
   profileLink = computed(() => {
     const user = this.user();
     if (!user?.username) return '';
@@ -140,7 +157,7 @@ export class BusinessCardPage implements OnInit {
     const links: SocialLink[] = [];
 
     // Email
-    if (user.email?.trim()) {
+    if (user.email?.trim() && this.showEmail()) {
       links.push({
         type: 'email',
         icon: 'mail-outline',
@@ -151,13 +168,19 @@ export class BusinessCardPage implements OnInit {
     }
 
     // Phone
-    if (user.mobile?.trim()) {
+    if (user.mobile?.trim() && this.showMobile()) {
+      const mobile = user.mobile.trim();
+      const currentName = this.authService.currentUser()?.name?.trim();
+      const messageText = currentName
+        ? `Hi! This is ${currentName}. Looking forward to staying in touch.`
+        : "Hi! Looking forward to staying in touch.";
+      const defaultMessage = encodeURIComponent(messageText);
       links.push({
         type: 'phone',
         icon: 'call-outline',
-        label: user.mobile.trim(),
-        value: user.mobile.trim(),
-        href: `tel:${user.mobile.trim()}`
+        label: mobile,
+        value: mobile,
+        href: `sms:${mobile}?body=${defaultMessage}`
       });
     }
 
@@ -213,12 +236,11 @@ export class BusinessCardPage implements OnInit {
 
       if (state?.user) {
         this.user.set(state.user);
+        this.connectionStatus.set((this.user() as any)?.connection_status ?? null);
       } else {
         const currentUser = this.authService.currentUser();
         if (currentUser) this.user.set(currentUser);
       }
-
-      this.isViewingOthersCard.set(false);
     }
   }
 
@@ -239,8 +261,6 @@ export class BusinessCardPage implements OnInit {
       const user = await this.userService.getUser(username);
       this.user.set(user);
 
-      const isOwnCard = this.isSameAsCurrentUser(user);
-      this.isViewingOthersCard.set(!isOwnCard);
       this.connectionStatus.set((user as any)?.connection_status ?? null);
     } catch (error) {
       console.error('Error loading user for business card:', error);
@@ -499,10 +519,8 @@ export class BusinessCardPage implements OnInit {
     const isLoggedIn = await this.ensureLoggedIn();
     if (!isLoggedIn) return;
 
-    // ✅ After login, re-check if the viewed user is now the logged-in user
     if (!wasLoggedIn) {
       if (this.isSameAsCurrentUser(this.user())) {
-        this.isViewingOthersCard.set(false);
         return;
       }
 

@@ -35,7 +35,7 @@ export class Permissions implements OnInit, OnDestroy {
     {
       id: 'contact',
       name: 'Contact Sync',
-      description: 'Allow Networked AI to access your contacts',
+      description: 'Allow Get Networked to access your contacts',
       icon: 'pi pi-users',
       enabled: false,
       accessLevel: 'denied'
@@ -43,7 +43,7 @@ export class Permissions implements OnInit, OnDestroy {
     {
       id: 'location',
       name: 'Location',
-      description: 'Allow Networked AI to access your location',
+      description: 'Allow Get Networked to access your location',
       icon: 'pi pi-map-marker',
       enabled: false,
       accessLevel: 'ask'
@@ -51,7 +51,7 @@ export class Permissions implements OnInit, OnDestroy {
     {
       id: 'camera',
       name: 'Camera',
-      description: 'Allow Networked AI to access your camera',
+      description: 'Allow Get Networked to access your camera',
       icon: 'pi pi-camera',
       enabled: false,
       accessLevel: 'denied'

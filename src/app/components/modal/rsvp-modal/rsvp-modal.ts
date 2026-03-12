@@ -1,11 +1,12 @@
 import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
 import { Button } from '@/components/form/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { ToasterService } from '@/services/toaster.service';
+import { CommonModule, NgTemplateOutlet } from '@angular/common';
 import { ShowMoreComponent } from '@/components/common/show-more/show-more';
+import { EventMediaBlockComponent } from '@/components/common/event-media-block';
 import { PromoCodeSectionStateChange, TicketDisplay } from '@/interfaces/event';
 import { createRsvpState, RsvpPromoState, RsvpTicketInput } from '@/utils/rsvp-state';
 import { PromoCodeSectionComponent } from '@/components/common/promo-code-section/promo-code-section';
@@ -27,8 +28,10 @@ import { Input, signal, inject, OnInit, computed, Component, OnDestroy, ChangeDe
     FormsModule,
     CommonModule,
     CheckboxModule,
+    NgTemplateOutlet,
     ShowMoreComponent,
-    PromoCodeSectionComponent
+    PromoCodeSectionComponent,
+    EventMediaBlockComponent
   ]
 })
 export class RsvpModal implements OnInit, OnDestroy {
@@ -50,6 +53,7 @@ export class RsvpModal implements OnInit, OnDestroy {
   @Input() participants: Array<{ user_id?: string; user?: { id?: string }; role?: string }> = [];
   @Input() isGuestMode: boolean = false;
   @Input() selectedTicketSignal: TicketDisplay | null = null;
+  @Input() imageUrl: string = '';
 
   modalCtrl = inject(ModalController);
   authService = inject(AuthService);
@@ -399,11 +403,23 @@ export class RsvpModal implements OnInit, OnDestroy {
     });
 
     // Questionnaire
-    if (this.hasQuestionnaire() && !this.questionnaireResult()) {
-      const preEvent = (this.questionnaire as any[]).filter((q) => !q.event_phase || q.event_phase === 'PreEvent');
-      if (preEvent.length > 0) {
-        this.questionnaireResult.set(await this.modalService.openQuestionnairePreviewModal(preEvent, false));
-        if (!this.questionnaireResult()) return;
+    if (this.hasQuestionnaire() && this.questionnaire && this.questionnaire.length > 0 && !this.questionnaireResult()) {
+      const preEventQuestionnaire = this.questionnaire.filter((q: any) => !q.event_phase || q.event_phase === 'PreEvent');
+
+      if (preEventQuestionnaire.length > 0) {
+        this.questionnaireResult.set(
+          await this.modalService.openQuestionnairePreviewModal(preEventQuestionnaire, false, {
+            eventTitle: this.eventTitle,
+            date: this.date,
+            location: this.location,
+            hostName: this.hostName,
+            imageUrl: this.imageUrl
+          })
+        );
+
+        if (!this.questionnaireResult()) {
+          return;
+        }
       }
     }
 
@@ -416,8 +432,9 @@ export class RsvpModal implements OnInit, OnDestroy {
       this.hostPaysFees,
       this.additionalFees,
       this.hostName,
-      !this.authService.getCurrentToken(),
-      this.participants
+      !isLoggedIn,
+      this.participants,
+      this.imageUrl
     );
 
     if (!rsvpConfirmData) return;
@@ -526,5 +543,4 @@ export class RsvpModal implements OnInit, OnDestroy {
       attendeeAmounts: attendeeAmounts ?? undefined
     });
   }
-
 }

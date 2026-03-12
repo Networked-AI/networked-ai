@@ -1,0 +1,113 @@
+<div class="event-skeleton-shell w-full bg-neutral-0">
+  <!-- Default (mobile + large desktop): stacked skeleton -->
+  <div class="event-skeleton-stacked w-full max-w-[672px] mx-auto">
+    <!-- Image Skeleton -->
+    <div class="relative w-full h-[361px] bg-neutral-06">
+      <ion-skeleton-text animated class="w-full h-full"></ion-skeleton-text>
+    </div>
+
+    <!-- Content Skeleton -->
+    <div class="flex flex-col gap-8 pt-4 px-4">
+      <!-- Chips Skeleton -->
+      <div class="flex items-center gap-2">
+        <ion-skeleton-text animated class="w-24 h-6 rounded-full"></ion-skeleton-text>
+        <ion-skeleton-text animated class="w-20 h-6 rounded-full"></ion-skeleton-text>
+      </div>
+
+      <!-- Title Skeleton -->
+      <div class="flex flex-col gap-2">
+        <ion-skeleton-text animated class="w-3/4 h-6 rounded"></ion-skeleton-text>
+        <ion-skeleton-text animated class="w-1/2 h-4 rounded"></ion-skeleton-text>
+      </div>
+
+      <!-- Details Skeleton -->
+      <div class="flex flex-col gap-3">
+        @for (i of [1, 2, 3]; track i) {
+          <div class="flex items-start gap-1.5">
+            <ion-skeleton-text animated class="w-4 h-4 rounded mt-0.5"></ion-skeleton-text>
+            <div class="flex items-center justify-between gap-4 w-full">
+              <ion-skeleton-text animated class="w-24 h-4 rounded"></ion-skeleton-text>
+              <ion-skeleton-text animated class="w-32 h-4 rounded"></ion-skeleton-text>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Description Skeleton -->
+      <div class="flex flex-col gap-2">
+        <ion-skeleton-text animated class="w-full h-4 rounded"></ion-skeleton-text>
+        <ion-skeleton-text animated class="w-full h-4 rounded"></ion-skeleton-text>
+        <ion-skeleton-text animated class="w-5/6 h-4 rounded"></ion-skeleton-text>
+      </div>
+
+      <!-- Map Skeleton -->
+      <div class="w-full rounded-[16px] overflow-hidden" style="height: 300px">
+        <ion-skeleton-text animated class="w-full h-full"></ion-skeleton-text>
+      </div>
+    </div>
+  </div>
+
+  <!-- Middle screens (tablet / iPad / laptop): two-column skeleton -->
+  <div class="event-skeleton-mid mx-auto">
+    <div class="event-skeleton-mid-main bg-neutral-0">
+      <div class="flex flex-col gap-8 pt-4 px-4">
+        <!-- Chips Skeleton -->
+        <div class="flex items-center gap-2">
+          <ion-skeleton-text animated class="w-24 h-6 rounded-full"></ion-skeleton-text>
+          <ion-skeleton-text animated class="w-20 h-6 rounded-full"></ion-skeleton-text>
+          <ion-skeleton-text animated class="w-28 h-6 rounded-full"></ion-skeleton-text>
+        </div>
+
+        <!-- Title + host Skeleton -->
+        <div class="flex flex-col gap-2">
+          <ion-skeleton-text animated class="w-2/3 h-7 rounded"></ion-skeleton-text>
+          <ion-skeleton-text animated class="w-1/3 h-4 rounded"></ion-skeleton-text>
+        </div>
+
+        <!-- Action buttons skeleton -->
+        <div class="flex gap-3">
+          <ion-skeleton-text animated class="flex-1 h-10 rounded-[12px]"></ion-skeleton-text>
+          <ion-skeleton-text animated class="flex-1 h-10 rounded-[12px]"></ion-skeleton-text>
+        </div>
+
+        <!-- Details Skeleton -->
+        <div class="flex flex-col gap-3">
+          @for (i of [1, 2, 3]; track i) {
+            <div class="flex items-start gap-1.5">
+              <ion-skeleton-text animated class="w-4 h-4 rounded mt-0.5"></ion-skeleton-text>
+              <div class="flex items-center justify-between gap-4 w-full">
+                <ion-skeleton-text animated class="w-24 h-4 rounded"></ion-skeleton-text>
+                <ion-skeleton-text animated class="w-44 h-4 rounded"></ion-skeleton-text>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Hosts row skeleton -->
+        <div class="flex flex-col gap-2">
+          <ion-skeleton-text animated class="w-24 h-4 rounded"></ion-skeleton-text>
+          <div class="flex items-center gap-2">
+            <ion-skeleton-text animated class="w-8 h-8 rounded-full"></ion-skeleton-text>
+            <ion-skeleton-text animated class="w-28 h-4 rounded"></ion-skeleton-text>
+          </div>
+        </div>
+
+        <!-- Map Skeleton -->
+        <div class="w-full rounded-[16px] overflow-hidden" style="height: 300px">
+          <ion-skeleton-text animated class="w-full h-full"></ion-skeleton-text>
+        </div>
+      </div>
+    </div>
+
+    <aside class="event-skeleton-mid-side">
+      <div class="event-skeleton-mid-card">
+        <div class="relative w-full h-[420px] bg-neutral-06">
+          <ion-skeleton-text animated class="w-full h-full"></ion-skeleton-text>
+        </div>
+        <div class="p-4">
+          <ion-skeleton-text animated class="w-full h-10 rounded-[12px]"></ion-skeleton-text>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

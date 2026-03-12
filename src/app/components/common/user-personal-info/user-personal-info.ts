@@ -40,14 +40,32 @@ export class UserPersonalInfo {
 
   // validate all personal info fields
   async validate(): Promise<boolean> {
-    // Enable async validation on inputs before validation
-    this.emailInput?.shouldValidate.set(true);
-    this.mobileInput?.shouldValidate.set(true);
+    const hasEmail = !!this.formGroup().get('email')?.value?.trim();
+    const hasMobile = !!this.getPhoneNumber()?.trim();
+
+    // at least one contact method required
+    if (!hasEmail && !hasMobile) {
+      this.emailInput?.shouldValidate.set(true);
+      this.mobileInput?.shouldValidate.set(true);
+      this.usernameInput?.shouldValidate.set(true);
+      const isValid = await validateFields(this.formGroup(), this.validationFields); // both required, both show errors
+      this.emailInput?.shouldValidate.set(false);
+      this.mobileInput?.shouldValidate.set(false);
+      this.usernameInput?.shouldValidate.set(false);
+      return isValid;
+    }
+
+    if (hasEmail) this.emailInput?.shouldValidate.set(true);
+    if (hasMobile) this.mobileInput?.shouldValidate.set(true);
     this.usernameInput?.shouldValidate.set(true);
 
-    const isValid = await validateFields(this.formGroup(), this.validationFields);
+    // pass email/mobile as optional — validates format if filled, skips if empty
+    const isValid = await validateFields(
+      this.formGroup(),
+      this.validationFields,
+      ['email', 'mobile'] // optional: skip required check, still validate format
+    );
 
-    // Disable async validation after validation
     this.emailInput?.shouldValidate.set(false);
     this.mobileInput?.shouldValidate.set(false);
     this.usernameInput?.shouldValidate.set(false);
