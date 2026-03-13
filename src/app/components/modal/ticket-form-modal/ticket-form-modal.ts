@@ -181,12 +181,6 @@ export class TicketFormModal implements OnInit {
       console.error('Error generating ticket description:', error);
       const msg = BaseApiService.getErrorMessage(error, 'Failed to generate description. Please try again.');
       this.toasterService.showError(msg);
-
-      // Set a fallback description on error
-      const fallbackDescription = 'This is a generated ticket description. You can customize this content to better match your ticket details.';
-      descriptionControl.setValue(fallbackDescription);
-      descriptionControl.markAsTouched();
-      this.showDescriptionEditor.set(true);
     } finally {
       this.isGeneratingDescription.set(false);
     }

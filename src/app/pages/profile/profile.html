@@ -79,6 +79,9 @@
               <div class="body-14SB neutral-01 absolute left-1/2 -translate-x-1/2">{{ currentUser()?.username || currentUser()?.name }}</div>
               @if (isLoggedIn() && currentUser()) {
                 <div class="flex items-center">
+                  <div class="flex items-center mr-2">
+                  <ion-icon name="arrow-redo-outline" (click)="onShare()" class="text-[22px] cursor-pointer mr-2"></ion-icon>
+                  </div>
                   @if (currentUser().id != authService.currentUser()?.id) {
                     <div class="flex items-center mr-2">
                       <ion-icon 
