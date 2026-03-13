@@ -80,7 +80,7 @@
               @if (isLoggedIn() && currentUser()) {
                 <div class="flex items-center">
                   <div class="flex items-center mr-2">
-                  <ion-icon  src="/assets/svg/manage-event/share-event.svg" (click)="onShare()" class="text-[18px] cursor-pointer mr-2"></ion-icon>
+                  <ion-icon name="arrow-redo-outline" (click)="onShare()" class="text-[22px] cursor-pointer mr-2"></ion-icon>
                   </div>
                   @if (currentUser().id != authService.currentUser()?.id) {
                     <div class="flex items-center mr-2">
