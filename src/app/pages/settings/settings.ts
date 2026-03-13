@@ -35,7 +35,7 @@ export class Settings implements OnInit {
   private isBrowser = isPlatformBrowser(this.platformId);
 
   // signals
-  appVersion = signal<string>('1.2.05');
+  appVersion = signal<string>('1.3.2');
   buildVersion = signal<string>('1');
 
   // settings sections
