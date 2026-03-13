@@ -45,7 +45,7 @@ export class UserCard {
 
   userLocation = computed(() => {
     const user = this.user();
-    return user?.address || '';
+    return !user?.settings?.hide_location ? user?.address || '' : '';
   });
 
   onImageError(event: Event): void {
