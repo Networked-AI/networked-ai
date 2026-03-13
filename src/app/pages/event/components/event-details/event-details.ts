@@ -537,14 +537,6 @@ export class EventDetails implements OnInit {
       console.error('Error generating description:', error);
       const msg = BaseApiService.getErrorMessage(error, 'Failed to generate description. Please try again.');
       this.toasterService.showError(msg);
-
-      // Set a fallback description on error
-      const fallbackDescription =
-        '<p>This is a generated event description. You can customize this content to better match your event details and requirements.</p>';
-      descriptionControl.setValue(fallbackDescription);
-      descriptionControl.markAsTouched();
-      this.updateDescriptionLength(fallbackDescription);
-      this.isCustomize.set(true);
     } finally {
       this.isGeneratingDescription.set(false);
     }
