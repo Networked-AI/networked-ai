@@ -83,12 +83,6 @@ export class UserAdditionalInfo {
 
       const msg = BaseApiService.getErrorMessage(error, 'Failed to generate profile description. Please try again.');
       this.toasterService.showError(msg);
-
-      // Safe fallback
-      const fallbackDescription = 'This is a short profile description. You can customize it to better reflect who you are.';
-      descriptionControl.setValue(fallbackDescription);
-      descriptionControl.markAsTouched();
-      this.showDescriptionEditor.set(true);
     } finally {
       this.isGeneratingDescription.set(false);
     }
