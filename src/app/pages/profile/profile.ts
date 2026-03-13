@@ -469,6 +469,11 @@ export class Profile implements OnDestroy {
     this.popoverService.close();
   }
 
+  async onShare(): Promise<void> {
+    const user = this.user();
+    if (user) await this.modalService.openShareProfileModal(user);
+  }
+  
   openBusinessCard(): void {
     const user = this.currentUser();
     if (user) {
