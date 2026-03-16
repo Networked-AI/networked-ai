@@ -253,4 +253,14 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
     if (!this.showHostPromo()) return;
     await this.modalService.openAddToCalendarModal(this.eventData());
   }
+
+  openFullscreen(index: number) {
+    if (!this.showHostPromo()) return;
+    const medias = this.displayMediasForDisplay() || [];
+    const media = medias[index];
+
+    if (media && media.type === 'Image' && media.url) {
+      this.modalService.openImagePreviewModal(this.getImageUrl(media.url));
+    }
+  }
 }
