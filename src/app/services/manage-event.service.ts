@@ -55,6 +55,13 @@ export class ManageEventService extends BaseApiService {
       { label: 'Manage Roles', icon: 'assets/svg/manage-event/settings.svg', iconType: 'svg', action: 'manageRoles' },
       { label: 'Guest List', icon: 'assets/svg/manage-event/users.svg', iconType: 'svg', action: 'viewGuestList' },
       { label: 'Event Page QR', icon: 'assets/svg/scanner.svg', iconType: 'svg', action: 'viewEventPageQr' },
+      {
+        label: `Viewers (${displayData?.total_views ?? 0})`,
+        icon: 'pi pi-eye',
+        iconType: 'pi',
+        iconSize: '!text-[22px]',
+        action: 'viewEventViewers'
+      },
       { label: 'Share Event', icon: 'assets/svg/manage-event/share-event.svg', iconType: 'svg', action: 'shareEvent' },
       { label: 'Cancel Event', icon: 'assets/svg/manage-event/calendar-x.svg', iconType: 'svg', danger: true, action: 'cancelEvent' }
     ];
@@ -65,7 +72,7 @@ export class ManageEventService extends BaseApiService {
     }
 
     if (isCoHost && !isHost) {
-      const allowedActions = ['viewEventAnalytics', 'viewGuestList', 'viewEventPageQr', 'shareEvent', 'duplicateEvent'];
+      const allowedActions = ['viewEventAnalytics', 'viewGuestList', 'viewEventPageQr', 'shareEvent', 'duplicateEvent', 'viewEventViewers'];
 
       return baseItems.filter((item) => allowedActions.includes(item['action'] || ''));
     }
@@ -125,6 +132,7 @@ export class ManageEventService extends BaseApiService {
       cancelEvent: () => this.cancelEvent(),
       scanQRCode: () => this.scanQRCode(),
       duplicateEvent: () => this.duplicateEvent(),
+      viewEventViewers: () => this.viewEventViewers()
     };
     actions[result.role]?.();
   }
@@ -165,6 +173,17 @@ export class ManageEventService extends BaseApiService {
     }
   }
 
+  viewEventViewers() {
+    const eventId = this.currentEventData()?.id;
+    if (eventId) {
+      const route = `/event/guests/${eventId}/viewers`;
+
+      this.navigationService.navigateForward(route, false, {
+        eventTitle: this.currentEventData()?.title
+      });
+    }
+  }
+
   async viewEventPageQr() {
     const currentEventData = this.currentEventData();
     if (currentEventData) {
@@ -200,7 +219,7 @@ export class ManageEventService extends BaseApiService {
         this.toasterService.showError('No QR code detected');
       }
     } catch (error: any) {
-      this.toasterService.showError(error?.toString()|| 'Unable to scan QR code');
+      this.toasterService.showError(error?.toString() || 'Unable to scan QR code');
     }
   }
 
@@ -248,7 +267,7 @@ export class ManageEventService extends BaseApiService {
           this.scanQRCode();
         }
       } else {
-      const result = await this.modalService.openScanResult(false, 'Invalid QR code');
+        const result = await this.modalService.openScanResult(false, 'Invalid QR code');
 
         if (result === 'scan-again') {
           this.scanQRCode();

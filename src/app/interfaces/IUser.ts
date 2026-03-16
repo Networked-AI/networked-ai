@@ -1,3 +1,5 @@
+import { IPagination } from "./IEventAttendee";
+
 interface IUserSettings {
   hide_email?: boolean;
   hide_mobile?: boolean;
@@ -126,4 +128,22 @@ export interface NetworkConnectionsApiResponse {
   success: boolean;
   message: string;
   data?: NetworkConnectionsData;
+}
+
+export interface IEventViewer {
+  id: string;
+  device_id: string;
+  created_at: string;
+  user: IUser | null;
+}
+
+export interface IEventViewersData {
+  data: IEventViewer[];
+  pagination: IPagination;
+}
+
+export interface IEventViewersResponse {
+  success: boolean;
+  message: string;
+  data: IEventViewersData;
 }

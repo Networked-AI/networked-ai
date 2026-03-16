@@ -14,6 +14,8 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { Searchbar } from '@/components/common/searchbar';
 import { SocketService } from '@/services/socket.service';
 import { EmptyState } from '@/components/common/empty-state';
+import { ToasterService } from '@/services/toaster.service';
+import { BaseApiService } from '@/services/base-api.service';
 import { UserCardList } from '@/components/card/user-card-list';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { NavigationService } from '@/services/navigation.service';
@@ -47,6 +49,8 @@ export class EventUserList implements OnInit, OnDestroy {
   route = inject(ActivatedRoute);
   private socketService = inject(SocketService);
   private eventService = inject(EventService);
+  private toasterService = inject(ToasterService);
+
   private searchSubject = new Subject<string>();
 
   private platformId = inject(PLATFORM_ID);
@@ -74,7 +78,7 @@ export class EventUserList implements OnInit, OnDestroy {
   ngOnInit(): void {
     const nav = this.router.currentNavigation();
     const state = nav?.extras?.state as { eventTitle?: string };
-  
+
     if (state?.eventTitle) {
       this.eventTitle.set(state.eventTitle);
     }
@@ -112,8 +116,12 @@ export class EventUserList implements OnInit, OnDestroy {
     }
   }
 
-  private getSectionType(): 'attendees' | 'participants' {
+  private getSectionType(): 'attendees' | 'participants' | 'viewers' {
     const title = this.title().toLowerCase();
+
+    if (title.startsWith('viewers')) {
+      return 'viewers';
+    }
 
     if (title.startsWith('going') || title.startsWith('maybe')) {
       return 'attendees';
@@ -161,7 +169,16 @@ export class EventUserList implements OnInit, OnDestroy {
       let mappedUsers: IUser[] = [];
       let pagination: any = null;
 
-      if (sectionType === 'attendees') {
+      if (sectionType === 'viewers') {
+        const res = await this.eventService.getEventViewersList(eventId, {
+          page,
+          limit: this.PAGE_SIZE,
+          search: this.searchQuery()
+        });
+
+        mappedUsers = (res.data || []).map((v: any) => v.user ?? { id: v.id, name: v.name }) as IUser[];
+        pagination = res.pagination;
+      } else if (sectionType === 'attendees') {
         const res = await this.eventService.getEventAttendeesList(eventId, {
           page,
           limit: this.PAGE_SIZE,
@@ -188,8 +205,9 @@ export class EventUserList implements OnInit, OnDestroy {
       else this.users.update((u) => [...u, ...mappedUsers]);
 
       this.pagination.set(pagination);
-    } catch (err) {
-      console.error('Load users error:', err);
+    } catch (error) {
+      const message = BaseApiService.getErrorMessage(error, 'Failed to load data.');
+      this.toasterService.showError(message);
     } finally {
       if (page === 1) this.isLoading.set(false);
     }
