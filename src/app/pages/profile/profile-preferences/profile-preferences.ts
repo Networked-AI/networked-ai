@@ -227,7 +227,7 @@ export class ProfilePreferences implements OnInit, OnDestroy {
 
       const returnTo = this.route.snapshot.queryParams['returnTo'];
       if (returnTo) {
-        this.navigationService.back(returnTo);
+        this.navigationService.navigateForward(returnTo, true);
       } else {
         this.navigationService.navigateForward('/', true);
       }
