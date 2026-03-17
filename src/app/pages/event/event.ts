@@ -1111,20 +1111,20 @@ export class Event implements OnInit, OnDestroy {
       confirmButtonLabel: 'Cancel Event',
       cancelButtonLabel: 'Cancel',
       confirmButtonColor: 'danger',
-      iconPosition: 'left'
-    });
-    if (result && result.role === 'confirm') {
-      const eventId = this.currentEventData()?.id;
-      if (!eventId) return;
+      iconPosition: 'left',
+      onConfirm: async () => {
+        const eventId = this.currentEventData()?.id;
+        if (!eventId) return;
 
-      try {
-        await this.eventService.deleteEvent(eventId);
-        this.toasterService.showSuccess('Event cancelled');
-        this.navigationService.navigateForward('/', true);
-      } catch (error) {
-        console.error('Error cancelling event:', error);
-        this.toasterService.showError('Failed to cancel event. Please try again.');
+        try {
+          await this.eventService.deleteEvent(eventId);
+          this.toasterService.showSuccess('Event cancelled');
+          this.navigationService.navigateForward('/', true);
+        } catch (error) {
+          const message = BaseApiService.getErrorMessage(error, 'Failed to cancel event. Please try again.');
+          this.toasterService.showError(message);
+        }
       }
-    }
+    });
   }
 }
