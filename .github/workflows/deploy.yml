@@ -28,7 +28,11 @@ jobs:
           passphrase: ${{ secrets.OVH_SSH_KEY_PASSPHRASE }}
 
           script: |
-            set -e
+            # 🔥 STRICT FAIL-FAST MODE
+            set -euo pipefail
+            trap 'echo "❌ Deployment failed. Exiting..."; exit 1' ERR
+
+            echo "🚀 Starting frontend deployment..."
 
             # -----------------------------
             # Node version

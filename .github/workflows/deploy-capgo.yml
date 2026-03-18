@@ -21,12 +21,22 @@ jobs:
         with:
           node-version: "24"
 
+      # 🔥 GLOBAL FAIL-FAST FOR ALL RUN STEPS
+      - name: Enable strict mode
+        run: |
+          set -euo pipefail
+
       - name: Install dependencies
-        run: npm install
+        run: |
+          set -euo pipefail
+          trap 'echo "❌ Install failed"; exit 1' ERR
+          npm install
 
       - name: Create .env for build
         run: |
-          set -e
+          set -euo pipefail
+          trap 'echo "❌ .env creation failed"; exit 1' ERR
+
           echo "🧪 Creating .env from GitHub Environment secrets..."
 
           cat > .env << EOF
@@ -58,14 +68,18 @@ jobs:
 
       - name: Build app
         run: |
-          set -e
+          set -euo pipefail
+          trap 'echo "❌ Build failed"; exit 1' ERR
+
           echo "🏗️ Building application..."
           npm run build
           echo "✅ Build completed"
 
       - name: Create ZIP
         run: |
-          set -e
+          set -euo pipefail
+          trap 'echo "❌ ZIP creation failed"; exit 1' ERR
+
           echo "📦 Creating build.zip..."
           cd dist/browser
           zip -r ../../build.zip .
@@ -74,7 +88,9 @@ jobs:
       - name: Get version
         id: version
         run: |
-          set -e
+          set -euo pipefail
+          trap 'echo "❌ Version extraction failed"; exit 1' ERR
+
           VERSION=$(node -p "require('./package.json').version")
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "📌 Version: $VERSION"
@@ -95,7 +111,8 @@ jobs:
       - name: Cleanup workspace
         if: always()
         run: |
-          set -e
+          set -euo pipefail
+
           echo "🧹 Starting cleanup process..."
 
           if [ -f ".env" ]; then
