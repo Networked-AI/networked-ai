@@ -153,7 +153,7 @@
             pagination-clickable="true"
           >
             @for (media of displayMediasForDisplay(); track media.id || $index) {
-              <swiper-slide>
+              <swiper-slide (click)="openFullscreen($index)">
                 <div class="slide-content">
                   <div class="slide-image bg-black" [class.slide-image-single]="displayMediasForDisplay().length === 1">
                     @if (media.type === 'Image') {

@@ -171,7 +171,7 @@ export class Event implements OnInit, OnDestroy {
         command: () => this.reportEvent()
       }
     ];
-
+  
     if (this.eventDisplayData()?.isCurrentUserHost || this.eventDisplayData()?.isCurrentUserCoHost) {
       items.push({
         label: 'Dashboard View',
@@ -179,7 +179,16 @@ export class Event implements OnInit, OnDestroy {
         command: () => this.goToDashboard()
       });
     }
-
+  
+    if (this.authService.currentUser()?.is_admin) {
+      items.push({
+        label: 'Delete Event',
+        icon: 'pi pi-trash',
+        styleClass: 'delete-menu-item',
+        command: () => this.cancelEvent()
+      });
+    }
+  
     return items;
   });
 
@@ -1088,7 +1097,34 @@ export class Event implements OnInit, OnDestroy {
       clearInterval(this.timerInterval);
     }
   }
+  
   navigateToNetwork() {
     this.navigationService.navigateForward(`/event/questionnaire-response/${this.eventDisplayData().id}`);
+  }
+
+  async cancelEvent() {
+    const result = await this.modalService.openConfirmModal({
+      icon: 'assets/svg/deleteWhiteIcon.svg',
+      iconBgColor: '#C73838',
+      title: 'Cancel This Event',
+      description: "Are you sure you want to cancel this event? We'll notify everyone that have registered, and issue automatic refunds.",
+      confirmButtonLabel: 'Cancel Event',
+      cancelButtonLabel: 'Cancel',
+      confirmButtonColor: 'danger',
+      iconPosition: 'left',
+      onConfirm: async () => {
+        const eventId = this.currentEventData()?.id;
+        if (!eventId) return;
+
+        try {
+          await this.eventService.deleteEvent(eventId);
+          this.toasterService.showSuccess('Event cancelled');
+          this.navigationService.navigateForward('/', true);
+        } catch (error) {
+          const message = BaseApiService.getErrorMessage(error, 'Failed to cancel event. Please try again.');
+          this.toasterService.showError(message);
+        }
+      }
+    });
   }
 }

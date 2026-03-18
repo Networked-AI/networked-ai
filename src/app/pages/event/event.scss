@@ -163,3 +163,14 @@ ion-header {
   bottom: 50px;
   z-index: 10;
 }
+::ng-deep .p-menu-item.delete-menu-item {
+  .p-menu-item-icon {
+    color: var(--accent-red);
+  }
+  .p-menu-item-label {
+    color: var(--accent-red);
+  }
+  &:not(.p-disabled) .p-menu-item-content:hover .p-menu-item-icon {
+    color: var(--accent-red);
+  }
+}
