@@ -1477,7 +1477,7 @@ export class EventService extends BaseApiService {
       return userId === currentUser.id && role === 'cohost';
     });
 
-    return isHost || isCoHost;
+    return isHost || isCoHost || currentUser?.is_admin;
   }
 
   checkSpeakerOrSponsorAccess(eventData: any): boolean {
