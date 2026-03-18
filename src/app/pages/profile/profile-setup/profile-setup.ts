@@ -10,7 +10,7 @@ import { ProfileFormService } from '@/services/profile-form.service';
 import { ProfileImageInput } from '@/components/form/profile-image-input';
 import { UserPersonalInfo } from '@/components/common/user-personal-info';
 import { UserAdditionalInfo } from '@/components/common/user-additional-info';
-import { IonFooter, IonHeader, IonToolbar, IonContent } from '@ionic/angular/standalone';
+import { IonFooter, IonHeader, IonToolbar, IonContent, NavController } from '@ionic/angular/standalone';
 import { ProfileSetupUserSuggestion } from '@/pages/profile/components/profile-setup-user-suggestion';
 import { signal, inject, OnInit, Component, viewChild, OnDestroy, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
 
@@ -43,6 +43,7 @@ export class ProfileSetup implements OnInit, OnDestroy, AfterViewInit {
   // services
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private navCtrl = inject(NavController);
   private userService = inject(UserService);
   private toasterService = inject(ToasterService);
   private navigationService = inject(NavigationService);
@@ -137,7 +138,13 @@ export class ProfileSetup implements OnInit, OnDestroy, AfterViewInit {
 
       // step 4
       else {
-        this.navigationService.navigateForward('/profile/preferences', true);
+        const returnTo = this.route.snapshot.queryParams['returnTo'];
+        if (returnTo) {
+          const url = `/profile/preferences?returnTo=${encodeURIComponent(returnTo)}`;
+          this.navigationService.navigateForward(url, true);
+        } else {
+          this.navigationService.navigateForward('/profile/preferences', true);
+        }
       }
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to update user profile.');

@@ -7,6 +7,7 @@ import { AuthService } from '@/services/auth.service';
 import { ToasterService } from '@/services/toaster.service';
 import { BaseApiService } from '@/services/base-api.service';
 import { NavigationService } from '@/services/navigation.service';
+import { KEYS, LocalStorageService } from '@/services/localstorage.service';
 import { IonFooter, IonHeader, IonSpinner, IonToolbar, IonContent } from '@ionic/angular/standalone';
 import { OnInit, signal, inject, computed, OnDestroy, Component, ChangeDetectionStrategy } from '@angular/core';
 
@@ -26,6 +27,7 @@ export class ProfilePreferences implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private toasterService = inject(ToasterService);
   private navigationService = inject(NavigationService);
+  private localStorageService = inject(LocalStorageService);
 
   // signals
   maxSelections = 3;
@@ -189,7 +191,17 @@ export class ProfilePreferences implements OnInit, OnDestroy {
   }
 
   skip(): void {
-    this.navigationService.navigateForward('/', true);
+    const returnTo = this.route.snapshot.queryParams['returnTo'];
+    const isOnboarded = this.localStorageService.getItem(KEYS.ONBOARDED) === 'true';
+
+    if (!returnTo) {
+      this.navigationService.navigateForward('/', true);
+      return;
+    }
+
+    const targetUrl = isOnboarded ? returnTo : `/onboarding?returnTo=${encodeURIComponent(returnTo)}`;
+
+    this.navigationService.navigateForward(targetUrl, true);
   }
 
   goBack(): void {
@@ -224,13 +236,7 @@ export class ProfilePreferences implements OnInit, OnDestroy {
         Array.from(this.selectedHobbiesIds())
       );
       this.toasterService.showSuccess('Preferences saved successfully.');
-
-      const returnTo = this.route.snapshot.queryParams['returnTo'];
-      if (returnTo) {
-        this.navigationService.back(returnTo);
-      } else {
-        this.navigationService.navigateForward('/', true);
-      }
+      this.skip();
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Failed to save preferences.');
       this.toasterService.showError(message);

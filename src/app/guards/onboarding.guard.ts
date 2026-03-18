@@ -51,17 +51,18 @@ export const onboardingGuard: CanActivateFn = async (route, state) => {
 
   // if not onboarded, redirect to onboarding page
   if (!onboarded || onboarded !== 'true') {
-    // only redirect if not already on onboarding page to avoid infinite loop
-    if (state.url !== '/onboarding') {
-      navCtrl.navigateRoot('/onboarding');
+    // ✅ Extract path only (ignore query params) to avoid infinite loop
+    const urlPath = state.url.split('?')[0];
+    if (urlPath !== '/onboarding') {
+      const returnTo = encodeURIComponent(state.url);
+      navCtrl.navigateRoot(`/onboarding?returnTo=${returnTo}`);
       return false;
     }
-
-    return true; // allow access to onboarding page
+    return true;
   }
 
   // if already onboarded and trying to access onboarding, redirect to home
-  if (state.url === '/onboarding') {
+  if (state.url.split('?')[0] === '/onboarding') {
     navCtrl.navigateRoot('/');
     return false;
   }
