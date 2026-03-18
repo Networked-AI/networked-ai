@@ -3,13 +3,13 @@ import { IonIcon } from '@ionic/angular/standalone';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { EventService } from '@/services/event.service';
+import { HapticService } from '@/services/haptic.service';
 import { ToasterService } from '@/services/toaster.service';
 import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { NavigationService } from '@/services/navigation.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { ManageEventService } from '@/services/manage-event.service';
 import { input, Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
-import { HapticService } from '@/services/haptic.service';
 
 @Component({
   selector: 'event-card',
@@ -35,7 +35,7 @@ export class EventCard {
   isSubscriberExclusive = computed(() => this.currentEvent()?.settings?.is_subscriber_exclusive || false);
   hasPlans = computed(() => this.currentEvent()?.has_plans || false);
   isLoggedIn = computed(() => !!this.authService.currentUser());
-
+  currentUser = computed(() => this.authService.currentUser());
   isHostOrCoHost = computed(() => {
     const currentEvent = this.currentEvent();
     const isHostOrCoHost = this.eventService.checkHostOrCoHostAccess(currentEvent);
@@ -57,7 +57,7 @@ export class EventCard {
   allowToview = computed(() => {
     if (!this.showBlur()) return true;
     const currentEvent = this.currentEvent();
-    return this.isHostOrCoHost() || this.isAttendee() || this.isSponsorOrSpeaker() || currentEvent.is_public;
+    return this.isHostOrCoHost() || this.isAttendee() || this.isSponsorOrSpeaker() || currentEvent.is_public || this.currentUser()?.is_admin;
   });
 
   isEventLiked = computed(() => {
@@ -137,7 +137,7 @@ export class EventCard {
       const isLoggedIn = await this.eventService.checkIsLoggin();
       if (!isLoggedIn) return;
 
-      const result = await this.modalService.openShareModal(eventId, 'Event',this.event()?.image_url);
+      const result = await this.modalService.openShareModal(eventId, 'Event', this.event()?.image_url);
       if (result) {
         this.toasterService.showSuccess('Event shared');
       }

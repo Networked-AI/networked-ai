@@ -2,7 +2,7 @@ import { Button } from '@/components/form/button';
 import { Component, Input, inject } from '@angular/core';
 import { ModalService } from '@/services/modal.service';
 import { NavigationService } from '@/services/navigation.service';
-import { IonToolbar, IonFooter, ModalController } from '@ionic/angular/standalone';
+import { IonToolbar, IonFooter, ModalController, NavController } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'rsvp-confirm-modal',
@@ -16,11 +16,12 @@ export class RsvpConfirmModal {
 
   private modalService = inject(ModalService);
   private navigationService = inject(NavigationService);
+  private navCtrl = inject(NavController);
   modalctrl = inject(ModalController);
 
   share(): void {
     this.modalctrl.dismiss();
-    this.modalService.openShareModal(this.eventData.id, 'Event',this.eventData?.image_url);
+    this.modalService.openShareModal(this.eventData.id, 'Event', this.eventData?.image_url);
   }
 
   async addEvent(): Promise<void> {
@@ -34,6 +35,10 @@ export class RsvpConfirmModal {
 
   finishProfileSetup(): void {
     this.done();
-    this.navigationService.navigateForward('/profile/setup');
+    const slug = this.eventData?.slug || this.eventData?.id;
+    const returnTo = `/event/${slug}`;
+    this.navCtrl.navigateForward('/profile/setup', {
+      queryParams: { returnTo }
+    });
   }
 }

@@ -17,6 +17,7 @@ import { Pagination } from 'swiper/modules';
 import { Browser } from '@capacitor/browser';
 import { Button } from '@/components/form/button';
 import { EventDisplayData } from '@/interfaces/event';
+import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { environment } from 'src/environments/environment';
@@ -59,7 +60,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   private modalService = inject(ModalService);
   private navigationService = inject(NavigationService);
   mapContainer = viewChild<ElementRef<HTMLDivElement>>('mapContainer');
-
+  private authService = inject(AuthService);
   // MapTiler (lazy loaded)
   private Maptiler!: typeof import('@maptiler/sdk');
 
@@ -74,6 +75,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
     return this.sanitizer.bypassSecurityTrustHtml(normalized);
   });
 
+  currentUser = computed(() => this.authService.currentUser());
   dateItemsForDisplay = computed(() => {
     return this.eventData().dateItems || [];
   });
@@ -131,7 +133,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
 
   canViewAttendees = computed(() => {
     const d = this.eventData();
-    return !!(d?.isCurrentUserHost || d?.isCurrentUserAttendee || d?.isCurrentUserCoHost);
+    return !!(d?.isCurrentUserHost || d?.isCurrentUserAttendee || d?.isCurrentUserCoHost || this.currentUser()?.is_admin);
   });
 
   hostUsername = computed(() => {
@@ -252,5 +254,15 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   async handleCalendarClick(): Promise<void> {
     if (!this.showHostPromo()) return;
     await this.modalService.openAddToCalendarModal(this.eventData());
+  }
+
+  openFullscreen(index: number) {
+    if (!this.showHostPromo()) return;
+    const medias = this.displayMediasForDisplay() || [];
+    const media = medias[index];
+
+    if (media && media.type === 'Image' && media.url) {
+      this.modalService.openImagePreviewModal(this.getImageUrl(media.url));
+    }
   }
 }

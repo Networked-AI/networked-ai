@@ -1,12 +1,12 @@
-import { AuthService } from './auth.service';
-import { Injectable, signal, inject, computed } from '@angular/core';
-import { BaseApiService } from '@/services/base-api.service';
-import { ModalService } from './modal.service';
-import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
 import { Capacitor } from '@capacitor/core';
-import { NavigationService } from './navigation.service';
-import { ToasterService } from './toaster.service';
+import { AuthService } from './auth.service';
 import { EventService } from './event.service';
+import { ModalService } from './modal.service';
+import { ToasterService } from './toaster.service';
+import { NavigationService } from './navigation.service';
+import { BaseApiService } from '@/services/base-api.service';
+import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
+import { Injectable, signal, inject, computed } from '@angular/core';
 import { CapacitorBarcodeScanner, CapacitorBarcodeScannerTypeHintALLOption } from '@capacitor/barcode-scanner';
 
 @Injectable({ providedIn: 'root' })
@@ -55,6 +55,13 @@ export class ManageEventService extends BaseApiService {
       { label: 'Manage Roles', icon: 'assets/svg/manage-event/settings.svg', iconType: 'svg', action: 'manageRoles' },
       { label: 'Guest List', icon: 'assets/svg/manage-event/users.svg', iconType: 'svg', action: 'viewGuestList' },
       { label: 'Event Page QR', icon: 'assets/svg/scanner.svg', iconType: 'svg', action: 'viewEventPageQr' },
+      {
+        label: `Viewers (${displayData?.total_views ?? 0})`,
+        icon: 'pi pi-eye',
+        iconType: 'pi',
+        iconSize: '!text-[22px]',
+        action: 'viewEventViewers'
+      },
       { label: 'Share Event', icon: 'assets/svg/manage-event/share-event.svg', iconType: 'svg', action: 'shareEvent' },
       { label: 'Cancel Event', icon: 'assets/svg/manage-event/calendar-x.svg', iconType: 'svg', danger: true, action: 'cancelEvent' }
     ];
@@ -64,8 +71,8 @@ export class ManageEventService extends BaseApiService {
       baseItems = baseItems.filter((item) => item['action'] !== 'viewQuestionnaireResponses');
     }
 
-    if (isCoHost && !isHost) {
-      const allowedActions = ['viewEventAnalytics', 'viewGuestList', 'viewEventPageQr', 'shareEvent', 'duplicateEvent'];
+    if (isCoHost && !isHost && !this.authService.currentUser()?.is_admin) {
+      const allowedActions = ['viewEventAnalytics', 'viewGuestList', 'viewEventPageQr', 'shareEvent', 'duplicateEvent', 'viewEventViewers'];
 
       return baseItems.filter((item) => allowedActions.includes(item['action'] || ''));
     }
@@ -125,6 +132,7 @@ export class ManageEventService extends BaseApiService {
       cancelEvent: () => this.cancelEvent(),
       scanQRCode: () => this.scanQRCode(),
       duplicateEvent: () => this.duplicateEvent(),
+      viewEventViewers: () => this.viewEventViewers()
     };
     actions[result.role]?.();
   }
@@ -165,6 +173,17 @@ export class ManageEventService extends BaseApiService {
     }
   }
 
+  viewEventViewers() {
+    const eventId = this.currentEventData()?.id;
+    if (eventId) {
+      const route = `/event/guests/${eventId}/viewers`;
+
+      this.navigationService.navigateForward(route, false, {
+        eventTitle: this.currentEventData()?.title
+      });
+    }
+  }
+
   async viewEventPageQr() {
     const currentEventData = this.currentEventData();
     if (currentEventData) {
@@ -200,7 +219,7 @@ export class ManageEventService extends BaseApiService {
         this.toasterService.showError('No QR code detected');
       }
     } catch (error: any) {
-      this.toasterService.showError(error?.toString()|| 'Unable to scan QR code');
+      this.toasterService.showError(error?.toString() || 'Unable to scan QR code');
     }
   }
 
@@ -213,21 +232,21 @@ export class ManageEventService extends BaseApiService {
       confirmButtonLabel: 'Cancel Event',
       cancelButtonLabel: 'Cancel',
       confirmButtonColor: 'danger',
-      iconPosition: 'left'
-    });
-    if (result && result.role === 'confirm') {
-      const eventId = this.currentEventData()?.id;
-      if (!eventId) return;
+      iconPosition: 'left',
+      onConfirm: async () => {
+        const eventId = this.currentEventData()?.id;
+        if (!eventId) return;
 
-      try {
-        await this.eventService.deleteEvent(eventId);
-        this.toasterService.showSuccess('Event cancelled');
-        this.navigationService.navigateForward('/', true);
-      } catch (error) {
-        console.error('Error cancelling event:', error);
-        this.toasterService.showError('Failed to cancel event. Please try again.');
+        try {
+          await this.eventService.deleteEvent(eventId);
+          this.toasterService.showSuccess('Event cancelled');
+          this.navigationService.navigateForward('/', true);
+        } catch (error) {
+          const message = BaseApiService.getErrorMessage(error, 'Failed to cancel event. Please try again.');
+          this.toasterService.showError(message);
+        }
       }
-    }
+    });
   }
 
   private async handleQRCodeScanned(decodedText: string): Promise<void> {
@@ -248,7 +267,7 @@ export class ManageEventService extends BaseApiService {
           this.scanQRCode();
         }
       } else {
-      const result = await this.modalService.openScanResult(false, 'Invalid QR code');
+        const result = await this.modalService.openScanResult(false, 'Invalid QR code');
 
         if (result === 'scan-again') {
           this.scanQRCode();

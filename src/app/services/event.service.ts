@@ -11,7 +11,6 @@ import {
   EventFeedbackPayload,
   EventCategoriesResponse
 } from '@/interfaces/event';
-import { IUser } from '@/interfaces/IUser';
 import { DatePipe } from '@angular/common';
 import { HttpParams } from '@angular/common/http';
 import { AuthService } from './auth.service';
@@ -37,6 +36,7 @@ import {
   IMarkAsPaidResponse
 } from '@/interfaces/IEventAttendee';
 import { ICsvBroadcastResponse } from '@/interfaces/IFeed';
+import { IEventViewer, IEventViewersResponse, IUser } from '@/interfaces/IUser';
 
 @Injectable({ providedIn: 'root' })
 export class EventService extends BaseApiService {
@@ -48,6 +48,7 @@ export class EventService extends BaseApiService {
   myEvents = signal<IEvent[]>([]);
   recommendedEvents = signal<IEvent[]>([]);
   publicEvents = signal<IEvent[]>([]);
+  allEvents = signal<IEvent[]>([]);
   upcomingEvents = signal<IEvent[]>([]);
   cityCards = signal<ICity[]>([]);
   isLoadingCities = signal<boolean>(false);
@@ -990,6 +991,7 @@ export class EventService extends BaseApiService {
       append?: boolean; // If true, append to existing events instead of replacing
       is_upcoming_event?: boolean;
       is_recommended?: boolean;
+      is_all_events?: boolean;
       from_home?: boolean;
     } = {
       from_home: false
@@ -1065,6 +1067,10 @@ export class EventService extends BaseApiService {
       // Store public events if is_public is true
       if (params.from_home && params.is_public) {
         this.publicEvents.set(params.append ? [...this.publicEvents(), ...events] : events);
+      }
+
+      if (params.from_home && params.is_all_events) {
+        this.allEvents.set(params.append ? [...this.allEvents(), ...events] : events);
       }
 
       if (params.from_home && params.is_upcoming_event) {
@@ -1195,6 +1201,7 @@ export class EventService extends BaseApiService {
     this.myEvents.set([]);
     this.recommendedEvents.set([]);
     this.publicEvents.set([]);
+    this.allEvents.set([]);
     this.upcomingEvents.set([]);
     this.cityCards.set([]);
     this.isLoadingCities.set(false);
@@ -1470,7 +1477,7 @@ export class EventService extends BaseApiService {
       return userId === currentUser.id && role === 'cohost';
     });
 
-    return isHost || isCoHost;
+    return isHost || isCoHost || currentUser?.is_admin;
   }
 
   checkSpeakerOrSponsorAccess(eventData: any): boolean {
@@ -1564,6 +1571,40 @@ export class EventService extends BaseApiService {
       return response;
     } catch (error) {
       console.error('Error sharing event CSV broadcast:', error);
+      throw error;
+    }
+  }
+
+  async getEventViewersList(
+    eventId: string,
+    params: { page?: number; limit?: number; search?: string } = {}
+  ): Promise<{ data: IEventViewer[]; pagination: IPagination }> {
+    try {
+      let httpParams = new HttpParams()
+        .set('page', String(params.page ?? 1))
+        .set('limit', String(params.limit ?? 20));
+  
+      if (params.search?.trim()) {
+        httpParams = httpParams.set('search', params.search.trim());
+      }
+  
+      const response = await this.get<IEventViewersResponse>(
+        `/events/${eventId}/viewers`,
+        { params: httpParams }
+      );
+  
+      const payload = response?.data;
+  
+      return {
+        data: payload?.data ?? [],
+        pagination: payload?.pagination ?? {
+          totalCount: 0,
+          currentPage: 1,
+          totalPages: 0
+        }
+      };
+    } catch (error) {
+      console.error('Error fetching event viewers:', error);
       throw error;
     }
   }

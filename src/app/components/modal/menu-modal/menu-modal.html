@@ -9,7 +9,7 @@
 
         <!-- icon from prime icons -->
         @if (item.iconType === 'pi') {
-          <div [class]="item.icon + ' !text-xl'"></div>
+          <div [class]="item.icon + ' ' + (item.iconSize || '!text-[19px]') + ' text-[#474747]'"></div>
         }
 
         @if (item.iconType === 'ion') {

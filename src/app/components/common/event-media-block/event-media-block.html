@@ -1,5 +1,5 @@
 @if (mode() === 'primary') {
-  <div class="event-media-block event-primary-media image-container" [class.event-media-block--compact]="compact()">
+  <div class="event-media-block event-primary-media image-container" [class.event-media-block--compact]="compact()" (click)="openFullscreen(0)">
     <div class="bg-blur-image relative w-full h-full">
       <img
         fill
@@ -44,7 +44,7 @@
     >
       @if ((displayMedias() || []).length > 0) {
         @for (media of displayMedias() || []; track media.id || $index) {
-          <swiper-slide>
+          <swiper-slide (click)="openFullscreen($index)">
             @if (media.type === 'Video') {
               <video [src]="media.url" class="w-full h-[420px] object-contain bg-black" controls></video>
             } @else {

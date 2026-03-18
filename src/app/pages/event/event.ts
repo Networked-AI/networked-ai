@@ -15,26 +15,26 @@ import { IUser } from '@/interfaces/IUser';
 import { Device } from '@capacitor/device';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
-import { ActivatedRoute, Router } from '@angular/router';
 import { Button } from '@/components/form/button';
 import { NgTemplateOutlet } from '@angular/common';
 import { OgService } from '@/services/og.service';
 import { AuthService } from '@/services/auth.service';
-import { KEYS, LocalStorageService } from '@/services/localstorage.service';
-import { EventService } from '@/services/event.service';
 import { ModalService } from '@/services/modal.service';
+import { EventService } from '@/services/event.service';
 import { MenuItem as PrimeMenuItem } from 'primeng/api';
-import { ToasterService } from '@/services/toaster.service';
+import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
+import { ToasterService } from '@/services/toaster.service';
 import { EmptyState } from '@/components/common/empty-state';
+import { BaseApiService } from '@/services/base-api.service';
+import { MessagesService } from '@/services/messages.service';
 import { EventDisplay } from '@/components/common/event-display';
 import { NavigationService } from '@/services/navigation.service';
 import { ManageEventService } from '@/services/manage-event.service';
+import { KEYS, LocalStorageService } from '@/services/localstorage.service';
 import { EventMediaBlockComponent } from '@/components/common/event-media-block';
 import { EventPageSkeleton } from '@/components/skeletons/event-page-skeleton/event-page-skeleton';
 import { OnInit, inject, signal, computed, Component, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
-import { BaseApiService } from '@/services/base-api.service';
-import { MessagesService } from '@/services/messages.service';
 
 @Component({
   selector: 'event',
@@ -1088,6 +1088,7 @@ export class Event implements OnInit, OnDestroy {
       clearInterval(this.timerInterval);
     }
   }
+
   navigateToNetwork() {
     this.navigationService.navigateForward(`/event/questionnaire-response/${this.eventDisplayData().id}`);
   }

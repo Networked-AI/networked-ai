@@ -4,6 +4,9 @@ import { PermissionsService } from '@/services/permissions.service';
 import { KEYS, LocalStorageService } from '@/services/localstorage.service';
 import { IonContent, IonicSlides, NavController } from '@ionic/angular/standalone';
 import { signal, inject, Component, viewChild, ElementRef, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { AuthService } from '@/services/auth.service';
+import { ActivatedRoute } from '@angular/router';
+import { NavigationService } from '@/services/navigation.service';
 
 @Component({
   selector: 'onboarding',
@@ -17,7 +20,9 @@ export class Onboarding {
   navCtrl = inject(NavController);
   private permissionsService = inject(PermissionsService);
   private localStorageService = inject(LocalStorageService);
-
+  private authService = inject(AuthService);
+  private route = inject(ActivatedRoute);
+  private navigationService = inject(NavigationService);
   // signals
   currentSlide = signal(0);
 
@@ -55,6 +60,15 @@ export class Onboarding {
     this.localStorageService.setItem(KEYS.ONBOARDED, 'true');
 
     // navigate to login page
-    this.navCtrl.navigateForward('/login');
+    const returnTo = this.route.snapshot.queryParams['returnTo'];
+    if (this.authService.currentUser()) {
+      if (returnTo) {
+        this.navigationService.navigateForward(returnTo, true);
+      } else {
+        this.navCtrl.navigateForward('/');
+      }
+    } else {
+      this.navCtrl.navigateForward('/login');
+    }
   }
 }

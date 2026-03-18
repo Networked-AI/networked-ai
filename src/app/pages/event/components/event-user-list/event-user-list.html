@@ -20,7 +20,7 @@
 
       <!-- Section Title -->
       <div class="flex items-center justify-between mb-4">
-        <div class="body-16SB neutral-01">{{ title() }}</div>
+        <div class="body-16SB neutral-01">{{ title() | titlecase }}</div>
         <div class="body-14M neutral-03">{{ pagination()?.totalCount }}</div>
       </div>
 
