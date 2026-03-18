@@ -1,4 +1,3 @@
-import { Component, inject, ChangeDetectionStrategy, input, output, computed, signal } from '@angular/core';
 import { IonIcon } from '@ionic/angular/standalone';
 import { NgOptimizedImage } from '@angular/common';
 import { ToasterService } from '@/services/toaster.service';
@@ -12,6 +11,8 @@ import { ConnectionStatus } from '@/enums/connection-status.enum';
 import { Button } from '@/components/form/button';
 import { Clipboard } from '@capacitor/clipboard';
 import { HapticService } from '@/services/haptic.service';
+import { Zoom } from 'swiper/modules';
+import { Component, inject, ChangeDetectionStrategy, input, output, computed, signal, CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 
 const CONFIRM_DANGER_OPTIONS = {
   icon: 'assets/svg/alert-white.svg',
@@ -26,12 +27,14 @@ const CONFIRM_DANGER_OPTIONS = {
   styleUrl: './profile-image-preview-overlay.scss',
   templateUrl: './profile-image-preview-overlay.html',
   imports: [IonIcon, NgOptimizedImage, Button],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA]
 })
 export class ProfileImagePreviewOverlay {
   user = input<IUser | null>(null);
   isViewingOtherProfile = input<boolean>(false);
   closeOverlay = output<void>();
+  swiperModules = [Zoom];
 
   private toasterService = inject(ToasterService);
   private modalService = inject(ModalService);

@@ -44,3 +44,10 @@
   --border-radius: 32px;
   align-items: flex-center;
 }
+
+.image-preview-fullscreen-modal{
+    --height: 100%;
+    --width: 100%;
+    --border-radius: 0px;
+    align-items: flex-start;
+}

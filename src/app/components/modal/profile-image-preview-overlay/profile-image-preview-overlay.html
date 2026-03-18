@@ -1,16 +1,27 @@
 <div class="profile-image-preview-container" (click)="close()">
   <div class="image-container">
-    <div class="profile-image-wrapper">
-      <img
-        placeholder
-        [ngSrc]="getImageUrl(getImage(user()))"
-        [alt]="user()?.username || 'Profile image'"
-        (error)="onImageError($event)"
-        class="profile-image"
-        [loaderParams]="{ thumbnail: user()?.thumbnail_url }"
-        fill
-      />
-    </div>
+    <swiper-container
+      zoom="true"
+      zoom-max-ratio="2"
+      slides-per-view="1"
+      [modules]="swiperModules"
+      class="profile-image-swiper"
+      (click)="$event.stopPropagation()"
+    >
+      <swiper-slide>
+        <div class="swiper-zoom-container">
+          <img
+            placeholder
+            [ngSrc]="getImageUrl(getImage(user()))"
+            [alt]="user()?.username || 'Profile image'"
+            (error)="onImageError($event)"
+            class="profile-image"
+            [loaderParams]="{ thumbnail: user()?.thumbnail_url }"
+            fill
+          />
+        </div>
+      </swiper-slide>
+    </swiper-container>
   </div>
 
   <!-- Action Buttons -->

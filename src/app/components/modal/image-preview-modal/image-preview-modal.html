@@ -1,4 +1,31 @@
 <div class="fullscreen-container">
-  <div class="pi pi-times close-icon" (click)="closeFullscreen()"></div>
-  <img [src]="url" />
+  <div class="pi pi-times close-icon cursor-pointer" (click)="closeFullscreen()"></div>
+
+  <swiper-container
+    #swiperContainer
+    zoom="true"
+    navigation="true"
+    pagination="true"
+    space-between="0"
+    allow-touch-move="true"
+    pagination-clickable="true"
+    slides-per-view="1"
+    [initial-slide]="initialIndex"
+    [modules]="swiperModules"
+    class="image-preview-swiper"
+  >
+    @for (item of mediaItems; track $index) {
+      <swiper-slide>
+        @if (item.type === 'Image') {
+          <div class="swiper-zoom-container">
+            <img fill placeholder priority (error)="onImageError($event)" [ngSrc]="getImageUrl(item.url || '')" />
+          </div>
+        } @else if (item.type === 'Video') {
+          <div class="video-slide">
+            <video [src]="item.url" controls class="preview-video"></video>
+          </div>
+        }
+      </swiper-slide>
+    }
+  </swiper-container>
 </div>
