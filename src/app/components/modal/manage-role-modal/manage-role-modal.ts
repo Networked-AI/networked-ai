@@ -92,11 +92,11 @@ export class ManageRoleModal implements OnInit {
             .filter((user: any) => user.role !== 'Host')
             .map((user: any) =>
               this.fb.group({
-                id: [user.user_id],
-                name: [user.user.name],
-                username: [user.user.username],
-                image: [user.user.thumbnail_url],
-                role: [user.role ?? 'None']
+                id: [user?.user_id],
+                name: [user?.user?.name],
+                username: [user?.user?.username],
+                image: [user?.user?.thumbnail_url],
+                role: [user?.role ?? 'None']
               })
             )
         )
