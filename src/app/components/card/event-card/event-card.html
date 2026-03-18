@@ -44,7 +44,11 @@
           <div
             class="flex w-[32px]! h-[32px]! min-w-[32px]! min-h-[32px]! justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px]"
           >
-            <ion-icon src="/assets/svg/share.svg" class="h-[18px] w-[18px]" (click)="shareEvent(); $event.stopPropagation(); hapticService.onClick()"></ion-icon>
+            <ion-icon
+              src="/assets/svg/share.svg"
+              class="h-[18px] w-[18px]"
+              (click)="shareEvent(); $event.stopPropagation(); hapticService.onClick()"
+            ></ion-icon>
           </div>
 
           <div
@@ -61,14 +65,16 @@
               <ion-icon src="/assets/svg/like.svg" class="h-[18px] w-[18px]"></ion-icon>
             }
           </div>
-          @if ((isHostOrCoHost() || isAttendee()) && isLoggedIn()) {
-            <div
-              class="flex w-[32px]! h-[32px]! min-w-[32px]! min-h-[32px]! justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px] cursor-pointer"
-              (click)="openEventChat($event); hapticService.onClick()"
-            >
-              <ion-icon src="assets/svg/manage-event/chat-white.svg" class="h-5 w-5"></ion-icon>
-            </div>
-            @if (isHostOrCoHost()) {
+          @if (isLoggedIn()) {
+            @if (isHostOrCoHost() || isAttendee()) {
+              <div
+                class="flex w-[32px]! h-[32px]! min-w-[32px]! min-h-[32px]! justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px] cursor-pointer"
+                (click)="openEventChat($event); hapticService.onClick()"
+              >
+                <ion-icon src="assets/svg/manage-event/chat-white.svg" class="h-5 w-5"></ion-icon>
+              </div>
+            }
+            @if (isHostOrCoHost() || currentUser()?.is_admin) {
               <div
                 class="flex w-[32px]! h-[32px]! min-w-[32px]! min-h-[32px]! justify-center items-center gap-2 rounded-full border border-white/10 bg-black/10 shadow-[4px_8px_16px_0_rgba(0,0,0,0.25)] backdrop-blur-[3px] cursor-pointer"
                 (click)="openMenu($event); hapticService.onClick()"

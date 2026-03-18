@@ -15,26 +15,26 @@ import { IUser } from '@/interfaces/IUser';
 import { Device } from '@capacitor/device';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
-import { ActivatedRoute, Router } from '@angular/router';
 import { Button } from '@/components/form/button';
 import { NgTemplateOutlet } from '@angular/common';
 import { OgService } from '@/services/og.service';
 import { AuthService } from '@/services/auth.service';
-import { KEYS, LocalStorageService } from '@/services/localstorage.service';
-import { EventService } from '@/services/event.service';
 import { ModalService } from '@/services/modal.service';
+import { EventService } from '@/services/event.service';
 import { MenuItem as PrimeMenuItem } from 'primeng/api';
-import { ToasterService } from '@/services/toaster.service';
+import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
+import { ToasterService } from '@/services/toaster.service';
 import { EmptyState } from '@/components/common/empty-state';
+import { BaseApiService } from '@/services/base-api.service';
+import { MessagesService } from '@/services/messages.service';
 import { EventDisplay } from '@/components/common/event-display';
 import { NavigationService } from '@/services/navigation.service';
 import { ManageEventService } from '@/services/manage-event.service';
+import { KEYS, LocalStorageService } from '@/services/localstorage.service';
 import { EventMediaBlockComponent } from '@/components/common/event-media-block';
 import { EventPageSkeleton } from '@/components/skeletons/event-page-skeleton/event-page-skeleton';
 import { OnInit, inject, signal, computed, Component, OnDestroy, ChangeDetectionStrategy, PLATFORM_ID } from '@angular/core';
-import { BaseApiService } from '@/services/base-api.service';
-import { MessagesService } from '@/services/messages.service';
 
 @Component({
   selector: 'event',
@@ -171,7 +171,7 @@ export class Event implements OnInit, OnDestroy {
         command: () => this.reportEvent()
       }
     ];
-  
+
     if (this.eventDisplayData()?.isCurrentUserHost || this.eventDisplayData()?.isCurrentUserCoHost) {
       items.push({
         label: 'Dashboard View',
@@ -179,16 +179,7 @@ export class Event implements OnInit, OnDestroy {
         command: () => this.goToDashboard()
       });
     }
-  
-    if (this.authService.currentUser()?.is_admin) {
-      items.push({
-        label: 'Delete Event',
-        icon: 'pi pi-trash',
-        styleClass: 'delete-menu-item',
-        command: () => this.cancelEvent()
-      });
-    }
-  
+
     return items;
   });
 
@@ -1097,34 +1088,8 @@ export class Event implements OnInit, OnDestroy {
       clearInterval(this.timerInterval);
     }
   }
-  
+
   navigateToNetwork() {
     this.navigationService.navigateForward(`/event/questionnaire-response/${this.eventDisplayData().id}`);
-  }
-
-  async cancelEvent() {
-    const result = await this.modalService.openConfirmModal({
-      icon: 'assets/svg/deleteWhiteIcon.svg',
-      iconBgColor: '#C73838',
-      title: 'Cancel This Event',
-      description: "Are you sure you want to cancel this event? We'll notify everyone that have registered, and issue automatic refunds.",
-      confirmButtonLabel: 'Cancel Event',
-      cancelButtonLabel: 'Cancel',
-      confirmButtonColor: 'danger',
-      iconPosition: 'left',
-      onConfirm: async () => {
-        const eventId = this.currentEventData()?.id;
-        if (!eventId) return;
-
-        try {
-          await this.eventService.deleteEvent(eventId);
-          this.toasterService.showSuccess('Event cancelled');
-          this.navigationService.navigateForward('/', true);
-        } catch (error) {
-          const message = BaseApiService.getErrorMessage(error, 'Failed to cancel event. Please try again.');
-          this.toasterService.showError(message);
-        }
-      }
-    });
   }
 }
