@@ -48,6 +48,7 @@ export class EventService extends BaseApiService {
   myEvents = signal<IEvent[]>([]);
   recommendedEvents = signal<IEvent[]>([]);
   publicEvents = signal<IEvent[]>([]);
+  allEvents = signal<IEvent[]>([]);
   upcomingEvents = signal<IEvent[]>([]);
   cityCards = signal<ICity[]>([]);
   isLoadingCities = signal<boolean>(false);
@@ -990,6 +991,7 @@ export class EventService extends BaseApiService {
       append?: boolean; // If true, append to existing events instead of replacing
       is_upcoming_event?: boolean;
       is_recommended?: boolean;
+      is_all_events?: boolean;
       from_home?: boolean;
     } = {
       from_home: false
@@ -1065,6 +1067,10 @@ export class EventService extends BaseApiService {
       // Store public events if is_public is true
       if (params.from_home && params.is_public) {
         this.publicEvents.set(params.append ? [...this.publicEvents(), ...events] : events);
+      }
+
+      if (params.from_home && params.is_all_events) {
+        this.allEvents.set(params.append ? [...this.allEvents(), ...events] : events);
       }
 
       if (params.from_home && params.is_upcoming_event) {
@@ -1195,6 +1201,7 @@ export class EventService extends BaseApiService {
     this.myEvents.set([]);
     this.recommendedEvents.set([]);
     this.publicEvents.set([]);
+    this.allEvents.set([]);
     this.upcomingEvents.set([]);
     this.cityCards.set([]);
     this.isLoadingCities.set(false);

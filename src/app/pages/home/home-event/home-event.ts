@@ -60,17 +60,21 @@ export class HomeEvent implements OnInit, OnDestroy {
   recommendedPage = signal(1);
   publicPage = signal(1);
   myEventsPage = signal(1);
+  allEventsPage = signal(1);
 
   isLoadingMore = signal(false);
   hasMoreRecommended = signal(true);
   hasMorePublic = signal(true);
   hasMoreMyEvents = signal(true);
+  hasMoreAllEvents = signal(true);
   @ViewChild('recommendedSwiper') recommendedSwiperRef?: ElementRef;
   @ViewChild('myEventsSwiper') myEventsSwiperRef?: ElementRef;
   @ViewChild('publicSwiper') publicSwiperRef?: ElementRef;
+  @ViewChild('allEventsSwiper') allEventsSwiperRef?: ElementRef;
   readonly PAGE_LIMIT = 10;
   currentUser = this.authService.currentUser;
   isLoggedIn = computed(() => !!this.authService.currentUser());
+  isAdmin = computed(() => !!this.currentUser()?.is_admin);
 
   private previousUserId: string | null = null;
   private previousLoginState: boolean | null = null;
@@ -78,6 +82,7 @@ export class HomeEvent implements OnInit, OnDestroy {
   myEvents = computed(() => this.eventService.myEvents());
   recommendedEvents = computed(() => this.eventService.recommendedEvents());
   publicEvents = computed(() => this.eventService.publicEvents());
+  allEvents = computed(() => this.eventService.allEvents());
   upcomingEvents = computed(() => this.eventService.upcomingEvents());
 
   cityCards = computed(() => this.eventService.cityCards());
@@ -170,6 +175,9 @@ export class HomeEvent implements OnInit, OnDestroy {
         await this.loadPublicEvents();
       }
     } else {
+      if (this.isAdmin() && this.eventService.allEvents().length === 0) {
+        this.loadAllEventsSection();
+      }
       if (!hasRecommendedEvents && !hasPublicEvents && !hasMyEvents) {
         await this.loadAllEvents();
       } else if (!hasRecommendedEvents) {
@@ -214,7 +222,8 @@ export class HomeEvent implements OnInit, OnDestroy {
   private async handleAccountChangeAndLogin(): Promise<void> {
     this.eventService.resetAllEvents();
     this.eventService.cityCards.set([]);
-    this.resetPagination(); // ← add
+    this.resetPagination();
+    if (this.isAdmin()) this.loadAllEventsSection(true);
     await this.loadAllEvents(true);
     await this.loadUpcomingEvents();
     await this.loadTopCities(true);
@@ -257,6 +266,30 @@ export class HomeEvent implements OnInit, OnDestroy {
       if (reset) this.publicPage.set(1);
     } catch (error) {
       console.error('Error loading public events:', error);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  private async loadAllEventsSection(reset: boolean = true): Promise<void> {
+    if (!this.isAdmin()) return;
+
+    try {
+      this.isLoading.set(true);
+      const res = await this.eventService.getEvents({
+        page: reset ? 1 : this.allEventsPage(),
+        limit: this.PAGE_LIMIT,
+        append: !reset,
+        order_by: 'start_date',
+        order_direction: 'DESC',
+        from_home: true,
+        is_all_events: true
+      });
+      const p = res?.data?.pagination;
+      this.hasMoreAllEvents.set((p?.currentPage ?? 1) < (p?.totalPages ?? 1));
+      if (reset) this.allEventsPage.set(1);
+    } catch (error) {
+      console.error('Error loading all events:', error);
     } finally {
       this.isLoading.set(false);
     }
@@ -333,9 +366,10 @@ export class HomeEvent implements OnInit, OnDestroy {
   async refresh(): Promise<void> {
     try {
       this.eventService.resetAllEvents();
-      this.resetPagination(); // ← add
+      this.resetPagination();
       this.loadAllEvents(true);
       if (this.isLoggedIn()) this.loadUpcomingEvents(true);
+      if (this.isAdmin()) this.loadAllEventsSection(true);
       this.loadTopCities(true);
     } catch (error) {
       console.error('Error refreshing events:', error);
@@ -385,7 +419,7 @@ export class HomeEvent implements OnInit, OnDestroy {
       this.isLoading.set(false);
     }
   }
-  onReachEnd(event: any, type: 'recommended' | 'public' | 'myEvents'): void {
+  onReachEnd(event: any, type: 'recommended' | 'public' | 'myEvents' | 'allEvents'): void {
     const swiper = event?.detail?.[0];
     if (!swiper?.isEnd) return;
 
@@ -398,6 +432,9 @@ export class HomeEvent implements OnInit, OnDestroy {
         break;
       case 'myEvents':
         this.onMyEventsSlideEnd();
+        break;
+      case 'allEvents':
+        this.onAllEventsSlideEnd();
         break;
     }
   }
@@ -483,13 +520,39 @@ export class HomeEvent implements OnInit, OnDestroy {
       this.isLoadingMore.set(false);
     }
   }
-  // Reset pagination on refresh/account change
+
+  async onAllEventsSlideEnd(): Promise<void> {
+    if (!this.isAdmin() || this.isLoadingMore() || !this.hasMoreAllEvents()) return;
+    const nextPage = this.allEventsPage() + 1;
+    const currentIndex = this.allEventsSwiperRef?.nativeElement?.swiper?.activeIndex ?? 0;
+    try {
+      this.isLoadingMore.set(true);
+      const response = await this.eventService.getEvents({
+        page: nextPage,
+        limit: this.PAGE_LIMIT,
+        append: true,
+        order_by: 'start_date',
+        order_direction: 'DESC',
+        from_home: true,
+        is_all_events: true
+      });
+      const pagination = response?.data?.pagination;
+      this.hasMoreAllEvents.set((pagination?.currentPage ?? nextPage) < (pagination?.totalPages ?? 1));
+      this.allEventsPage.set(nextPage);
+      this.updateSwiper(this.allEventsSwiperRef, currentIndex);
+    } finally {
+      this.isLoadingMore.set(false);
+    }
+  }
+
   private resetPagination(): void {
     this.recommendedPage.set(1);
     this.publicPage.set(1);
     this.myEventsPage.set(1);
+    this.allEventsPage.set(1);
     this.hasMoreRecommended.set(true);
     this.hasMorePublic.set(true);
     this.hasMoreMyEvents.set(true);
+    this.hasMoreAllEvents.set(true);
   }
 }

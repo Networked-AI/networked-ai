@@ -67,11 +67,21 @@ export class AllEvents implements OnInit, OnDestroy {
   // Constants
   private readonly pageLimit = 10;
 
+  isAdmin = computed(() => !!this.authService.currentUser()?.is_admin);
+
   async ngOnInit(): Promise<void> {
     const navigation = this.router.currentNavigation();
     const state = navigation?.extras?.state || history.state;
     if (state?.user) {
       this.userFromState.set(state.user);
+    }
+
+    const { eventFilter } = this.getQueryParams();
+    if (eventFilter === 'all' && !this.isAdmin()) {
+      await this.router.navigate(['/event/all'], { queryParams: { eventFilter: 'public' }, replaceUrl: true });
+      this.loadEvents(true);
+      this.setupSearchDebounce();
+      return;
     }
 
     this.setupSearchDebounce();
@@ -128,6 +138,7 @@ export class AllEvents implements OnInit, OnDestroy {
     const isAttendedEvents = eventFilter === 'attended';
     const isLikedEvents = eventFilter === 'liked';
     const isUpcomingEvents = eventFilter === 'upcoming';
+    const isAllEvents = eventFilter === 'all' && this.isAdmin();
 
     const baseParams: any = {
       page,
@@ -182,6 +193,14 @@ export class AllEvents implements OnInit, OnDestroy {
         is_recommended: true,
         start_date: new Date()
       });
+    }
+
+    if (isAllEvents) {
+      return await this.eventService.getEvents({
+        ...baseParams,
+        order_by: 'start_date',
+        order_direction: 'DESC',
+      })
     }
 
     return await this.eventService.getEvents({
@@ -265,6 +284,8 @@ export class AllEvents implements OnInit, OnDestroy {
       return 'Recommended Events';
     } else if (eventFilter === 'public') {
       return 'Public Events';
+    } else if (eventFilter === 'all') {
+      return 'All Events';
     } else if (eventFilter === 'liked') {
       return 'Liked Events';
     } else if (eventFilter === 'hosted') {

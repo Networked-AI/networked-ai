@@ -399,6 +399,75 @@
         }
       </swiper-container>
     }
+
+    <!-- all events (admin only) -->
+    @if (isAdmin()) {
+      @if (isLoading() && allEvents().length === 0) {
+        <div class="px-4">
+          <div class="flex items-center justify-between mb-4">
+            <ion-skeleton-text animated class="w-32 h-5 rounded" />
+            <ion-skeleton-text animated class="w-16 h-4 rounded" />
+          </div>
+        </div>
+
+        <swiper-container
+          speed="100"
+          space-between="8"
+          slides-per-view="1.5"
+          allow-touch-move="true"
+          slides-offset-after="16"
+          slides-offset-before="16"
+          [modules]="swiperModules"
+          [breakpoints]="{ '768': { slidesPerView: 2.2 } }"
+        >
+          @for (i of [1, 2, 3]; track i) {
+            <swiper-slide>
+              <div class="rounded-xl overflow-hidden">
+                <ion-skeleton-text animated class="w-full h-48 rounded-t-xl" />
+                <div class="p-4 flex flex-col gap-2">
+                  <ion-skeleton-text animated class="w-3/4 h-5 rounded" />
+                  <ion-skeleton-text animated class="w-1/2 h-4 rounded" />
+                  <ion-skeleton-text animated class="w-2/3 h-4 rounded" />
+                </div>
+              </div>
+            </swiper-slide>
+          }
+        </swiper-container>
+      } @else if (allEvents().length > 0) {
+        <div class="px-4">
+          <div class="flex items-center justify-between">
+            <div class="body-16SB neutral-01">All Events</div>
+            <button type="button" class="body-14SB brand-02" (click)="navigationService.navigateForward('/event/all?eventFilter=all')">
+              See all
+            </button>
+          </div>
+        </div>
+
+        <swiper-container
+          #allEventsSwiper
+          speed="100"
+          space-between="8"
+          slides-per-view="1.5"
+          allow-touch-move="true"
+          slides-offset-after="16"
+          slides-offset-before="16"
+          [modules]="swiperModules"
+          [breakpoints]="{ '768': { slidesPerView: 2.2 } }"
+          (swiperslidechangetransitionend)="onReachEnd($event, 'allEvents')"
+        >
+          @for (event of allEvents(); track event.id || event.title) {
+            <swiper-slide>
+              <event-card [event]="event" />
+            </swiper-slide>
+          }
+          @if (isLoadingMore() && hasMoreAllEvents()) {
+            <swiper-slide>
+              <ng-container *ngTemplateOutlet="eventSkeletonSlide" />
+            </swiper-slide>
+          }
+        </swiper-container>
+      }
+    }
   }
 </div>
 
