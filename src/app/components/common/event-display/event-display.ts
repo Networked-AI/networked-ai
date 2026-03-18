@@ -133,7 +133,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
 
   canViewAttendees = computed(() => {
     const d = this.eventData();
-    return !!(d?.isCurrentUserHost || d?.isCurrentUserAttendee || d?.isCurrentUserCoHost);
+    return !!(d?.isCurrentUserHost || d?.isCurrentUserAttendee || d?.isCurrentUserCoHost || this.currentUser()?.is_admin);
   });
 
   hostUsername = computed(() => {
