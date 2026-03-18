@@ -3,11 +3,11 @@ import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
 import { EventService } from '@/services/event.service';
 import { EventAttendee, IEvent } from '@/interfaces/event';
+import { HapticService } from '@/services/haptic.service';
 import { NgOptimizedImage, DatePipe } from '@angular/common';
 import { NavigationService } from '@/services/navigation.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { input, Component, ChangeDetectionStrategy, computed, inject } from '@angular/core';
-import { HapticService } from '@/services/haptic.service';
 @Component({
   imports: [NgOptimizedImage, DatePipe, Button],
   selector: 'upcoming-event-card',
@@ -22,7 +22,7 @@ export class UpcomingEventCard {
   private navigationService = inject(NavigationService);
   hapticService = inject(HapticService);
   event = input.required<IEvent>();
-
+  currentUser = computed(() => this.authService.currentUser());
   isLoggedIn = computed(() => !!this.authService.currentUser());
   eventImage = computed(() => {
     const event = this.event();
@@ -54,7 +54,7 @@ export class UpcomingEventCard {
 
   allowToview = computed(() => {
     const currentEvent = this.event();
-    return this.isHostOrCoHost() || this.isAttendee() || this.isSponsorOrSpeaker() || currentEvent.is_public;
+    return this.isHostOrCoHost() || this.isAttendee() || this.isSponsorOrSpeaker() || currentEvent.is_public || this.currentUser()?.is_admin;
   });
 
   formattedLocation = computed(() => {

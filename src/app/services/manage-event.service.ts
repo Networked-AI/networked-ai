@@ -1,12 +1,12 @@
-import { AuthService } from './auth.service';
-import { Injectable, signal, inject, computed } from '@angular/core';
-import { BaseApiService } from '@/services/base-api.service';
-import { ModalService } from './modal.service';
-import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
 import { Capacitor } from '@capacitor/core';
-import { NavigationService } from './navigation.service';
-import { ToasterService } from './toaster.service';
+import { AuthService } from './auth.service';
 import { EventService } from './event.service';
+import { ModalService } from './modal.service';
+import { ToasterService } from './toaster.service';
+import { NavigationService } from './navigation.service';
+import { BaseApiService } from '@/services/base-api.service';
+import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
+import { Injectable, signal, inject, computed } from '@angular/core';
 import { CapacitorBarcodeScanner, CapacitorBarcodeScannerTypeHintALLOption } from '@capacitor/barcode-scanner';
 
 @Injectable({ providedIn: 'root' })
@@ -71,7 +71,7 @@ export class ManageEventService extends BaseApiService {
       baseItems = baseItems.filter((item) => item['action'] !== 'viewQuestionnaireResponses');
     }
 
-    if (isCoHost && !isHost) {
+    if (isCoHost && !isHost && !this.authService.currentUser()?.is_admin) {
       const allowedActions = ['viewEventAnalytics', 'viewGuestList', 'viewEventPageQr', 'shareEvent', 'duplicateEvent', 'viewEventViewers'];
 
       return baseItems.filter((item) => allowedActions.includes(item['action'] || ''));
@@ -236,7 +236,7 @@ export class ManageEventService extends BaseApiService {
       onConfirm: async () => {
         const eventId = this.currentEventData()?.id;
         if (!eventId) return;
-    
+
         try {
           await this.eventService.deleteEvent(eventId);
           this.toasterService.showSuccess('Event cancelled');
