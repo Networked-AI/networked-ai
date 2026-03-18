@@ -11,7 +11,6 @@ import {
   EventFeedbackPayload,
   EventCategoriesResponse
 } from '@/interfaces/event';
-import { IUser } from '@/interfaces/IUser';
 import { DatePipe } from '@angular/common';
 import { HttpParams } from '@angular/common/http';
 import { AuthService } from './auth.service';
@@ -37,6 +36,7 @@ import {
   IMarkAsPaidResponse
 } from '@/interfaces/IEventAttendee';
 import { ICsvBroadcastResponse } from '@/interfaces/IFeed';
+import { IEventViewer, IEventViewersResponse, IUser } from '@/interfaces/IUser';
 
 @Injectable({ providedIn: 'root' })
 export class EventService extends BaseApiService {
@@ -1564,6 +1564,40 @@ export class EventService extends BaseApiService {
       return response;
     } catch (error) {
       console.error('Error sharing event CSV broadcast:', error);
+      throw error;
+    }
+  }
+
+  async getEventViewersList(
+    eventId: string,
+    params: { page?: number; limit?: number; search?: string } = {}
+  ): Promise<{ data: IEventViewer[]; pagination: IPagination }> {
+    try {
+      let httpParams = new HttpParams()
+        .set('page', String(params.page ?? 1))
+        .set('limit', String(params.limit ?? 20));
+  
+      if (params.search?.trim()) {
+        httpParams = httpParams.set('search', params.search.trim());
+      }
+  
+      const response = await this.get<IEventViewersResponse>(
+        `/events/${eventId}/viewers`,
+        { params: httpParams }
+      );
+  
+      const payload = response?.data;
+  
+      return {
+        data: payload?.data ?? [],
+        pagination: payload?.pagination ?? {
+          totalCount: 0,
+          currentPage: 1,
+          totalPages: 0
+        }
+      };
+    } catch (error) {
+      console.error('Error fetching event viewers:', error);
       throw error;
     }
   }

@@ -4,10 +4,11 @@ import { Input, inject, Component } from '@angular/core';
 
 export interface MenuItem {
   label: string;
-  icon?: string;
+  icon: string;
+  iconType: 'svg' | 'pi' | 'ion';
   action?: string;
   danger?: boolean;
-  iconType?: 'svg' | 'pi' | 'ion'; 
+  iconSize?: string;
 }
 @Component({
   imports: [IonIcon],
