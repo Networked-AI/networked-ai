@@ -24,6 +24,7 @@ export class TextInput implements OnInit {
   // inputs
   label = input('');
   iconName = input('');
+  icon = input('');
   required = input(true);
   placeholder = input('');
   endIconName = input('');
@@ -56,7 +57,17 @@ export class TextInput implements OnInit {
   }
 
   get isControlInvalid(): boolean {
-    return !this.control?.valid && this.control?.touched && this.required() && this.isSubmitted();
+    if (!this.control?.touched || !this.isSubmitted()) return false;
+    // show required error only when field is required
+    if (this.required() && this.control.hasError('required')) return true;
+    // always show max length errors (optional fields included)
+    if (this.control.hasError('maxlength')) return true;
+    return false;
+  }
+
+  maxLengthRequired(): number | null {
+    const err = this.control?.getError('maxlength') as { requiredLength: number } | null;
+    return err?.requiredLength ?? null;
   }
 
   ngOnInit(): void {
