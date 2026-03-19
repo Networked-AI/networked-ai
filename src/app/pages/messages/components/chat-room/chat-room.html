@@ -142,7 +142,7 @@
             [class.opacity-30]="editingIndex() !== null"
             [class.pointer-events-none]="editingIndex() !== null"
           >
-            <div class="w-10 h-10 min-w-10 rounded-full overflow-hidden relative cursor-pointer shrink-0">
+            <div class="w-10 h-10 min-w-10 rounded-full overflow-hidden relative cursor-pointer shrink-0" (click)="goToUserProfile(msg.posted_by_user.username)">
               @if (msg.posted_by_user.thumbnail_url || msg.posted_by_user.image_url) {
                 <img
                   fill
