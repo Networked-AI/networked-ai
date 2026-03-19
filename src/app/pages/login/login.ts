@@ -15,6 +15,7 @@ import { SocialLoginButtons } from '@/components/common/social-login-buttons';
 import { IonContent, IonIcon, ModalController } from '@ionic/angular/standalone';
 import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { signal, inject, Component, viewChild, OnDestroy, Input, AfterViewInit } from '@angular/core';
+import { KEYS, LocalStorageService } from '@/services/localstorage.service';
 
 interface LoginForm {
   email?: FormControl<string | null>;
@@ -43,6 +44,7 @@ export class Login implements OnDestroy, AfterViewInit {
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
   navigationService = inject(NavigationService);
+  localStorageService = inject(LocalStorageService);
 
   // view child
   mobileInput = viewChild(MobileInput);
@@ -134,7 +136,8 @@ export class Login implements OnDestroy, AfterViewInit {
       if (this.isRsvpModal) {
         this.onLoginSuccess(false);
       } else {
-        this.navigationService.navigateForward('/', true);
+        const returnTo = this.route.snapshot.queryParams['returnTo'];
+        this.navigateAfterAuth(returnTo);
       }
       await this.modalService.close();
     } catch (error) {
@@ -192,7 +195,8 @@ export class Login implements OnDestroy, AfterViewInit {
       if (this.isRsvpModal) {
         this.onLoginSuccess(false);
       } else {
-        this.navigationService.navigateForward('/', true);
+        const returnTo = this.route.snapshot.queryParams['returnTo'];
+        this.navigateAfterAuth(returnTo);
       }
     } catch (error) {
       this.isInvalidOtp.set(true);
@@ -237,7 +241,9 @@ export class Login implements OnDestroy, AfterViewInit {
     if (this.isRsvpModal) {
       await this.modalService.openSignupModal();
     } else {
-      this.navigationService.navigateForward('/signup', true);
+      const returnTo = this.route.snapshot.queryParams['returnTo'];
+      const route = returnTo ? `/signup?returnTo=${encodeURIComponent(returnTo)}` : '/signup';
+      this.navigationService.navigateForward(route, true);
     }
   }
 
@@ -275,5 +281,16 @@ export class Login implements OnDestroy, AfterViewInit {
 
   ngOnDestroy() {
     this.queryParamsSubscription?.unsubscribe();
+  }
+
+  navigateAfterAuth(returnTo?: string): void {
+    const isOnboarded = this.localStorageService.getItem(KEYS.ONBOARDED) === 'true';
+    const destination = returnTo || '/';
+
+    if (!isOnboarded) {
+      this.navigationService.navigateForward(`/onboarding?returnTo=${encodeURIComponent(destination)}`, true);
+    } else {
+      this.navigationService.navigateForward(destination, true);
+    }
   }
 }

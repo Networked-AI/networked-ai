@@ -1,5 +1,5 @@
 import { maskEmail } from '@/utils/helper';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Button } from '@/components/form/button';
 import { isPlatformBrowser } from '@angular/common';
 import { AuthService } from '@/services/auth.service';
@@ -34,6 +34,8 @@ export class ForgotPassword implements AfterViewInit {
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
   navigationService = inject(NavigationService);
+  router = inject(Router);
+
   @Input() isRsvpModal: boolean = false;
   @Input() prefillEmail: string | null = null;
   // platform
@@ -72,10 +74,10 @@ export class ForgotPassword implements AfterViewInit {
     // Step 1
     if (this.isRsvpModal) {
       await this.modalService.close();
-      return;
+      return; 
     }
 
-    this.navigationService.back('/login');
+    this.navigationService.back();
   }
   async sendResetPasswordLink() {
     this.isSubmitted.set(true);

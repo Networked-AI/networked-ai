@@ -7,5 +7,38 @@
     <text-input type="text" controlName="linkedin" iconName="pi-linkedin" placeholder="Linkedin" [required]="false" />
     <text-input type="text" controlName="twitter" iconName="pi-twitter" placeholder="Twitter" [required]="false" />
     <text-input type="text" controlName="snapchat" iconName="pi-snapchat" placeholder="Snapchat" [required]="false" />
+
+    <!-- Dynamic custom links -->
+    @for (link of visibleCustomLinks; track link.controlName) {
+      <div class="flex items-start gap-2">
+        <div class="flex-1">
+          <text-input
+            type="text"
+            [controlName]="link.controlName"
+            icon="assets/svg/linkGrayIcon.svg"
+            [placeholder]="link.placeholder"
+            [required]="false"
+          />
+        </div>
+        <app-button
+          (click)="removeCustomLink(link.index)"
+          [iconName]="'pi pi-times'"
+          [variant]="'text'"
+          [height]="'44px'"
+          [color]="'secondary'"
+        />
+      </div>
+    }
+
+    <!-- Add Link button — shown only if fewer than 3 custom links are visible -->
+    @if (visibleCustomLinks.length < maxCustomLinks) {
+      <app-button
+        (click)="addCustomLink()"
+        [label]="'Add Link'"
+        [iconName]="'pi pi-plus'"
+        [variant]="'text'"
+        [disabled]="!canAddNewLink"
+      />
+    }
   </div>
 </div>
