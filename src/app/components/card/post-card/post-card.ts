@@ -9,7 +9,7 @@ import { NavigationService } from '@/services/navigation.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { MenuItem } from '@/components/modal/menu-modal/menu-modal';
 import { DatePipe, NgOptimizedImage, isPlatformBrowser } from '@angular/common';
-import { onImageError, getImageUrlOrDefault } from '@/utils/helper';
+import { onImageError, getImageUrlOrDefault, buildPreviewMediaItems } from '@/utils/helper';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -79,7 +79,7 @@ export class PostCard {
   });
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
-  
+
   // Menu items for current user's posts (Edit/Delete only)
   currentUserMenuItems: MenuItem[] = [
     { label: 'Edit', icon: 'assets/svg/editIconBlack.svg', iconType: 'svg', action: 'edit' },
@@ -379,13 +379,13 @@ export class PostCard {
     const postId = this.post().id;
     if (!postId) return;
 
-    await this.modalService.openShareModal(postId, 'Post',this.sortedMedias()[0]?.media_url);
+    await this.modalService.openShareModal(postId, 'Post', this.sortedMedias()[0]?.media_url);
   }
 
   openFullscreen(index: number) {
-    const media = this.sortedMedias()[index];
-    if (media && media.media_type === 'Image' && media.media_url) {
-      this.modalService.openImagePreviewModal(media.media_url);
+    const mediaItems = buildPreviewMediaItems(this.sortedMedias());
+    if (mediaItems.length > 0) {
+      this.modalService.openImagePreviewModal(mediaItems, Math.min(index, mediaItems.length - 1));
     }
   }
 
@@ -488,7 +488,7 @@ export class PostCard {
     const platform = Capacitor.getPlatform();
 
     const mapAppName = platform === 'ios' ? 'Apple Maps' : platform === 'android' ? 'Google Maps' : 'Your Browser';
- 
+
     const confirmed = await this.modalService.openConfirmModal({
       icon: 'assets/svg/alert-white.svg',
       title: 'Leave App?',
@@ -507,13 +507,13 @@ export class PostCard {
       iconBgColor: this.iconBgColor,
       iconPosition: 'left'
     });
- 
+
     if (!confirmed?.data) return;
 
     const [lat, lng] = mapCenter;
- 
+
     let url = '';
- 
+
     if (platform === 'ios') {
       url = `https://maps.apple.com/?daddr=${lat},${lng}`;
     } else {

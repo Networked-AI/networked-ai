@@ -24,11 +24,11 @@ import { environment } from 'src/environments/environment';
 import { IonIcon, IonicSlides } from '@ionic/angular/standalone';
 import { NavigationService } from '@/services/navigation.service';
 import { SegmentButton } from '@/components/common/segment-button';
-import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { isPlatformBrowser, NgOptimizedImage } from '@angular/common';
 import { AvatarGroupComponent } from '@/components/common/avatar-group';
 import { HostEventPromoCard } from '@/components/card/host-event-promo-card';
 import { VideoJsPlayerComponent } from '@/components/common/video-js-player';
+import { buildPreviewMediaItems, getImageUrlOrDefault, onImageError } from '@/utils/helper';
 
 @Component({
   selector: 'event-display',
@@ -258,11 +258,9 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
 
   openFullscreen(index: number) {
     if (!this.showHostPromo()) return;
-    const medias = this.displayMediasForDisplay() || [];
-    const media = medias[index];
-
-    if (media && media.type === 'Image' && media.url) {
-      this.modalService.openImagePreviewModal(this.getImageUrl(media.url));
+    const mediaItems = buildPreviewMediaItems(this.displayMediasForDisplay() || [], (url) => this.getImageUrl(url));
+    if (mediaItems.length > 0) {
+      this.modalService.openImagePreviewModal(mediaItems, Math.min(index, mediaItems.length - 1));
     }
   }
 }

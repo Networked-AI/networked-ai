@@ -1,3 +1,5 @@
+import { PreviewMediaItem } from '@/components/modal/image-preview-modal/image-preview-modal';
+
 export function maskPhoneNumber(phoneNumber: string): string {
   // mask phone number, showing only first 4 and last 2 digits
   if (phoneNumber.length <= 6) {
@@ -111,4 +113,20 @@ export function extractUsernameFromQR(decodedText: string): string | null {
     }
   }
   return value || null;
+}
+
+export function buildPreviewMediaItems(
+  medias: Array<{ type?: string; media_type?: string; url?: string; media_url?: string }>,
+  getImageUrl?: (url: string) => string
+): PreviewMediaItem[] {
+  return medias
+    .map((m) => ({
+      resolvedType: (m.type || m.media_type) as string,
+      resolvedUrl: (m.url || m.media_url) as string
+    }))
+    .filter(({ resolvedType, resolvedUrl }) => (resolvedType === 'Image' || resolvedType === 'Video') && !!resolvedUrl)
+    .map(({ resolvedType, resolvedUrl }) => ({
+      type: (resolvedType === 'Video' ? 'Video' : 'Image') as PreviewMediaItem['type'],
+      url: resolvedType === 'Video' ? resolvedUrl : getImageUrl ? getImageUrl(resolvedUrl) : resolvedUrl
+    }));
 }

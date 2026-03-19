@@ -69,7 +69,7 @@
                   }
 
                   @if (media.media_type === 'Video') {
-                    <div class="h-full! w-full!">
+                    <div class="h-full! w-full! cursor-pointer" (click)="$event.stopPropagation(); hapticService.onClick()">
                       <video-js-player [src]="getImageUrl(media.media_url)" />
                     </div>
                   }
@@ -123,7 +123,10 @@
       }
 
       @if (post().address) {
-        <div class="flex items-center gap-1.5 body-12 neutral-03 mt-2" (click)="$event.stopPropagation(); openMapFromLatLng([post()!.latitude!, post()!.longitude!])">
+        <div
+          class="flex items-center gap-1.5 body-12 neutral-03 mt-2"
+          (click)="$event.stopPropagation(); openMapFromLatLng([post()!.latitude!, post()!.longitude!])"
+        >
           <i class="pi pi-map-marker text-[14px]!"></i>
           <span>{{ post().address }}</span>
         </div>

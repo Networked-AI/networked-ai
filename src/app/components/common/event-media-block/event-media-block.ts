@@ -2,7 +2,7 @@ import { Pagination } from 'swiper/modules';
 import { NgOptimizedImage } from '@angular/common';
 import { IonicSlides } from '@ionic/angular/standalone';
 import { ModalService } from '@/services/modal.service';
-import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
+import { buildPreviewMediaItems, getImageUrlOrDefault, onImageError } from '@/utils/helper';
 import { Component, input, ChangeDetectionStrategy, CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA, inject } from '@angular/core';
 
 export type EventMediaBlockMode = 'primary' | 'swiper';
@@ -49,17 +49,12 @@ export class EventMediaBlockComponent {
   openFullscreen(index: number) {
     if (this.mode() === 'primary') {
       const url = this.imageUrl() || this.thumbnailUrl();
-      if (url) {
-        this.modalService.openImagePreviewModal(this.getImageUrl(url));
-      }
+      if (url) this.modalService.openImagePreviewModal(this.getImageUrl(url));
       return;
     }
-
-    const medias = this.displayMedias() || [];
-    const media = medias[index];
-
-    if (media && media.type === 'Image' && media.url) {
-      this.modalService.openImagePreviewModal(this.getImageUrl(media.url));
+    const mediaItems = buildPreviewMediaItems(this.displayMedias() || [], (url) => this.getImageUrl(url));
+    if (mediaItems.length > 0) {
+      this.modalService.openImagePreviewModal(mediaItems, Math.min(index, mediaItems.length - 1));
     }
   }
 }

@@ -1,16 +1,27 @@
 <div class="profile-image-preview-container" (click)="close()">
   <div class="image-container">
-    <div class="profile-image-wrapper">
-      <img
-        placeholder
-        [ngSrc]="getImageUrl(getImage(user()))"
-        [alt]="user()?.username || 'Profile image'"
-        (error)="onImageError($event)"
-        class="profile-image"
-        [loaderParams]="{ thumbnail: user()?.thumbnail_url }"
-        fill
-      />
-    </div>
+    <swiper-container
+      zoom="true"
+      zoom-max-ratio="2"
+      slides-per-view="1"
+      [modules]="swiperModules"
+      class="profile-image-swiper"
+      (click)="$event.stopPropagation()"
+    >
+      <swiper-slide>
+        <div class="swiper-zoom-container">
+          <img
+            placeholder
+            [ngSrc]="getImageUrl(getImage(user()))"
+            [alt]="user()?.username || 'Profile image'"
+            (error)="onImageError($event)"
+            class="profile-image"
+            [loaderParams]="{ thumbnail: user()?.thumbnail_url }"
+            fill
+          />
+        </div>
+      </swiper-slide>
+    </swiper-container>
   </div>
 
   <!-- Action Buttons -->
@@ -39,19 +50,19 @@
     } @else if (isViewingOtherProfile() && isOtherUserConnected()) {
       <!-- Other user, connected: My Network, Copy Link, Share, Business Card -->
       <button type="button" class="action-button" (click)="onMyNetwork()">
-        <ion-icon name="people-outline" class="action-icon"></ion-icon>
+        <ion-icon src="assets/svg/user-check.svg" class="action-icon"></ion-icon>
         <span class="action-label">My Network</span>
       </button>
       <button type="button" class="action-button" (click)="onCopyLink()">
-        <ion-icon name="link-outline" class="action-icon"></ion-icon>
+        <ion-icon src="assets/svg/linkWhiteIcon.svg" class="action-icon"></ion-icon>
         <span class="action-label">Copy Link</span>
       </button>
       <button type="button" class="action-button" (click)="onShare()">
-        <ion-icon name="share-outline" class="action-icon"></ion-icon>
+        <ion-icon name="arrow-redo-outline" class="action-icon"></ion-icon>
         <span class="action-label">Share</span>
       </button>
       <button type="button" class="action-button" (click)="onBusinessCard()">
-        <ion-icon name="qr-code-outline" class="action-icon"></ion-icon>
+        <ion-icon src="assets/svg/business-card-qr.svg" class="action-icon"></ion-icon>
         <span class="action-label">
           <span>Business</span>
           <span>Card</span>
@@ -60,15 +71,15 @@
     } @else {
       <!-- Own profile: Copy Link, Share, Business Card -->
       <button type="button" class="action-button" (click)="onCopyLink()">
-        <ion-icon name="link-outline" class="action-icon"></ion-icon>
+        <ion-icon src="assets/svg/linkWhiteIcon.svg" class="action-icon"></ion-icon>
         <span class="action-label">Copy Link</span>
       </button>
       <button type="button" class="action-button" (click)="onShare()">
-        <ion-icon name="share-outline" class="action-icon"></ion-icon>
+        <ion-icon name="arrow-redo-outline" class="action-icon"></ion-icon>
         <span class="action-label">Share</span>
       </button>
       <button type="button" class="action-button" (click)="onBusinessCard()">
-        <ion-icon name="qr-code-outline" class="action-icon"></ion-icon>
+        <ion-icon src="assets/svg/business-card-qr.svg" class="action-icon"></ion-icon>
         <span class="action-label">
           <span>Business</span>
           <span>Card</span>

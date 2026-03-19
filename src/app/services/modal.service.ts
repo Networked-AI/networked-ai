@@ -54,7 +54,7 @@ import { RsvpDetailsData, RsvpDetailsModal } from '@/components/modal/rsvp-detai
 import { ProfileImageConfirmModal } from '@/components/modal/profile-image-confirm-modal';
 import { QuestionnairePreviewModal } from '@/components/modal/questionnaire-preview-modal';
 import { StripePaymentComponent } from '@/components/common/stripe-payment/stripe-payment';
-import { ImagePreviewModal } from '@/components/modal/image-preview-modal/image-preview-modal';
+import { ImagePreviewModal, PreviewMediaItem } from '@/components/modal/image-preview-modal/image-preview-modal';
 import { ChatRoom } from '@/interfaces/IChat';
 import { AddToCalendarModal } from '@/components/modal/add-to-calendar-modal';
 import { UserSubscriptionPlans } from '@/pages/subscription-plans/user-subscription-plans';
@@ -735,11 +735,19 @@ export class ModalService {
     return data;
   }
 
-  async openImagePreviewModal(url: string): Promise<any | null> {
+  async openImagePreviewModal(mediaOrUrl: string | string[] | PreviewMediaItem[], initialIndex = 0): Promise<any | null> {
+    let mediaItems: PreviewMediaItem[];
+    if (typeof mediaOrUrl === 'string') {
+      mediaItems = [{ type: 'Image', url: mediaOrUrl }];
+    } else {
+      mediaItems = mediaOrUrl as PreviewMediaItem[];
+    }
+
     const modal = await this.modalCtrl.create({
       mode: 'ios',
       component: ImagePreviewModal,
-      componentProps: { url }
+      cssClass: 'image-preview-fullscreen-modal',
+      componentProps: { mediaItems, initialIndex }
     });
     await modal.present();
   }
