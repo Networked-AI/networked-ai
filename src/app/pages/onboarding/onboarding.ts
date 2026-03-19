@@ -61,14 +61,10 @@ export class Onboarding {
 
     // navigate to login page
     const returnTo = this.route.snapshot.queryParams['returnTo'];
-    if (this.authService.currentUser()) {
       if (returnTo) {
         this.navigationService.navigateForward(returnTo, true);
       } else {
         this.navCtrl.navigateForward('/');
       }
-    } else {
-      this.navCtrl.navigateForward('/login');
-    }
   }
 }

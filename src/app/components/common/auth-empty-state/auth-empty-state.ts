@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, input, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { Button } from '@/components/form/button';
-import { NavController } from '@ionic/angular/standalone';
+import { NavigationService } from '@/services/navigation.service';
+import { Component, ChangeDetectionStrategy, input, inject } from '@angular/core';
 
 export type AuthEmptyStateType = 'network' | 'messages' | 'profile';
 
@@ -13,8 +14,8 @@ export type AuthEmptyStateType = 'network' | 'messages' | 'profile';
 })
 export class AuthEmptyState {
   type = input.required<AuthEmptyStateType>();
-
-  private navCtrl = inject(NavController);
+  private router = inject(Router);
+  private navigationService = inject(NavigationService);
 
   get imagePath(): string {
     switch (this.type()) {
@@ -56,6 +57,6 @@ export class AuthEmptyState {
   }
 
   onSignInClick(): void {
-    this.navCtrl.navigateForward('/login');
+    this.navigationService.navigateForward(`/login?returnTo=${encodeURIComponent(this.router.url)}`);
   }
 }

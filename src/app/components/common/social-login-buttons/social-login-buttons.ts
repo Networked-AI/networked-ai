@@ -1,6 +1,7 @@
-import { inject, Component, input } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { AuthService } from '@/services/auth.service';
 import { ModalService } from '@/services/modal.service';
+import { inject, Component, input } from '@angular/core';
 import { ToasterService } from '@/services/toaster.service';
 import { BaseApiService } from '@/services/base-api.service';
 import { NavigationService } from '@/services/navigation.service';
@@ -11,11 +12,11 @@ import { NavigationService } from '@/services/navigation.service';
   templateUrl: './social-login-buttons.html'
 })
 export class SocialLoginButtons {
-
   isRsvpModal = input<boolean>(false);
   onLoginSuccess = input<(isNewUser?: boolean) => void>(() => {});
 
   // services
+  route = inject(ActivatedRoute);
   authService = inject(AuthService);
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
@@ -27,7 +28,9 @@ export class SocialLoginButtons {
       return;
     }
     if (isNewUser) {
-      this.navigationService.navigateForward('/profile/setup', true);
+      const returnTo = this.route.snapshot.queryParams['returnTo'];
+      const destination = returnTo || '/';
+      this.navigationService.navigateForward(`/profile/setup?returnTo=${encodeURIComponent(destination)}`, true);
       return;
     }
     this.navigationService.navigateForward('/', true);

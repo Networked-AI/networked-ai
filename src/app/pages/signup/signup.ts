@@ -15,6 +15,7 @@ import { IonContent, IonIcon, ModalController } from '@ionic/angular/standalone'
 import { SocialLoginButtons } from '@/components/common/social-login-buttons';
 import { FormGroup, FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { signal, inject, Component, viewChild, OnInit, OnDestroy, Input } from '@angular/core';
+import { LocalStorageService } from '@/services/localstorage.service';
 
 interface SignupForm {
   email?: FormControl<string | null>;
@@ -42,7 +43,7 @@ export class Signup implements OnInit, OnDestroy {
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
   navigationService = inject(NavigationService);
-
+  localStorageService = inject(LocalStorageService);
   // view child
   mobileInput = viewChild(MobileInput);
   emailInput = viewChild(EmailInput);
@@ -202,7 +203,8 @@ export class Signup implements OnInit, OnDestroy {
       } else {
         await this.modalService.close();
         await this.modalService.openPhoneEmailVerifiedModal(this.activeTab());
-        this.navigationService.navigateForward('/profile/setup', true);
+        const returnTo = this.route.snapshot.queryParams['returnTo'];
+        this.navigationService.navigateForward(`/profile/setup?returnTo=${encodeURIComponent(returnTo)}`, true);
       }
     } catch (error) {
       const message = BaseApiService.getErrorMessage(error, 'Invalid OTP or failed to create account.');
@@ -247,7 +249,7 @@ export class Signup implements OnInit, OnDestroy {
       this.modalCtrl.dismiss();
       this.modalService.openLoginModal();
     } else {
-      this.navigationService.navigateForward('/login');
+      this.navigationService.navigateForward(`/login?returnTo=${encodeURIComponent(this.router.url)}`);
     }
   }
 
