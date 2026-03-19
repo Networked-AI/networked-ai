@@ -84,7 +84,7 @@ const handleApiError = async (
 
         if (result && result.role === 'confirm') {
           await authService.signOut();
-          navigationService.navigateForward('/login');
+          navigationService.navigateForward(`/login?returnTo=${encodeURIComponent(router.url)}`);
         }
       } catch (err) {
         console.error('Error handling invalid token:', err);

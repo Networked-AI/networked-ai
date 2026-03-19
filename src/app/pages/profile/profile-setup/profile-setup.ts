@@ -117,6 +117,7 @@ export class ProfileSetup implements OnInit, OnDestroy, AfterViewInit {
           this.toasterService.showError('Please complete step 1 first.');
           return;
         }
+        if (!this.profileFormService.validateSocialsMaxLength()) return;
 
         this.navigateToStep(PROFILE_STEPS.PROFILE_IMAGE);
       }

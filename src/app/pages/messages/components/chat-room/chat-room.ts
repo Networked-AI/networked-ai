@@ -801,4 +801,10 @@ export class ChatRoom implements OnInit, OnDestroy {
     this.hapticService.onClick();
     this.sendMessage();
   }
+
+  goToUserProfile(username:string): void {
+    if (username) {
+      this.navigationService.navigateForward(`/${username}`);
+    }
+  }
 }

@@ -19,6 +19,10 @@
     } @else {
       <p-inputIcon [class]="'pi ' + iconName()" />
     }
+  } @else if (icon()) {
+    <p-inputicon>
+      <ion-icon [src]="icon()" class="text-lg" />
+    </p-inputicon>
   }
 
   <input
@@ -39,5 +43,9 @@
 
 <!-- validation -->
 @if (isControlInvalid) {
-  <div class="accent-red pt-2 body-12M">Please enter the {{ label() ? label().toLowerCase() : 'value' }}.</div>
+  @if (control.hasError('maxlength') && maxLengthRequired()) {
+    <div class="accent-red pt-2 body-12M">Maximum {{ maxLengthRequired() }} characters allowed.</div>
+  } @else {
+    <div class="accent-red pt-2 body-12M">Please enter the {{ label() ? label().toLowerCase() : 'value' }}.</div>
+  }
 }

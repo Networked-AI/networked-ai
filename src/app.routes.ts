@@ -12,7 +12,6 @@ export const appRoutes: Routes = [
   {
     path: '',
     component: TabLayout,
-    canActivate: [onboardingGuard],
     children: [
       { path: '', component: Home },
       { path: 'profile', component: Profile },
@@ -27,12 +26,10 @@ export const appRoutes: Routes = [
   // authentication routes (lazy loaded)
   {
     path: 'login',
-    canActivate: [onboardingGuard],
     loadComponent: () => import('@/pages/login').then((m) => m.Login)
   },
   {
     path: 'signup',
-    canActivate: [onboardingGuard],
     loadComponent: () => import('@/pages/signup/signup').then((m) => m.Signup)
   },
   {

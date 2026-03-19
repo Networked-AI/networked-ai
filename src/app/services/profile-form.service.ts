@@ -123,6 +123,8 @@ export class ProfileFormService {
     try {
       this.isLoading.set(true);
 
+      if (!this.validateSocialsMaxLength()) return false;
+
       // validate personal info fields
       if (!(await this.validate(userPersonalInfo))) {
         this.toasterService.showError('Please fill all required fields.');
@@ -144,5 +146,19 @@ export class ProfileFormService {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  // reusable helper to validate socials max length
+  validateSocialsMaxLength(): boolean {
+    const socials = this.profileForm().get('socials') as FormGroup | null;
+    if (!socials) return true;
+
+    const hasMax = Object.values(socials.controls).some((c) => c.hasError('maxlength'));
+    if (hasMax) {
+      socials.markAllAsTouched();
+      this.toasterService.showError('One or more social links exceed the maximum length.');
+      return false;
+    }
+    return true;
   }
 }
