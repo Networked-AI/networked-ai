@@ -195,6 +195,7 @@ export interface EventDisplayData {
   rsvpButtonLabel: string;
   isCurrentUserHost: boolean;
   isCurrentUserCoHost: boolean;
+  isCurrentUserStaff: boolean;
   isCurrentUserAttendee?: boolean;
   isRsvpApprovalRequired?: boolean;
   hasCurrentUserRsvpRequest?: boolean;

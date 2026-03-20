@@ -739,17 +739,16 @@ export class EventService extends BaseApiService {
 
     const rsvpButtonLabel = admission === 'Free' ? 'RSVP Now for Free' : `RSVP Now from ${admission}`;
 
-    const isCurrentUserHost = participants.some((p: any) => {
+    const currentParticipant = participants.find((p: any) => {
       const userId = p.user_id || p.user?.id;
-      const role = (p.role || '').toLowerCase();
-      return userId === currentUser?.id && role === 'host';
+      return userId === currentUser?.id;
     });
 
-    const isCurrentUserCoHost = participants.some((p: any) => {
-      const userId = p.user_id || p.user?.id;
-      const role = (p.role || '').toLowerCase();
-      return userId === currentUser?.id && role === 'cohost';
-    });
+    const role = (currentParticipant?.role || '').toLowerCase();
+
+    const isCurrentUserHost = role === 'host';
+    const isCurrentUserCoHost = role === 'cohost';
+    const isCurrentUserStaff = role === 'staff';
 
     const isRepeatingEvent = options?.isRepeatingEvent ?? parentEvent?.settings?.is_repeating_event === true;
     const dateItems = options?.dateItems ?? (isRepeatingEvent ? this.createDateItems(parentEvent || eventData) : []);
@@ -784,6 +783,7 @@ export class EventService extends BaseApiService {
       rsvpButtonLabel,
       isCurrentUserHost,
       isCurrentUserCoHost,
+      isCurrentUserStaff,
       isRsvpApprovalRequired,
       tickets: eventData?.tickets || [],
       questionnaire: eventData?.questionnaire || eventData?.questions || [],

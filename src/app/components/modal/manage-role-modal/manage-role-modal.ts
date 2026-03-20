@@ -89,7 +89,7 @@ export class ManageRoleModal implements OnInit {
       this.fb.group({
         users: this.fb.array(
           eventData.participants
-            .filter((user: any) => user.role !== 'Host')
+            .filter((user: any) => user.role !== 'Host' && user?.user)
             .map((user: any) =>
               this.fb.group({
                 id: [user?.user_id],

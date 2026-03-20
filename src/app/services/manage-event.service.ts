@@ -34,17 +34,17 @@ export class ManageEventService extends BaseApiService {
     const isCompleted = this.isEventCompleted();
     const displayData = this.currentEventData();
 
-    const isHost = displayData.participants.some((p: any) => {
-      const userId = p.user?.id;
-      const role = (p.role || '').toLowerCase();
-      return userId === this.authService.currentUser()?.id && role === 'host';
+    const currentParticipant = displayData.participants.find((p: any) => {
+      const userId = p.user_id || p.user?.id;
+      return userId === this.authService.currentUser()?.id;
     });
 
-    const isCoHost = displayData.participants.some((p: any) => {
-      const userId = p.user?.id;
-      const role = (p.role || '').toLowerCase();
-      return userId === this.authService.currentUser()?.id && role === 'cohost';
-    });
+    const role = (currentParticipant?.role || '').toLowerCase();
+
+    const isHost = role === 'host';
+    const isCoHost = role === 'cohost';
+    const isStaff = role === 'staff';
+
     const hasQuestionnaire = displayData.questionnaire && displayData.questionnaire.length > 0;
 
     let baseItems: MenuItem[] = [
@@ -71,12 +71,6 @@ export class ManageEventService extends BaseApiService {
       baseItems = baseItems.filter((item) => item['action'] !== 'viewQuestionnaireResponses');
     }
 
-    if (isCoHost && !isHost && !this.authService.currentUser()?.is_admin) {
-      const allowedActions = ['viewEventAnalytics', 'viewGuestList', 'viewEventPageQr', 'shareEvent', 'duplicateEvent', 'viewEventViewers'];
-
-      return baseItems.filter((item) => allowedActions.includes(item['action'] || ''));
-    }
-
     if (isCompleted) {
       baseItems = baseItems.filter((item) => !['editEvent', 'manageRoles'].includes(item['action'] || ''));
     }
@@ -97,7 +91,7 @@ export class ManageEventService extends BaseApiService {
     }
 
     // Ticket Scanner
-    if (isHost && this.isNativePlatform() && !isCompleted) {
+    if (this.isNativePlatform() && !isCompleted) {
       const scannerItem: MenuItem = {
         label: 'Ticket Scanner',
         icon: 'assets/svg/scanner.svg',
@@ -111,6 +105,17 @@ export class ManageEventService extends BaseApiService {
       }
     }
 
+    if (isCoHost && !isHost && !this.authService.currentUser()?.is_admin) {
+      const allowedActions = ['viewEventAnalytics', 'viewGuestList', 'viewEventPageQr', 'shareEvent', 'duplicateEvent', 'viewEventViewers'];
+
+      return baseItems.filter((item) => allowedActions.includes(item['action'] || ''));
+    }
+
+    if (isStaff && !isHost && !this.authService.currentUser()?.is_admin) {
+      const allowedActions = ['viewEventPageQr', 'shareEvent', 'scanQRCode'];
+
+      return baseItems.filter((item) => allowedActions.includes(item['action'] || ''));
+    }
     return baseItems;
   });
 

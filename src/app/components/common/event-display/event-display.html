@@ -74,10 +74,11 @@
       <!-- Action Buttons -->
       @if (showActionButtons()) {
         <div class="flex gap-3">
-          @if (eventData().isCurrentUserHost || eventData().isCurrentUserAttendee || eventData().isCurrentUserCoHost) {
+          @if (canViewAttendeesAndChat()) {
             <app-button label="Event Chat" icon="assets/svg/messageChatIcon.svg" (click)="onEventChatClick()?.()" class="flex-1" color="secondary" />
           }
-          @if (eventData().isCurrentUserHost || eventData().isCurrentUserCoHost || this.currentUser()?.is_admin) {
+
+          @if (canManageEvent()) {
             <app-button label="Manage" icon="assets/svg/manage-event/settings.svg" (click)="onManageEventClick()?.()" class="flex-1" />
           }
         </div>
@@ -132,7 +133,7 @@
 
         <avatar-group
           [users]="section.users || []"
-          [disabled]="(section.title == 'Going' || section.title == 'Maybe') && !this.canViewAttendees()"
+          [disabled]="(section.title == 'Going' || section.title == 'Maybe') && !this.canViewAttendeesAndChat()"
           [totalCount]="section.totalCount ?? null"
         />
       </div>
