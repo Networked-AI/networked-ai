@@ -120,10 +120,10 @@ export class CreateEvent implements OnInit, OnDestroy {
   isUploadingMedia = signal(false);
   selectedDate = signal<string>('');
   previewFormChangeTrigger = signal(0);
+  staffParticipants = signal<any[]>([]);
   steps = signal<number[]>([1, 2, 3, 4]);
   editingEventId = signal<string | null>(null);
   currentStep = signal<number>(EVENT_STEPS.EVENT_DETAILS);
-
   step1Fields = ['title', 'date', 'address', 'category_id', 'description', 'vibes', 'start_time', 'end_time', 'until_finished'];
   step2Fields = ['tickets', 'promo_codes', 'is_subscription', 'subscription_plan', 'host_pays_platform_fee', 'additional_fees'];
   iconBgColor = 'linear-gradient(138.06deg, #F5BC61 8.51%, #C89034 48.28%, #9E660A 85.69%)';
@@ -508,6 +508,13 @@ export class CreateEvent implements OnInit, OnDestroy {
       if (eventData) {
         const formData = this.eventService.transformEventDataToForm(eventData);
         this.eventForm().patchValue(formData);
+  
+        const staff = (eventData.participants || []).filter((p: any) => {
+          const role = (p.role || '').toLowerCase();
+          return role === 'staff';
+        });
+  
+        this.staffParticipants.set(staff);
       }
     } catch (error) {
       const errorMessage = BaseApiService.getErrorMessage(error, 'Failed to load event data.');
@@ -517,7 +524,6 @@ export class CreateEvent implements OnInit, OnDestroy {
       await loading.dismiss();
     }
   }
-
   getFieldValue<T>(field: string): T | null {
     return this.eventForm().get(field)?.value ?? null;
   }
@@ -853,8 +859,21 @@ export class CreateEvent implements OnInit, OnDestroy {
     if (result.dismissed) return;
 
     const eventPayload = await this.processEventData(formData);
-
-    // Add notify flag if user chose to notify
+  
+    const staff = this.staffParticipants();
+  
+    if (staff?.length) {
+      eventPayload.participants = [
+        ...(eventPayload.participants || []),
+  
+        ...staff.map((p: any) => ({
+          id: p.id,
+          user_id: p.user_id || p.user?.id,
+          role: p.role || 'Staff'
+        }))
+      ];
+    }
+  
     if (result.notify) eventPayload.notify = true;
 
     const response: any = await this.eventService.updateEvent(this.editingEventId()!, eventPayload);

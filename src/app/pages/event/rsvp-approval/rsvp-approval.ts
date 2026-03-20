@@ -120,7 +120,7 @@ export class RsvpApproval implements OnInit {
       }
 
       // Check if user is host or cohost
-      if (!this.eventService.checkHostOrCoHostAccess(eventData)) {
+      if (!this.eventService.checkEventAccess(eventData)) {
         this.toasterService.showError('You do not have permission to view this page');
         this.navigationService.navigateForward(`/event/${this.eventId()}`);
         return;

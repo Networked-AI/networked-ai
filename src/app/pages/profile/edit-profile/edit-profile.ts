@@ -35,7 +35,7 @@ export class EditProfile implements AfterViewInit {
   private userService = inject(UserService);
   private authService = inject(AuthService);
   private profileFormService = inject(ProfileFormService);
-
+  userAdditionalInfo = viewChild(UserAdditionalInfo);  
   // signals
   tab = signal<Tab>('profile');
   currentUser = this.authService.currentUser;
@@ -77,6 +77,7 @@ export class EditProfile implements AfterViewInit {
       await this.profileFormService.initializeForm();
       const user = await this.userService.getCurrentUser();
       this.profileFormService.initializeFields(this.userPersonalInfo(), user);
+      this.userAdditionalInfo()?.socialInput()?.syncVisibleLinksFromValues()
     } catch (error) {}
   }
 
@@ -88,7 +89,10 @@ export class EditProfile implements AfterViewInit {
 
   async save(): Promise<void> {
     this.profileFormService.isSubmitted.set(true);
-    const success = await this.profileFormService.save(this.userPersonalInfo());
+    const success = await this.profileFormService.save(
+      this.userPersonalInfo(),
+      this.userAdditionalInfo()?.socialInput()
+    );
     if (success) this.navCtrl.back();
   }
 

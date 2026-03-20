@@ -34,16 +34,27 @@ export class UpcomingEventCard {
     return getImageUrlOrDefault(imageUrl);
   });
 
-  isHostOrCoHost = computed(() => {
-    const currentEvent = this.event();
-    const isHostOrCoHost = this.eventService.checkHostOrCoHostAccess(currentEvent);
-    return isHostOrCoHost;
-  });
+  currentParticipantRole = computed(() => {
+    const event = this.event();
+    const currentUser = this.currentUser();
 
-  isSponsorOrSpeaker = computed(() => {
-    const currentEvent = this.event();
-    const isSponsorOrSpeaker = this.eventService.checkSpeakerOrSponsorAccess(currentEvent);
-    return isSponsorOrSpeaker;
+    const participant = event?.participants?.find((p: any) => {
+      const userId = p.user_id || p.user?.id;
+      return userId === currentUser?.id;
+    });
+
+    return (participant?.role || '').toLowerCase();
+  });
+  roles = computed(() => {
+    const role = this.currentParticipantRole();
+
+    return {
+      isHost: role === 'host',
+      isCoHost: role === 'cohost',
+      isStaff: role === 'staff',
+      isSpeaker: role === 'speaker',
+      isSponsor: role === 'sponsor'
+    };
   });
 
   isAttendee = computed(() => {
@@ -53,10 +64,12 @@ export class UpcomingEventCard {
   });
 
   allowToview = computed(() => {
+    const r = this.roles();
     const currentEvent = this.event();
-    return this.isHostOrCoHost() || this.isAttendee() || this.isSponsorOrSpeaker() || currentEvent.is_public || this.currentUser()?.is_admin;
+    return (
+      r.isHost || r.isCoHost || r.isSpeaker || r.isSponsor || r.isStaff || this.isAttendee() || this.currentUser()?.is_admin || currentEvent.is_public
+    );
   });
-
   formattedLocation = computed(() => {
     const event = this.event();
     return this.eventService.formatLocation(event.city, event.state);
