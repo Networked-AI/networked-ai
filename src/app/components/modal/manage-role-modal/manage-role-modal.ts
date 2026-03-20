@@ -1,4 +1,5 @@
 import { IUser } from '@/interfaces/IUser';
+import { Subject, Subscription } from 'rxjs';
 import { SelectModule } from 'primeng/select';
 import { ButtonModule } from 'primeng/button';
 import { NgOptimizedImage } from '@angular/common';
@@ -10,9 +11,11 @@ import { Searchbar } from '@/components/common/searchbar';
 import { ToasterService } from '@/services/toaster.service';
 import { PopoverService } from '@/services/popover.service';
 import { getImageUrlOrDefault, onImageError } from '@/utils/helper';
-import { IonHeader, IonToolbar, IonContent, IonFooter } from '@ionic/angular/standalone';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { FormGroup, FormArray, FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { Input, inject, signal, OnInit, Component, ChangeDetectionStrategy, computed } from '@angular/core';
+import { IonHeader, IonToolbar, IonContent, IonFooter } from '@ionic/angular/standalone';
+import { Input, inject, signal, OnInit, OnDestroy, Component, ChangeDetectionStrategy, computed } from '@angular/core';
+
 @Component({
   selector: 'manage-role-modal',
   styleUrl: './manage-role-modal.scss',
@@ -20,7 +23,7 @@ import { Input, inject, signal, OnInit, Component, ChangeDetectionStrategy, comp
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [IonFooter, IonContent, IonHeader, IonToolbar, SelectModule, ReactiveFormsModule, Searchbar, ButtonModule, NgOptimizedImage, Button]
 })
-export class ManageRoleModal implements OnInit {
+export class ManageRoleModal implements OnInit, OnDestroy {
   // services
   private fb = inject(FormBuilder);
   private modalService = inject(ModalService);
@@ -28,6 +31,7 @@ export class ManageRoleModal implements OnInit {
   private userService = inject(UserService);
   private toasterService = inject(ToasterService);
   popoverService = inject(PopoverService);
+
   searchQuery = signal<string>('');
   isAddMode = signal<boolean>(false);
   selectedRole = signal<string>('');
@@ -37,10 +41,12 @@ export class ManageRoleModal implements OnInit {
   isSearching = signal<boolean>(false);
   selectedMembers = signal<IUser[]>([]);
 
-  // inputs
+  // debounce subject
+  private searchSubject = new Subject<string>();
+  private searchSubscription = new Subscription();
+
   @Input() eventId: string = '';
 
-  // signals
   form = signal<FormGroup>(
     this.fb.group({
       users: this.fb.array([])
@@ -82,7 +88,9 @@ export class ManageRoleModal implements OnInit {
     return this.isAddMode() ? `Add ${this.selectedRole()}` : 'Manage Roles';
   });
 
-  async ngOnInit() {
+  async ngOnInit(): Promise<void> {
+    this.initSearchDebounce();
+
     this.isLoadingRoles.set(true);
     const eventData = await this.eventService.getEventById(this.eventId);
     this.form.set(
@@ -103,6 +111,31 @@ export class ManageRoleModal implements OnInit {
       })
     );
     this.isLoadingRoles.set(false);
+  }
+
+  private initSearchDebounce(): void {
+    const sub = this.searchSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap(async (term) => {
+          if (!term.trim()) {
+            return [];
+          }
+          try {
+            const results = await this.userService.searchUsers(term.trim());
+            return results.users as IUser[];
+          } catch {
+            return [] as IUser[];
+          }
+        })
+      )
+      .subscribe((users) => {
+        this.filteredUsers.set(users);
+        this.isSearching.set(false);
+      });
+
+    this.searchSubscription.add(sub);
   }
 
   get usersFormArray(): FormArray {
@@ -141,28 +174,10 @@ export class ManageRoleModal implements OnInit {
     }
 
     this.isSearching.set(true);
-
-    setTimeout(async () => {
-      try {
-        const searchTerm = value.trim();
-        if (!searchTerm) {
-          this.filteredUsers.set([]);
-          this.isSearching.set(false);
-          return;
-        }
-
-        const searchResults = await this.userService.searchUsers(searchTerm);
-        this.filteredUsers.set(searchResults.users);
-        this.isSearching.set(false);
-      } catch (error) {
-        console.error('Error searching users:', error);
-        this.filteredUsers.set([]);
-        this.isSearching.set(false);
-      }
-    }, 300);
+    this.searchSubject.next(value);
   }
 
-  close() {
+  close(): void {
     this.modalService.close();
   }
 
@@ -210,10 +225,6 @@ export class ManageRoleModal implements OnInit {
     return '/assets/svg/gamification/diamond-1k.svg';
   }
 
-  removeMember(user: IUser): void {
-    this.selectedMembers.update((list) => list.filter((u) => u.id !== user.id));
-  }
-
   isSelected(id: string): boolean {
     return this.selectedMembers().some((u) => u.id === id);
   }
@@ -254,5 +265,9 @@ export class ManageRoleModal implements OnInit {
 
   closePopover(): void {
     this.popoverService.close();
+  }
+
+  ngOnDestroy(): void {
+    this.searchSubscription.unsubscribe();
   }
 }
