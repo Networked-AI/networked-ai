@@ -38,7 +38,7 @@ import {
     SegmentButton
   ]
 })
-export class SubscriptionPlans implements OnInit {
+export class SubscriptionPlans {
   // services
   navigationService = inject(NavigationService);
   subscriptionService = inject(SubscriptionService);
@@ -109,7 +109,7 @@ export class SubscriptionPlans implements OnInit {
     }));
   }
 
-  async ngOnInit(): Promise<void> {
+  async ionViewWillEnter(): Promise<void> {
     await this.loadPlans();
   }
 

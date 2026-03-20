@@ -36,18 +36,55 @@ export class EventCard {
   hasPlans = computed(() => this.currentEvent()?.has_plans || false);
   isLoggedIn = computed(() => !!this.authService.currentUser());
   currentUser = computed(() => this.authService.currentUser());
-  isHostOrCoHost = computed(() => {
-    const currentEvent = this.currentEvent();
-    const isHostOrCoHost = this.eventService.checkHostOrCoHostAccess(currentEvent);
-    return isHostOrCoHost;
+
+  currentParticipantRole = computed(() => {
+    const event = this.currentEvent();
+    const currentUser = this.currentUser();
+  
+    const participant = event?.participants?.find((p: any) => {
+      const userId = p.user_id || p.user?.id;
+      return userId === currentUser?.id;
+    });
+  
+    return (participant?.role || '').toLowerCase();
+  });
+  roles = computed(() => {
+    const role = this.currentParticipantRole();
+  
+    return {
+      isHost: role === 'host',
+      isCoHost: role === 'cohost',
+      isStaff: role === 'staff',
+      isSpeaker: role === 'speaker',
+      isSponsor: role === 'sponsor'
+    };
   });
 
-  isSponsorOrSpeaker = computed(() => {
-    const currentEvent = this.currentEvent();
-    const isSponsorOrSpeaker = this.eventService.checkSpeakerOrSponsorAccess(currentEvent);
-    return isSponsorOrSpeaker;
+  canOpenSettings = computed(() => {
+    const r = this.roles();
+    return (
+      r.isHost ||
+      r.isCoHost ||
+      r.isSpeaker ||
+      r.isSponsor ||
+      r.isStaff ||
+      this.currentUser()?.is_admin
+    );
   });
-
+  
+  canOpenChat = computed(() => {
+    const r = this.roles();
+  
+    return (
+      r.isHost ||
+      r.isCoHost ||
+      r.isSpeaker ||
+      r.isSponsor ||
+      r.isStaff ||
+      this.isAttendee() ||
+      this.currentUser()?.is_admin
+    );
+  });
   isAttendee = computed(() => {
     const currentEvent = this.currentEvent();
     const isAttendee = currentEvent.attendees && currentEvent.attendees.length > 0;
@@ -57,7 +94,7 @@ export class EventCard {
   allowToview = computed(() => {
     if (!this.showBlur()) return true;
     const currentEvent = this.currentEvent();
-    return this.isHostOrCoHost() || this.isAttendee() || this.isSponsorOrSpeaker() || currentEvent.is_public || this.currentUser()?.is_admin;
+    return currentEvent.is_public || this.canOpenChat();
   });
 
   isEventLiked = computed(() => {

@@ -373,7 +373,7 @@ export class GuestList implements OnInit, OnDestroy {
       this.isLoading.set(true);
       const eventData = await this.eventService.getEventById(eventId);
       if (eventData) {
-        if (!this.eventService.checkHostOrCoHostAccess(eventData)) {
+        if (!this.eventService.checkEventAccess(eventData)) {
           this.toasterService.showError('You do not have permission to view this page');
           this.navigationService.navigateForward(`/event/${eventId}`, true);
           return;

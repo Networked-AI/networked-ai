@@ -48,6 +48,7 @@ export class ProfileSetup implements OnInit, OnDestroy, AfterViewInit {
   private toasterService = inject(ToasterService);
   private navigationService = inject(NavigationService);
   private profileFormService = inject(ProfileFormService);
+  userAdditionalInfo = viewChild(UserAdditionalInfo);
 
   // signals
   readonly steps = [1, 2, 3, 4];
@@ -117,8 +118,7 @@ export class ProfileSetup implements OnInit, OnDestroy, AfterViewInit {
           this.toasterService.showError('Please complete step 1 first.');
           return;
         }
-        if (!this.profileFormService.validateSocialsMaxLength()) return;
-
+        if (!this.profileFormService.validateSocialLinks(this.userAdditionalInfo()?.socialInput())) return;
         this.navigateToStep(PROFILE_STEPS.PROFILE_IMAGE);
       }
 

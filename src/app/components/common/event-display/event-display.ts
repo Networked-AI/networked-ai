@@ -89,6 +89,25 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
     return this.displayMediasForDisplay().length > 1;
   });
 
+  canManageEvent = computed(() => {
+    const event = this.eventData();
+    const user = this.currentUser();
+
+    return event?.isCurrentUserHost || event?.isCurrentUserCoHost || event?.isCurrentUserStaff || event?.isCurrentUserSponsor || event?.isCurrentUserSpeaker || user?.is_admin;
+  });
+
+  canViewAttendeesAndChat = computed(() => {
+    const d = this.eventData();
+    return !!(d?.isCurrentUserHost || d?.isCurrentUserAttendee || d?.isCurrentUserCoHost || d?.isCurrentUserStaff ||  d?.isCurrentUserSponsor || d?.isCurrentUserSpeaker || this.currentUser()?.is_admin);
+  });
+
+  hostUsername = computed(() => {
+    const participants = (this.eventData() as any)?.participants;
+    if (!Array.isArray(participants)) return null;
+    const host = participants.find((p: any) => p?.role === 'Host');
+    return host?.user?.username ?? null;
+  });
+
   async openMapFromLatLng(): Promise<void> {
     if (!this.showHostPromo()) return;
 
@@ -131,18 +150,6 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
     if (this.isBrowser) window.open(url, '_blank');
   }
 
-  canViewAttendees = computed(() => {
-    const d = this.eventData();
-    return !!(d?.isCurrentUserHost || d?.isCurrentUserAttendee || d?.isCurrentUserCoHost || this.currentUser()?.is_admin);
-  });
-
-  hostUsername = computed(() => {
-    const participants = (this.eventData() as any)?.participants;
-    if (!Array.isArray(participants)) return null;
-    const host = participants.find((p: any) => p?.role === 'Host');
-    return host?.user?.username ?? null;
-  });
-
   onHostClick(): void {
     const username = this.hostUsername();
     if (username) this.navigationService.navigateForward(`/${username}`);
@@ -156,7 +163,7 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
   }
 
   handleUserListClick(title: string): void {
-    if ((title == 'Going' || title == 'Maybe') && !this.canViewAttendees()) return;
+    if ((title == 'Going' || title == 'Maybe') && !this.canViewAttendeesAndChat()) return;
     const handler = this.onUserListClick();
     if (handler) {
       handler(title, this.eventData()?.title || '');

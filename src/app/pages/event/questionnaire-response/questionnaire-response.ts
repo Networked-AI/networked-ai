@@ -147,7 +147,7 @@ export class QuestionnaireResponse implements OnInit, OnDestroy {
 
       this.eventData.set(eventData);
 
-      if (!this.eventService.checkHostOrCoHostAccess(eventData)) {
+      if (!this.eventService.checkEventAccess(eventData)) {
         this.isHost.set(false);
         this.onFilterChange('analytics');
       }else{

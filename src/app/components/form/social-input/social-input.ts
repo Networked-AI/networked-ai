@@ -1,9 +1,10 @@
-import { TextInput } from '../text-input';
 import { Button } from '../button';
 import { Subscription } from 'rxjs';
+import { TextInput } from '../text-input';
 import { filter, take } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, Input, OnInit, OnDestroy } from '@angular/core';
+import { ToasterService } from '@/services/toaster.service';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, Input, OnInit, OnDestroy, input, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ControlContainer, ReactiveFormsModule, Validators, AbstractControl } from '@angular/forms';
 
 interface CustomLinkMeta {
@@ -27,10 +28,12 @@ interface CustomLinkMeta {
 })
 export class SocialInput implements OnInit, OnDestroy {
   @Input() controlName = 'socials';
-
+  isSubmitted = input(true);
+  isLinkValidating = signal(false);
   readonly maxCustomLinks = 3;
   readonly maxLinkLength = 150;
   private readonly linkValidators = [Validators.maxLength(this.maxLinkLength)];
+  private toasterService = inject(ToasterService);
 
   visibleCustomLinks: CustomLinkMeta[] = [];
 
@@ -96,25 +99,82 @@ export class SocialInput implements OnInit, OnDestroy {
 
   addCustomLink(): void {
     if (this.visibleCustomLinks.length >= this.maxCustomLinks) return;
-    if (!this.canAddNewLink) return;  // ← add this
+    this.isLinkValidating.set(false);
+
+    if (!this.canAddNewLink) {
+      this.isLinkValidating.set(true);
+      this.validateCustomLinks();
+      this.toasterService.showError(
+        this.lastLinkHasMaxLengthError
+          ? 'Link exceeds maximum length. Please shorten it before adding a new one.'
+          : 'Please fill the current link before adding a new one.'
+      );
+      return;
+    }
+
     const nextIndex = this.nextAvailableIndex();
     if (nextIndex === -1) return;
+
+    const controlName = `custom_link_${nextIndex}`;
+    const ctrl = this.socialsGroup?.get(controlName);
+    if (ctrl) {
+      ctrl.addValidators(Validators.required);
+      ctrl.updateValueAndValidity({ emitEvent: false });
+    }
+
     this.visibleCustomLinks = [...this.visibleCustomLinks, this.buildMeta(nextIndex)];
+  }
+
+  private get lastLinkHasMaxLengthError(): boolean {
+    if (this.visibleCustomLinks.length === 0) return false;
+    const last = this.visibleCustomLinks[this.visibleCustomLinks.length - 1];
+    return !!this.socialsGroup?.get(last.controlName)?.hasError('maxlength');
+  }
+
+  get canAddNewLink(): boolean {
+    if (this.visibleCustomLinks.length === 0) return true;
+    const last = this.visibleCustomLinks[this.visibleCustomLinks.length - 1];
+    const ctrl = this.socialsGroup?.get(last.controlName);
+    const val = ctrl?.value;
+    // Block if empty OR if maxlength error exists
+    return !!val?.trim() && !ctrl?.hasError('maxlength');
   }
 
   removeCustomLink(index: number): void {
     const ctrl = this.socialsGroup?.get(`custom_link_${index}`);
-    ctrl?.setValue('');
-    ctrl?.markAsUntouched();
-    ctrl?.updateValueAndValidity();
+    if (ctrl) {
+      ctrl.removeValidators(Validators.required);
+      ctrl.setValue('');
+      ctrl.markAsUntouched();
+      ctrl.updateValueAndValidity();
+    }
+
     this.visibleCustomLinks = this.visibleCustomLinks.filter((l) => l.index !== index);
+  }
+
+  validateCustomLinks(): boolean {
+    if (this.visibleCustomLinks.length === 0) return true;
+
+    let allValid = true;
+    for (const link of this.visibleCustomLinks) {
+      const ctrl = this.socialsGroup?.get(link.controlName);
+      if (ctrl && !ctrl.value?.trim()) {
+        ctrl.markAsTouched();
+        ctrl.markAsDirty();
+        ctrl.updateValueAndValidity();
+        allValid = false;
+      }
+    }
+
+    this.cdr.markForCheck();
+    return allValid;
   }
 
   private buildMeta(index: number): CustomLinkMeta {
     return {
       index,
       controlName: `custom_link_${index}`,
-      placeholder: `Custom Link ${index}`
+      placeholder: `Custom Link`
     };
   }
 
@@ -126,25 +186,27 @@ export class SocialInput implements OnInit, OnDestroy {
     return -1;
   }
 
-  private syncVisibleLinksFromValues(): void {
+  syncVisibleLinksFromValues(): void {
     const group = this.socialsGroup;
     if (!group) return;
 
     const alreadyVisible = new Set(this.visibleCustomLinks.map((l) => l.index));
 
     for (let i = 1; i <= this.maxCustomLinks; i++) {
-      const val = group.get(`custom_link_${i}`)?.value;
+      const controlName = `custom_link_${i}`;
+      const ctrl = group.get(controlName);
+      const val = ctrl?.value;
+
       if (val && !alreadyVisible.has(i)) {
+        if (ctrl) {
+          ctrl.addValidators(Validators.required);
+          ctrl.updateValueAndValidity({ emitEvent: false });
+        }
+
         this.visibleCustomLinks = [...this.visibleCustomLinks, this.buildMeta(i)];
+
         alreadyVisible.add(i);
       }
     }
-  }
-
-  get canAddNewLink(): boolean {
-    if (this.visibleCustomLinks.length === 0) return true;
-    const last = this.visibleCustomLinks[this.visibleCustomLinks.length - 1];
-    const val = this.socialsGroup?.get(last.controlName)?.value;
-    return !!val?.trim();
   }
 }

@@ -6,7 +6,7 @@ import { ToasterService } from '@/services/toaster.service';
 import { SocialInput } from '@/components/form/social-input';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { TextAreaInput } from '@/components/form/text-area-input';
-import { input, Component, signal, computed, inject } from '@angular/core';
+import { input, Component, signal, computed, inject, viewChild } from '@angular/core';
 import { DescriptionGeneratorService } from '@/services/description-generator.service';
 import { BaseApiService } from '@/services/base-api.service';
 
@@ -19,6 +19,8 @@ import { BaseApiService } from '@/services/base-api.service';
 export class UserAdditionalInfo {
   // inputs
   formGroup = input.required<FormGroup<IUserForm>>();
+  isSubmitted = input.required<boolean>();
+  socialInput = viewChild(SocialInput);
 
   conversation = signal<any[]>([]);
   isGeneratingDescription = signal<boolean>(false);

@@ -17,28 +17,22 @@
             [controlName]="link.controlName"
             icon="assets/svg/linkGrayIcon.svg"
             [placeholder]="link.placeholder"
-            [required]="false"
+            [required]="true"
+            [isSubmitted]="isSubmitted() || isLinkValidating()"
           />
         </div>
-        <app-button
-          (click)="removeCustomLink(link.index)"
-          [iconName]="'pi pi-times'"
-          [variant]="'text'"
-          [height]="'44px'"
-          [color]="'secondary'"
-        />
+        <app-button (click)="removeCustomLink(link.index)" [iconName]="'pi pi-times'" [variant]="'text'" [height]="'44px'" [color]="'secondary'" />
       </div>
     }
 
     <!-- Add Link button — shown only if fewer than 3 custom links are visible -->
     @if (visibleCustomLinks.length < maxCustomLinks) {
-      <app-button
-        (click)="addCustomLink()"
-        [label]="'Add Link'"
-        [iconName]="'pi pi-plus'"
-        [variant]="'text'"
-        [disabled]="!canAddNewLink"
-      />
+      <div class="flex justify-center items-center w-full">
+        <button type="button" class="body-14SB brand-02 flex items-center gap-2" (click)="addCustomLink()">
+          <i class="pi pi-plus"></i>
+          Add Link
+        </button>
+      </div>
     }
   </div>
 </div>

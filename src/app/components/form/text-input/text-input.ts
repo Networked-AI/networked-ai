@@ -77,7 +77,6 @@ export class TextInput implements OnInit {
 
     setTimeout(() => {
       this.updateDisplayValue(this.control.value);
-      this.checkValidation();
       this.cdr.markForCheck();
     }, 0);
 

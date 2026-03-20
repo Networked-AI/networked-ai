@@ -20,7 +20,7 @@
         <!-- step 2: additional information -->
         <div [hidden]="currentStep() !== 2" class="space-y-4 flex flex-col gap-4">
           <div class="heading-h2 neutral-01">More About You</div>
-          <user-additional-info [formGroup]="profileForm" />
+          <user-additional-info [formGroup]="profileForm" [isSubmitted]="isSubmitted"/>
         </div>
 
         <!-- step 3: profile image -->

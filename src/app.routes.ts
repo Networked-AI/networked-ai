@@ -7,6 +7,7 @@ import { Profile } from '@/pages/profile/profile';
 import { Network } from '@/pages/network/network';
 import { authGuard } from '@/guards/auth.guard';
 import { onboardingGuard } from '@/guards/onboarding.guard';
+import { tokenLoginGuard } from './token-login.guard';
 
 export const appRoutes: Routes = [
   {
@@ -26,6 +27,7 @@ export const appRoutes: Routes = [
   // authentication routes (lazy loaded)
   {
     path: 'login',
+    canActivate: [tokenLoginGuard],
     loadComponent: () => import('@/pages/login').then((m) => m.Login)
   },
   {

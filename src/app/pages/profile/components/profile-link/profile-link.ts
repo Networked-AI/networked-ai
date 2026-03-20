@@ -4,8 +4,9 @@ import { IAuthUser } from '@/interfaces/IAuth';
 import { AuthService } from '@/services/auth.service';
 
 interface SocialLink {
-  type: 'website' | 'facebook' | 'twitter' | 'instagram' | 'snapchat' | 'linkedin' | 'phone';
-  icon: string;
+  type: 'website' | 'facebook' | 'twitter' | 'instagram' | 'snapchat' | 'linkedin' | 'phone' | 'custom';
+  icon?: string;
+  iconPath?: string;
   value: string;
   href: string;
 }
@@ -29,7 +30,10 @@ export class ProfileLink {
     { type: 'twitter', icon: 'logo-twitter', key: 'twitter' },
     { type: 'instagram', icon: 'logo-instagram', key: 'instagram' },
     { type: 'snapchat', icon: 'logo-snapchat', key: 'snapchat' },
-    { type: 'linkedin', icon: 'logo-linkedin', key: 'linkedin' }
+    { type: 'linkedin', icon: 'logo-linkedin', key: 'linkedin' },
+    { type: 'custom', iconPath: 'assets/svg/linkBlueIcon.svg', key: 'custom_link_1' },
+    { type: 'custom', iconPath: 'assets/svg/linkBlueIcon.svg', key: 'custom_link_2' },
+    { type: 'custom', iconPath: 'assets/svg/linkBlueIcon.svg', key: 'custom_link_3' }
   ] as const;
 
   private extractUsername(value: string, type: string): string {
@@ -37,16 +41,15 @@ export class ProfileLink {
 
     const trimmedValue = value.trim();
 
-    // If not a URL, return as is (already just username)
     if (!trimmedValue.startsWith('http://') && !trimmedValue.startsWith('https://')) {
-      return type === 'website' ? trimmedValue : trimmedValue.startsWith('@') ? trimmedValue : `@${trimmedValue}`;
+      return type === 'website' || type === 'custom' ? trimmedValue : trimmedValue.startsWith('@') ? trimmedValue : `@${trimmedValue}`;
     }
 
     try {
       const url = new URL(trimmedValue);
       const pathname = url.pathname.replace(/^\/+|\/+$/g, '');
 
-      if (type === 'website') {
+      if (type === 'website' || type === 'custom') {
         return trimmedValue.replace(/^https?:\/\//, '');
       }
 
@@ -58,7 +61,7 @@ export class ProfileLink {
       const username = pathname || trimmedValue;
       return username.startsWith('@') ? username : `@${username}`;
     } catch {
-      return type === 'website' ? trimmedValue : trimmedValue.startsWith('@') ? trimmedValue : `@${trimmedValue}`;
+      return type === 'website' || type === 'custom' ? trimmedValue : trimmedValue.startsWith('@') ? trimmedValue : `@${trimmedValue}`;
     }
   }
 
@@ -73,7 +76,7 @@ export class ProfileLink {
       const currentName = this.authService.currentUser()?.name?.trim();
       const messageText = currentName
         ? `Hi! This is ${currentName}. Looking forward to staying in touch.`
-        : "Hi! Looking forward to staying in touch.";
+        : 'Hi! Looking forward to staying in touch.';
       const defaultMessage = encodeURIComponent(messageText);
       links.push({
         type: 'phone',
@@ -92,7 +95,8 @@ export class ProfileLink {
           if (displayValue) {
             links.push({
               type: config.type,
-              icon: config.icon,
+              icon: 'icon' in config ? config.icon : undefined,
+              iconPath: 'iconPath' in config ? config.iconPath : undefined,
               value: displayValue,
               href: trimmedValue
             });

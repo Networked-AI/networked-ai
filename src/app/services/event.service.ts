@@ -423,6 +423,7 @@ export class EventService extends BaseApiService {
 
     const getParticipantsByRole = (role: string): IUser[] => {
       if (!participants || !Array.isArray(participants)) return [];
+
       return participants
         .filter((p: any) => (p.role || '').toLowerCase() === role.toLowerCase())
         .map((p: any) => {
@@ -437,6 +438,7 @@ export class EventService extends BaseApiService {
     const coHosts = getParticipantsByRole('CoHost');
     const sponsors = getParticipantsByRole('Sponsor');
     const speakers = getParticipantsByRole('Speaker');
+    const staff = getParticipantsByRole('Staff');
 
     if (hosts.length > 0) {
       sections.push({ title: 'Host(s)', users: hosts });
@@ -450,6 +452,11 @@ export class EventService extends BaseApiService {
     if (speakers.length > 0) {
       sections.push({ title: 'Speaker(s)', users: speakers });
     }
+
+    if (staff.length > 0) {
+      sections.push({ title: 'Staff', users: staff });
+    }
+
     return sections;
   }
 
@@ -739,17 +746,18 @@ export class EventService extends BaseApiService {
 
     const rsvpButtonLabel = admission === 'Free' ? 'RSVP Now for Free' : `RSVP Now from ${admission}`;
 
-    const isCurrentUserHost = participants.some((p: any) => {
+    const currentParticipant = participants.find((p: any) => {
       const userId = p.user_id || p.user?.id;
-      const role = (p.role || '').toLowerCase();
-      return userId === currentUser?.id && role === 'host';
+      return userId === currentUser?.id;
     });
 
-    const isCurrentUserCoHost = participants.some((p: any) => {
-      const userId = p.user_id || p.user?.id;
-      const role = (p.role || '').toLowerCase();
-      return userId === currentUser?.id && role === 'cohost';
-    });
+    const role = (currentParticipant?.role || '').toLowerCase();
+
+    const isCurrentUserHost = role === 'host';
+    const isCurrentUserCoHost = role === 'cohost';
+    const isCurrentUserStaff = role === 'staff';
+    const isCurrentUserSpeaker = role === 'speaker';
+    const isCurrentUserSponsor = role === 'sponsor';
 
     const isRepeatingEvent = options?.isRepeatingEvent ?? parentEvent?.settings?.is_repeating_event === true;
     const dateItems = options?.dateItems ?? (isRepeatingEvent ? this.createDateItems(parentEvent || eventData) : []);
@@ -784,6 +792,9 @@ export class EventService extends BaseApiService {
       rsvpButtonLabel,
       isCurrentUserHost,
       isCurrentUserCoHost,
+      isCurrentUserSponsor,
+      isCurrentUserSpeaker,
+      isCurrentUserStaff,
       isRsvpApprovalRequired,
       tickets: eventData?.tickets || [],
       questionnaire: eventData?.questionnaire || eventData?.questions || [],
@@ -1457,27 +1468,19 @@ export class EventService extends BaseApiService {
     }
   }
 
-  checkHostOrCoHostAccess(eventData: any): boolean {
+  checkEventAccess(eventData: any): boolean {
     const currentUser = this.authService?.currentUser();
-
-    if (!currentUser?.id || !eventData?.participants) {
-      return false;
-    }
-
-    const participants = eventData.participants || [];
-    const isHost = participants.some((p: any) => {
-      const userId = p.user?.id;
-      const role = (p.role || '').toLowerCase();
-      return userId === currentUser.id && role === 'host';
+  
+    if (!currentUser?.id) return false;
+  
+    if (currentUser.is_admin) return true;
+  
+    const participants = eventData?.participants || [];
+  
+    return participants.some((p: any) => {
+      const userId = p.user_id || p.user?.id;
+      return userId === currentUser.id;
     });
-
-    const isCoHost = participants.some((p: any) => {
-      const userId = p.user?.id;
-      const role = (p.role || '').toLowerCase();
-      return userId === currentUser.id && role === 'cohost';
-    });
-
-    return isHost || isCoHost || currentUser?.is_admin;
   }
 
   checkSpeakerOrSponsorAccess(eventData: any): boolean {
@@ -1607,5 +1610,29 @@ export class EventService extends BaseApiService {
       console.error('Error fetching event viewers:', error);
       throw error;
     }
+  }
+
+  getCurrentUserRole(participants: any[]): string | null {
+    const userId = this.authService.currentUser()?.id;
+
+    const participant = participants.find((p) => {
+      const uid = p.user_id ?? p.user?.id;
+      return uid === userId;
+    });
+
+    return participant?.role || null;
+  }
+
+  getRoleMessage(role: string): string {
+    const roleMap: Record<string, string> = {
+      host: 'the Host',
+      cohost: 'a Co-Host',
+      speaker: 'a Speaker',
+      sponsor: 'a Sponsor',
+      staff: 'part of the Staff'
+    };
+
+    const label = roleMap[role?.toLowerCase()] ?? 'already part of this event';
+    return `You're ${label} — no RSVP needed!`;
   }
 }
