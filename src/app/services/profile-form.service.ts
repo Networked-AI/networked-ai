@@ -37,7 +37,6 @@ export class ProfileFormService {
       const currentUser = await this.userService.getCurrentUser();
       const formValue = this.userService.getUserFromApiResponse(currentUser);
       this.profileForm().patchValue(formValue, { emitEvent: false });
-
       // store original email and mobile for comparison
       this.originalEmail = currentUser.email || null;
       this.originalMobile = currentUser.mobile || null;
@@ -119,11 +118,11 @@ export class ProfileFormService {
   }
 
   // save the form - validates, verifies changes, and submits
-  async save(userPersonalInfo: UserPersonalInfo | undefined): Promise<boolean> {
+  async save(userPersonalInfo: UserPersonalInfo | undefined, socialInput?: { validateCustomLinks: () => boolean }): Promise<boolean> {
     try {
       this.isLoading.set(true);
 
-      if (!this.validateSocialsMaxLength()) return false;
+      if (!this.validateSocialLinks(socialInput)) return false;
 
       // validate personal info fields
       if (!(await this.validate(userPersonalInfo))) {
@@ -148,8 +147,11 @@ export class ProfileFormService {
     }
   }
 
-  // reusable helper to validate socials max length
-  validateSocialsMaxLength(): boolean {
+  validateSocialLinks(socialInput?: { validateCustomLinks: () => boolean }): boolean {
+    if (socialInput && !socialInput.validateCustomLinks()) {
+      this.toasterService.showError('Please fill in all added custom links or remove them.');
+      return false;
+    }
     const socials = this.profileForm().get('socials') as FormGroup | null;
     if (!socials) return true;
 
