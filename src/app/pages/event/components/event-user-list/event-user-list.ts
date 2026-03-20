@@ -139,6 +139,7 @@ export class EventUserList implements OnInit, OnDestroy {
     if (title.startsWith('host')) return { role: 'Host' };
     if (title.startsWith('co-host')) return { role: 'CoHost' };
     if (title.startsWith('sponsor')) return { role: 'Sponsor' };
+    if (title.startsWith('staff')) return { role: 'Staff' };
     if (title.startsWith('speaker')) return { role: 'Speaker' };
 
     return {};

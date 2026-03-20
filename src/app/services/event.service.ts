@@ -423,6 +423,7 @@ export class EventService extends BaseApiService {
 
     const getParticipantsByRole = (role: string): IUser[] => {
       if (!participants || !Array.isArray(participants)) return [];
+
       return participants
         .filter((p: any) => (p.role || '').toLowerCase() === role.toLowerCase())
         .map((p: any) => {
@@ -437,6 +438,7 @@ export class EventService extends BaseApiService {
     const coHosts = getParticipantsByRole('CoHost');
     const sponsors = getParticipantsByRole('Sponsor');
     const speakers = getParticipantsByRole('Speaker');
+    const staff = getParticipantsByRole('Staff');
 
     if (hosts.length > 0) {
       sections.push({ title: 'Host(s)', users: hosts });
@@ -450,6 +452,11 @@ export class EventService extends BaseApiService {
     if (speakers.length > 0) {
       sections.push({ title: 'Speaker(s)', users: speakers });
     }
+
+    if (staff.length > 0) {
+      sections.push({ title: 'Staff', users: staff });
+    }
+
     return sections;
   }
 
