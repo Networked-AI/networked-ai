@@ -12,6 +12,7 @@ import { createRsvpState, RsvpPromoState, RsvpTicketInput } from '@/utils/rsvp-s
 import { PromoCodeSectionComponent } from '@/components/common/promo-code-section/promo-code-section';
 import { IonHeader, IonFooter, IonToolbar, IonIcon, ModalController, IonContent } from '@ionic/angular/standalone';
 import { Input, signal, inject, OnInit, computed, Component, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import { EventService } from '@/services/event.service';
 
 @Component({
   selector: 'rsvp-modal',
@@ -59,6 +60,7 @@ export class RsvpModal implements OnInit, OnDestroy {
   authService = inject(AuthService);
   modalService = inject(ModalService);
   private toasterService = inject(ToasterService);
+  private eventService = inject(EventService);
 
   rsvp = createRsvpState({ hostPaysFees: false, additionalFees: null });
   selectedTicket = signal<TicketDisplay | null>(null);
@@ -358,16 +360,6 @@ export class RsvpModal implements OnInit, OnDestroy {
     }
   }
 
-  private isCurrentUserHostOrCoHost(): boolean {
-    const user = this.authService.currentUser();
-    if (!user?.id || !this.participants?.length) return false;
-    return this.participants.some((p) => {
-      const uid = p.user_id ?? p.user?.id;
-      const role = (p.role ?? '').toLowerCase();
-      return uid === user.id && (role === 'host' || role === 'cohost');
-    });
-  }
-
   private async ensureLoggedIn(): Promise<{ success: boolean; isNewUser?: boolean } | null> {
     if (this.authService.getCurrentToken()) return { success: true };
     return await this.modalService.openLoginModal();
@@ -382,8 +374,9 @@ export class RsvpModal implements OnInit, OnDestroy {
     const loginResult = isLoggedIn ? await this.ensureLoggedIn() : { success: true };
     if (isLoggedIn && !loginResult?.success) return;
 
-    if (isLoggedIn && this.isCurrentUserHostOrCoHost()) {
-      this.toasterService.showError('You are the host or co-host. You cannot RSVP as a guest.');
+    const role = this.eventService.getCurrentUserRole(this.participants);
+    if (isLoggedIn && role) {
+      this.toasterService.showError(this.eventService.getRoleMessage(role));
       return;
     }
 

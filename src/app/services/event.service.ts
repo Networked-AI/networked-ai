@@ -1611,4 +1611,36 @@ export class EventService extends BaseApiService {
       throw error;
     }
   }
+
+  getCurrentUserRole(participants: any[]): string | null {
+    const userId = this.authService.currentUser()?.id;
+
+    const participant = participants.find((p) => {
+      const uid = p.user_id ?? p.user?.id;
+      return uid === userId;
+    });
+
+    return participant?.role || null;
+  }
+
+  getRoleMessage(role: string): string {
+    const roleMap: Record<string, string> = {
+      host: 'the Host',
+      cohost: 'a Co-Host',
+      speaker: 'a Speaker',
+      sponsor: 'a Sponsor',
+      staff: 'part of the Staff'
+    };
+
+    const label = roleMap[role?.toLowerCase()] ?? 'already part of this event';
+    return `You're ${label} — no RSVP needed!`;
+  }
+  isUserParticipant(userId: string, participants: any[]): boolean {
+    if (!userId || !participants?.length) return false;
+
+    return participants.some((p) => {
+      const uid = p.user_id ?? p.user?.id;
+      return uid === userId;
+    });
+  }
 }
