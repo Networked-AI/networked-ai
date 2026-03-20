@@ -396,7 +396,10 @@ export class CreateEvent implements OnInit, OnDestroy {
             thumbnail_url: currentUser?.thumbnail_url,
             name: currentUser?.name
           },
-          ...(formData.participants || []).filter((p: any) => (p.role || '').toLowerCase() !== 'host').map(({ id, ...p }: any) => p)
+          ...(formData.participants || [])
+            .filter((p: any) => p.user_id !== currentUser?.id)
+            .filter((p: any) => (p.role || '').toLowerCase() !== 'host')
+            .map(({ id, ...p }: any) => p)
         ],
         medias: (formData.medias || []).map(({ id, ...media }: any) => media),
         questionnaire: (formData.questionnaire || []).map(({ id, options, ...q }: any) => ({
