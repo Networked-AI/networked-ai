@@ -5,6 +5,7 @@ import { inject, Component, input } from '@angular/core';
 import { ToasterService } from '@/services/toaster.service';
 import { BaseApiService } from '@/services/base-api.service';
 import { NavigationService } from '@/services/navigation.service';
+import { KEYS, LocalStorageService } from '@/services/localstorage.service';
 
 @Component({
   selector: 'social-login-buttons',
@@ -21,6 +22,7 @@ export class SocialLoginButtons {
   modalService = inject(ModalService);
   toasterService = inject(ToasterService);
   navigationService = inject(NavigationService);
+  localStorageService = inject(LocalStorageService);
 
   private handleLoginSuccess(isNewUser: boolean) {
     if (this.isRsvpModal()) {
@@ -33,7 +35,10 @@ export class SocialLoginButtons {
       this.navigationService.navigateForward(`/profile/setup?returnTo=${encodeURIComponent(destination)}`, true);
       return;
     }
-    this.navigationService.navigateForward('/', true);
+    const returnTo = this.route.snapshot.queryParams['returnTo'];
+    const isOnboarded = this.localStorageService.getItem(KEYS.ONBOARDED) === 'true';
+    const targetUrl = isOnboarded ? returnTo : `/onboarding?returnTo=${encodeURIComponent(returnTo)}`;
+    this.navigationService.navigateForward(targetUrl, true);
   }
 
   async loginWithGoogle() {
