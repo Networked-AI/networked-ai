@@ -17,6 +17,7 @@ import { AuthService } from '@/services/auth.service';
 import { UserService } from '@/services/user.service';
 import { ModalService } from '@/services/modal.service';
 import { TextInput } from '@/components/form/text-input';
+import { EventService } from '@/services/event.service';
 import { validateFields } from '@/utils/form-validation';
 import { EmailInput } from '@/components/form/email-input';
 import { ToasterService } from '@/services/toaster.service';
@@ -99,7 +100,7 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   private modalService = inject(ModalService);
   private stripeService = inject(StripeService);
   private toasterService = inject(ToasterService);
-
+  private eventService = inject(EventService);
   emailInputRef = viewChild<EmailInput>('emailInputRef');
 
   form: FormGroup;
@@ -515,8 +516,10 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
   }
 
   async dismiss(): Promise<void> {
-    if (this.isCurrentUserHostOrCoHost()) {
-      this.toasterService.showError('You are the host or co-host. You cannot RSVP as a guest.');
+    const role = this.eventService.getCurrentUserRole(this.participants);
+
+    if (role) {
+      this.toasterService.showError(this.eventService.getRoleMessage(role));
       return;
     }
     if (this.isGuestMode && this.guestStep() === 'details') {
@@ -586,17 +589,6 @@ export class RsvpDetailsModal extends BaseApiService implements OnInit {
     } finally {
       this.isUpdatingUserDetails.set(false);
     }
-  }
-
-  private isCurrentUserHostOrCoHost(): boolean {
-    const user = this.authService.currentUser();
-    if (!user?.id || !this.participants?.length) return false;
-
-    return this.participants.some((p) => {
-      const uid = p.user_id ?? p.user?.id;
-      const role = (p.role ?? '').toLowerCase();
-      return uid === user.id && (role === 'host' || role === 'cohost');
-    });
   }
 
   async finalizeRsvpAndClose(): Promise<void> {
