@@ -1635,12 +1635,4 @@ export class EventService extends BaseApiService {
     const label = roleMap[role?.toLowerCase()] ?? 'already part of this event';
     return `You're ${label} — no RSVP needed!`;
   }
-  isUserParticipant(userId: string, participants: any[]): boolean {
-    if (!userId || !participants?.length) return false;
-
-    return participants.some((p) => {
-      const uid = p.user_id ?? p.user?.id;
-      return uid === userId;
-    });
-  }
 }
