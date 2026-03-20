@@ -182,7 +182,21 @@ export class Event implements OnInit, OnDestroy {
 
     return items;
   });
-
+  
+  isParticipant = computed(() => {
+    const d = this.eventDisplayData();
+  
+    return (
+      d.isCurrentUserHost ||
+      d.isCurrentUserCoHost ||
+      d.isCurrentUserStaff ||
+      d.isCurrentUserSponsor ||
+      d.isCurrentUserSpeaker ||
+      d.isCurrentUserAttendee
+    );
+  });
+  
+  showRsvp = computed(() => !this.isParticipant());
   showEventAnalytics = computed(() => {
     const event = this.eventDisplayData();
     if (!event) return false;
@@ -190,7 +204,7 @@ export class Event implements OnInit, OnDestroy {
       (q: any) => q.is_public === true && ['SingleChoice', 'MultipleChoice', 'Rating'].includes(q.question_type)
     );
 
-    const showToUser = event.isCurrentUserHost || event.isCurrentUserAttendee || event.isCurrentUserCoHost || event?.isCurrentUserStaff || this.currentUser()?.is_admin  ;
+    const showToUser = event.isCurrentUserHost || event.isCurrentUserAttendee || event.isCurrentUserCoHost || event?.isCurrentUserStaff ||  event?.isCurrentUserSponsor || event?.isCurrentUserSpeaker ||this.currentUser()?.is_admin  ;
 
     return hasPublicQuestions && showToUser;
   });
@@ -292,6 +306,8 @@ export class Event implements OnInit, OnDestroy {
         isCurrentUserHost: false,
         isCurrentUserCoHost: false,
         isCurrentUserStaff: false,
+        isCurrentUserSponsor: false,
+        isCurrentUserSpeaker: false,
         isCurrentUserAttendee: false,
         isRsvpApprovalRequired: false,
         hasCurrentUserRsvpRequest: false,

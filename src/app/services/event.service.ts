@@ -756,6 +756,8 @@ export class EventService extends BaseApiService {
     const isCurrentUserHost = role === 'host';
     const isCurrentUserCoHost = role === 'cohost';
     const isCurrentUserStaff = role === 'staff';
+    const isCurrentUserSpeaker = role === 'speaker';
+    const isCurrentUserSponsor = role === 'sponsor';
 
     const isRepeatingEvent = options?.isRepeatingEvent ?? parentEvent?.settings?.is_repeating_event === true;
     const dateItems = options?.dateItems ?? (isRepeatingEvent ? this.createDateItems(parentEvent || eventData) : []);
@@ -790,6 +792,8 @@ export class EventService extends BaseApiService {
       rsvpButtonLabel,
       isCurrentUserHost,
       isCurrentUserCoHost,
+      isCurrentUserSponsor,
+      isCurrentUserSpeaker,
       isCurrentUserStaff,
       isRsvpApprovalRequired,
       tickets: eventData?.tickets || [],
@@ -1464,27 +1468,19 @@ export class EventService extends BaseApiService {
     }
   }
 
-  checkHostOrCoHostAccess(eventData: any): boolean {
+  checkEventAccess(eventData: any): boolean {
     const currentUser = this.authService?.currentUser();
-
-    if (!currentUser?.id || !eventData?.participants) {
-      return false;
-    }
-
-    const participants = eventData.participants || [];
-    const isHost = participants.some((p: any) => {
-      const userId = p.user?.id;
-      const role = (p.role || '').toLowerCase();
-      return userId === currentUser.id && role === 'host';
+  
+    if (!currentUser?.id) return false;
+  
+    if (currentUser.is_admin) return true;
+  
+    const participants = eventData?.participants || [];
+  
+    return participants.some((p: any) => {
+      const userId = p.user_id || p.user?.id;
+      return userId === currentUser.id;
     });
-
-    const isCoHost = participants.some((p: any) => {
-      const userId = p.user?.id;
-      const role = (p.role || '').toLowerCase();
-      return userId === currentUser.id && role === 'cohost';
-    });
-
-    return isHost || isCoHost || currentUser?.is_admin;
   }
 
   checkSpeakerOrSponsorAccess(eventData: any): boolean {

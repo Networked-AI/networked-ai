@@ -33,18 +33,18 @@ export class ManageEventService extends BaseApiService {
   menuItems = computed<MenuItem[]>(() => {
     const isCompleted = this.isEventCompleted();
     const displayData = this.currentEventData();
-
-    const currentParticipant = displayData.participants.find((p: any) => {
+    const currentUser = this.authService.currentUser();
+    const participants = displayData?.participants || [];
+  
+    // ✅ Find current participant
+    const currentParticipant = participants.find((p: any) => {
       const userId = p.user_id || p.user?.id;
-      return userId === this.authService.currentUser()?.id;
+      return userId === currentUser?.id;
     });
-
+  
     const role = (currentParticipant?.role || '').toLowerCase();
-
-    const isHost = role === 'host';
-    const isCoHost = role === 'cohost';
-    const isStaff = role === 'staff';
-
+    const isAdmin = currentUser?.is_admin;
+  
     const hasQuestionnaire = displayData.questionnaire && displayData.questionnaire.length > 0;
 
     let baseItems: MenuItem[] = [
@@ -66,59 +66,77 @@ export class ManageEventService extends BaseApiService {
       { label: 'Cancel Event', icon: 'assets/svg/manage-event/calendar-x.svg', iconType: 'svg', danger: true, action: 'cancelEvent' }
     ];
 
-    // 👉 NEW: questionnaire condition
     if (!hasQuestionnaire) {
-      baseItems = baseItems.filter((item) => item['action'] !== 'viewQuestionnaireResponses');
+      baseItems = baseItems.filter(i => i.action !== 'viewQuestionnaireResponses');
     }
-
+  
     if (isCompleted) {
-      baseItems = baseItems.filter((item) => !['editEvent', 'manageRoles'].includes(item['action'] || ''));
+      baseItems = baseItems.filter(i => !['editEvent', 'manageRoles'].includes(i.action || ''));
     }
-
-    // RSVP Approval
+  
+    const insertAfterQR = (item: MenuItem) => {
+      const index = baseItems.findIndex(i => i.action === 'viewEventPageQr');
+      if (index !== -1) baseItems.splice(index + 1, 0, item);
+    };
+  
+    // ✅ RSVP Approval
     if (displayData?.settings?.is_rsvp_approval_required) {
-      const rsvpApprovalItem: MenuItem = {
+      insertAfterQR({
         label: 'RSVP Approval',
         icon: 'pi pi-check-circle',
         iconType: 'pi',
         action: 'viewRsvpApproval'
-      };
-
-      const qrIndex = baseItems.findIndex((i) => i['action'] === 'viewEventPageQr');
-      if (qrIndex !== -1) {
-        baseItems.splice(qrIndex + 1, 0, rsvpApprovalItem);
-      }
+      });
     }
-
-    // Ticket Scanner
+  
     if (this.isNativePlatform() && !isCompleted) {
-      const scannerItem: MenuItem = {
+      insertAfterQR({
         label: 'Ticket Scanner',
         icon: 'assets/svg/scanner.svg',
         iconType: 'svg',
         action: 'scanQRCode'
-      };
-
-      const qrIndex = baseItems.findIndex((i) => i['action'] === 'viewEventPageQr');
-      if (qrIndex !== -1) {
-        baseItems.splice(qrIndex + 1, 0, scannerItem);
-      }
+      });
     }
-
-    if (isCoHost && !isHost && !this.authService.currentUser()?.is_admin) {
-      const allowedActions = ['viewEventAnalytics', 'viewGuestList', 'viewEventPageQr', 'shareEvent', 'duplicateEvent', 'viewEventViewers'];
-
-      return baseItems.filter((item) => allowedActions.includes(item['action'] || ''));
-    }
-
-    if (isStaff && !isHost && !this.authService.currentUser()?.is_admin) {
-      const allowedActions = ['viewEventPageQr', 'shareEvent', 'scanQRCode'];
-
-      return baseItems.filter((item) => allowedActions.includes(item['action'] || ''));
-    }
-    return baseItems;
+  
+    const rolePermissions: Record<string, string[]> = {
+      host: baseItems.map(i => i.action || ''),
+  
+      cohost: [
+        'editEvent',
+        'viewEventAnalytics',
+        'viewQuestionnaireResponses',
+        'duplicateEvent',
+        'manageRoles',
+        'viewGuestList',
+        'viewEventPageQr',
+        'scanQRCode',
+        'viewEventViewers',
+        'viewRsvpApproval',
+        'shareEvent'
+      ],
+  
+      staff: [
+        'viewQuestionnaireResponses',
+        'duplicateEvent',
+        'manageRoles',
+        'viewGuestList',
+        'viewEventPageQr',
+        'scanQRCode',
+        'viewEventViewers',
+        'viewRsvpApproval',
+        'shareEvent'
+      ],
+  
+      speaker: ['viewEventPageQr', 'shareEvent'],
+      sponsor: ['viewEventPageQr', 'shareEvent']
+    };
+  
+    if (isAdmin) return baseItems;
+  
+    const allowedActions = rolePermissions[role] || [];
+  
+    return baseItems.filter(item => allowedActions.includes(item.action || ''));
   });
-
   async openMenu(event: any) {
     this.currentEventData.set(event);
     const result = await this.modalService.openMenuModal(this.menuItems());

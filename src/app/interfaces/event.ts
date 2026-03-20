@@ -196,6 +196,8 @@ export interface EventDisplayData {
   isCurrentUserHost: boolean;
   isCurrentUserCoHost: boolean;
   isCurrentUserStaff: boolean;
+  isCurrentUserSponsor: boolean;
+  isCurrentUserSpeaker: boolean;
   isCurrentUserAttendee?: boolean;
   isRsvpApprovalRequired?: boolean;
   hasCurrentUserRsvpRequest?: boolean;

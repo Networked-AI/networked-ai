@@ -93,12 +93,12 @@ export class EventDisplay implements AfterViewInit, AfterViewChecked, OnDestroy 
     const event = this.eventData();
     const user = this.currentUser();
 
-    return event?.isCurrentUserHost || event?.isCurrentUserCoHost || event?.isCurrentUserStaff || user?.is_admin;
+    return event?.isCurrentUserHost || event?.isCurrentUserCoHost || event?.isCurrentUserStaff || event?.isCurrentUserSponsor || event?.isCurrentUserSpeaker || user?.is_admin;
   });
 
   canViewAttendeesAndChat = computed(() => {
     const d = this.eventData();
-    return !!(d?.isCurrentUserHost || d?.isCurrentUserAttendee || d?.isCurrentUserCoHost || d?.isCurrentUserStaff || this.currentUser()?.is_admin);
+    return !!(d?.isCurrentUserHost || d?.isCurrentUserAttendee || d?.isCurrentUserCoHost || d?.isCurrentUserStaff ||  d?.isCurrentUserSponsor || d?.isCurrentUserSpeaker || this.currentUser()?.is_admin);
   });
 
   hostUsername = computed(() => {
